@@ -25,8 +25,8 @@ export interface PatientModel {
 	phone: string;
 	address: string;
 	citizenId: string; // Số CMND/CCCD
-	email: string;
-	gender: 'male' | 'female' | 'other';
+	email?: string;
+	gender?: 'male' | 'female' | undefined;
 	createdAt: Date;
 	updatedAt: Date;
 	medicalHistory: string;

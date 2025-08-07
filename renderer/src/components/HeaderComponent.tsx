@@ -1,8 +1,9 @@
 /** @format */
 
-import { Divider, Menu, Typography } from 'antd';
+import { Divider, Menu, Space, Typography } from 'antd';
 import { useState } from 'react';
 import { IoNotificationsOutline } from 'react-icons/io5';
+import { formatDateToString, parseDateInput } from '../utils/datetime';
 
 const HeaderComponent = () => {
 	const [keySelected, setKeySelected] = useState('home');
@@ -36,11 +37,11 @@ const HeaderComponent = () => {
 					/> */}
 				</div>
 				<div className='col text-end'>
-					<IoNotificationsOutline size={18} />
-					<Divider type='vertical' />
-					<Typography.Text>
-						{new Date().toLocaleDateString('vi-VN')}
-					</Typography.Text>
+					<Space>
+						<IoNotificationsOutline size={18} />
+						<Divider type='vertical' />
+						<Typography.Text>{formatDateToString(new Date())}</Typography.Text>
+					</Space>
 				</div>
 			</div>
 		</div>

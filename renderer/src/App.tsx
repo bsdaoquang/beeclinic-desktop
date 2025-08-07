@@ -7,6 +7,8 @@ import '../src/styles/index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ConfigProvider } from 'antd';
 import { theme } from './styles/theme';
+import dayjs, { locale } from 'dayjs';
+import 'dayjs/locale/vi'; // Import ngôn ngữ tiếng Việt cho dayjs
 
 // Quản lý phần mềm như thế nào?
 // Kể cả tính năng cập nhật phiên bản, quản lý cài đặt, v.v.
@@ -25,9 +27,11 @@ import { theme } from './styles/theme';
 	
 */
 
+dayjs.locale('vi'); // Đặt ngôn ngữ cho dayjs
+
 function App() {
 	return (
-		<ConfigProvider theme={theme}>
+		<ConfigProvider theme={theme} locale={locale as any}>
 			<div style={{ padding: 0, margin: 0 }}>
 				<HeaderComponent />
 				<Router />
