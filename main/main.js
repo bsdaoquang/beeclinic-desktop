@@ -11,6 +11,7 @@ function createWindow() {
 		// },
 	});
 
+	win.maximize();
 	// Sử dụng địa chỉ của Vite server trong quá trình dev
 	win.loadURL('http://localhost:5173');
 }
