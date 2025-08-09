@@ -1,11 +1,13 @@
 /** @format */
 
 import {
+	Button,
 	DatePicker,
 	Drawer,
 	Form,
 	Input,
 	Select,
+	Space,
 	Typography,
 	Upload,
 	type UploadProps,
@@ -30,8 +32,15 @@ const AddPatient = (props: AddPatientProps) => {
 	const handleChangeImage: UploadProps['onChange'] = ({
 		fileList: newFileList,
 	}) => {
-		setFilelists(newFileList);
+		setFilelists(
+			newFileList.map((file) => ({
+				...file,
+				status: 'success',
+			}))
+		);
 	};
+
+	const handleAddPatient = (vals: any) => {};
 
 	return (
 		<Drawer
@@ -42,101 +51,154 @@ const AddPatient = (props: AddPatientProps) => {
 			footer={null}>
 			<div className='container-fluid'>
 				<div className='container'>
-					<div className='row'>
-						<div className='col-8 offset-2'>
-							<Form
-								form={form}
-								size='large'
-								layout='vertical'
-								variant='filled'
-								initialValues={{
-									gender: 'male',
-								}}>
+					<Form
+						form={form}
+						onFinish={handleAddPatient}
+						size='large'
+						layout='vertical'
+						variant='filled'
+						initialValues={{
+							gender: 'male',
+						}}>
+						<Form.Item name='photoUrl'>
+							<Upload
+								type='select'
+								onChange={handleChangeImage}
+								fileList={filelists}
+								listType='picture-circle'
+								maxCount={1}
+								accept='image/*'>
+								{filelists.length > 0 ? null : 'Tải lên'}
+							</Upload>
+							{/* <div className='mt-2'>
+								<Typography.Text type='secondary'>
+									Ảnh đại diện của bệnh nhân
+								</Typography.Text>
+							</div> */}
+						</Form.Item>
+						<div className='row'>
+							<div className='col'>
+								<Form.Item
+									name='name'
+									label='Họ và tên'
+									rules={[
+										{ required: true, message: 'Vui lòng nhập họ và tên' },
+									]}>
+									<Input
+										onBlur={(e) =>
+											form.setFieldValue('name', e.target.value.toUpperCase())
+										}
+										autoComplete=''
+										autoFocus
+										placeholder='Nhập họ và tên'
+										allowClear
+									/>
+								</Form.Item>
 								<div className='row'>
 									<div className='col'>
-										<Form.Item name='photoUrl'>
-											<Upload
-												type='select'
-												listType='picture-circle'
-												fileList={filelists}
-												maxCount={1}
-												accept='image/*'
-												onChange={handleChangeImage}>
-												{filelists.length > 0 ? null : 'Tải lên'}
-											</Upload>
-											<div className='mt-2'>
-												<Typography.Text type='secondary'>
-													Ảnh đại diện của bệnh nhân
-												</Typography.Text>
-											</div>
-										</Form.Item>
-									</div>
-									<div className='col-8'>
-										<Form.Item
-											name='name'
-											label='Họ và tên'
-											rules={[
-												{ required: true, message: 'Vui lòng nhập họ và tên' },
-											]}>
-											<Input
-												onBlur={(e) =>
-													form.setFieldValue(
-														'name',
-														e.target.value.toUpperCase()
-													)
-												}
-												autoComplete=''
-												autoFocus
-												placeholder='Nhập họ và tên'
+										<Form.Item name='gender' label='Giới tính'>
+											<Select
 												allowClear
+												options={[
+													{ label: 'Nam', value: 'male' },
+													{ label: 'Nữ', value: 'female' },
+												]}
 											/>
 										</Form.Item>
-										<div className='row'>
-											<div className='col'>
-												<Form.Item name='gender' label='Giới tính'>
-													<Select
-														allowClear
-														options={[
-															{ label: 'Nam', value: 'male' },
-															{ label: 'Nữ', value: 'female' },
-														]}
-													/>
-												</Form.Item>
-											</div>
-											<div className='col'>
-												<Form.Item name='age' label='Ngày sinh'>
-													<DatePicker
-														format={'DD/MM/YYYY'}
-														style={{ width: '100%' }}
-														onBlur={(val: any) => {
-															const value = val.target.value;
-															const dateStr = value
-																? parseDateInput(value)
-																: null;
+									</div>
+									<div className='col'>
+										<Form.Item name='age' label='Ngày sinh'>
+											<DatePicker
+												format={'DD/MM/YYYY'}
+												style={{ width: '100%' }}
+												onBlur={(val: any) => {
+													const value = val.target.value;
+													const dateStr = value ? parseDateInput(value) : null;
 
-															if (dateStr) {
-																form.setFieldValue(
-																	'age',
-																	dayjs(dateStr, 'YYYY-MM-DD', true)
-																);
-															} else {
-																form.setFieldValue('age', null);
-															}
-															// form.setFieldValue(
-															// 	'age',
-															// 	parseDateInput(val.target.value) !== null
-															// 		? parseDateInput(val.target.value)
-															// 		: val.target.value
-															// );
-														}}
-													/>
-												</Form.Item>
-											</div>
-										</div>
+													if (dateStr) {
+														form.setFieldValue(
+															'age',
+															dayjs(dateStr, 'YYYY-MM-DD', true)
+														);
+													} else {
+														form.setFieldValue('age', null);
+													}
+												}}
+											/>
+										</Form.Item>
 									</div>
 								</div>
-							</Form>
+								<div className='row'>
+									<div className='col'>
+										<Form.Item name='phone' label='Số điện thoại'>
+											<Input
+												placeholder='Nhập số điện thoại'
+												allowClear
+												maxLength={10}
+											/>
+										</Form.Item>
+									</div>
+									<div className='col'>
+										<Form.Item name='citizenId' label='Số CMND/CCCD'>
+											<Input allowClear />
+										</Form.Item>
+									</div>
+								</div>
+								<Form.Item name='email' label='Email'>
+									<Input
+										type='email'
+										autoComplete='email'
+										placeholder='Nhập email'
+										allowClear
+									/>
+								</Form.Item>
+								<Form.Item name='address' label='Địa chỉ'>
+									<Input
+										autoComplete='address'
+										placeholder='Nhập địa chỉ'
+										allowClear
+									/>
+								</Form.Item>
+							</div>
+							<div className='col'>
+								<Form.Item name='medicalHistory' label='Lịch sử bệnh án'>
+									<Input.TextArea
+										autoComplete='medicalHistory'
+										placeholder='Nhập lịch sử bệnh án'
+										allowClear
+										rows={4}
+									/>
+								</Form.Item>
+								<Form.Item name='allergies' label='Dị ứng'>
+									<Input.TextArea
+										autoComplete='allergies'
+										placeholder='Nhập thông tin dị ứng'
+										allowClear
+										rows={4}
+									/>
+								</Form.Item>
+								<Form.Item name='notes' label='Ghi chú thêm'>
+									<Input.TextArea
+										autoComplete='notes'
+										placeholder='Nhập ghi chú thêm'
+										allowClear
+										rows={4}
+									/>
+								</Form.Item>
+							</div>
 						</div>
+					</Form>
+
+					<div className='mt-3 text-end'>
+						<Space>
+							<Button
+								className='px-5'
+								type='primary'
+								onClick={() => form.submit()}
+								size='large'>
+								Đồng ý
+							</Button>
+						</Space>
 					</div>
 				</div>
 			</div>

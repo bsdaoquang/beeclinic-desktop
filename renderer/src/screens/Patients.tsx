@@ -29,10 +29,8 @@ const Patients = () => {
 					</div>
 					<div className='col text-end'>
 						<Button
+							type='primary'
 							onClick={() => setIsVisibleModalAddPatient(true)}
-							color='cyan'
-							// variant='filled'
-							variant='solid'
 							size='large'
 							icon={<IoAdd size={18} />}>
 							Thêm mới
