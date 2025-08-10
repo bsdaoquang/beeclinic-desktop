@@ -5,7 +5,7 @@ import HeaderComponent from './components/HeaderComponent';
 import FooterComponent from './components/FooterComponent';
 import '../src/styles/index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, message } from 'antd';
 import { theme } from './styles/theme';
 import dayjs, { locale } from 'dayjs';
 import 'dayjs/locale/vi'; // Import ngôn ngữ tiếng Việt cho dayjs
@@ -28,6 +28,7 @@ import 'dayjs/locale/vi'; // Import ngôn ngữ tiếng Việt cho dayjs
 */
 
 dayjs.locale('vi'); // Đặt ngôn ngữ cho dayjs
+message.config({});
 
 function App() {
 	return (

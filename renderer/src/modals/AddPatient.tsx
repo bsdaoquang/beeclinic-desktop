@@ -7,14 +7,16 @@ import {
 	Form,
 	Input,
 	Select,
+	Image,
 	Space,
-	Typography,
 	Upload,
 	type UploadProps,
+	message,
 } from 'antd';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { parseDateInput } from '../utils/datetime';
+import { handleSaveFile } from '../utils/handleFile';
 
 export interface AddPatientProps {
 	visible: boolean;
@@ -26,6 +28,7 @@ const AddPatient = (props: AddPatientProps) => {
 	const { visible, onClose } = props;
 
 	const [filelists, setFilelists] = useState<any>([]);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const [form] = Form.useForm();
 
@@ -40,12 +43,37 @@ const AddPatient = (props: AddPatientProps) => {
 		);
 	};
 
-	const handleAddPatient = (vals: any) => {};
+	const handleAddPatient = async (vals: any) => {
+		setIsLoading(true);
+		try {
+			const data = {
+				...vals,
+				photoUrl:
+					vals.photoUrl && vals.photoUrl.file
+						? await handleSaveFile(vals.photoUrl.file)
+						: '',
+			};
+			await (window as any).beeclinicAPI.addPatient(data);
+			message.success('Lưu thông tin bệnh nhân thành công');
+			handleClose();
+		} catch (error) {
+			console.log(error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleClose = () => {
+		setFilelists([]);
+		form.resetFields();
+		onClose();
+	};
 
 	return (
 		<Drawer
+			loading={isLoading}
 			open={visible}
-			onClose={onClose}
+			onClose={handleClose}
 			title='Thêm bệnh nhân mới'
 			width={'100%'}
 			footer={null}>
@@ -70,11 +98,6 @@ const AddPatient = (props: AddPatientProps) => {
 								accept='image/*'>
 								{filelists.length > 0 ? null : 'Tải lên'}
 							</Upload>
-							{/* <div className='mt-2'>
-								<Typography.Text type='secondary'>
-									Ảnh đại diện của bệnh nhân
-								</Typography.Text>
-							</div> */}
 						</Form.Item>
 						<div className='row'>
 							<div className='col'>
@@ -191,6 +214,9 @@ const AddPatient = (props: AddPatientProps) => {
 
 					<div className='mt-3 text-end'>
 						<Space>
+							<Button onClick={handleClose} size='large' className='px-5'>
+								Huỷ bỏ
+							</Button>
 							<Button
 								className='px-5'
 								type='primary'
