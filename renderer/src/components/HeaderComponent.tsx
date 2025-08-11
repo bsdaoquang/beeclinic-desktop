@@ -3,12 +3,10 @@
 import { Divider, Menu, Space, Typography } from 'antd';
 import { useState } from 'react';
 import { IoNotificationsOutline } from 'react-icons/io5';
-import { formatDateToString, parseDateInput } from '../utils/datetime';
+import { formatDateToString } from '../utils/datetime';
 
 const HeaderComponent = () => {
 	const [keySelected, setKeySelected] = useState('home');
-
-	const topMenu = [{}];
 
 	return (
 		<div
@@ -19,14 +17,23 @@ const HeaderComponent = () => {
 			}}>
 			<div className='row'>
 				<div className='col'>
-					{/* <Menu
+					<Menu
 						onClick={(e) => {
 							setKeySelected(e.key);
-							window.location.href = `/${e.key}`;
+							window.location.href = `${e.key}`;
 						}}
 						mode='horizontal'
 						selectedKeys={[keySelected]}
-						items={[]}
+						items={[
+							{
+								label: 'Trang chủ',
+								key: '/',
+							},
+							{
+								label: 'Bệnh nhân',
+								key: '/patients',
+							},
+						]}
 						style={{
 							lineHeight: '20px',
 							marginBottom: 0,
@@ -34,7 +41,7 @@ const HeaderComponent = () => {
 							border: 'none',
 							textDecoration: 'none',
 						}}
-					/> */}
+					/>
 				</div>
 				<div className='col text-end'>
 					<Space>
