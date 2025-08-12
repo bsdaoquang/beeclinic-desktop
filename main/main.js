@@ -77,6 +77,20 @@ ipcMain.handle('get-patients', async () => {
 	});
 });
 
+// delete patient
+ipcMain.handle('delete-patient', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		const query = 'DELETE FROM patients WHERE id = ?';
+		db.run(query, [id], function (err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve({ success: true, changes: this.changes });
+			}
+		});
+	});
+});
+
 // files handle
 ipcMain.handle('save-file-to-assets', async (event, { fileName, buffer }) => {
 	try {

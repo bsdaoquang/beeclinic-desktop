@@ -1,9 +1,75 @@
 /** @format */
 
-import { Button, Input, Typography } from 'antd';
+import { AutoComplete, Button, Flex, Typography } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
+import type { PatientModel } from '../types/PatientModel';
+import { replaceName } from '../utils/replaceName';
+import { AddPatient } from '../modals';
 
 const Home = () => {
+	const [options, setOptions] = useState<any[]>([]);
+	const [patients, setPatients] = useState<PatientModel[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
+	const [isVisibleModalAddPatient, setIsVisibleModalAddPatient] =
+		useState(false);
+
+	const inpRef = useRef<any>(null);
+
+	useEffect(() => {
+		getPatients();
+		inpRef.current.focus();
+	}, []);
+
+	useEffect(() => {
+		if (patients.length > 0) {
+			setOptions(
+				patients.map((item) => ({
+					value: `${item.id}`,
+					label: (
+						<Flex align='center' justify='space-between'>
+							{item.name} <span>{item.phone ?? ''}</span>
+						</Flex>
+					),
+				}))
+			);
+		}
+	}, [patients]);
+
+	const getPatients = async () => {
+		setIsLoading(true);
+		try {
+			const res = await (window as any).beeclinicAPI.getPatients();
+			setPatients(res);
+		} catch (error) {
+			console.log(error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleSearch = (key: string) => {
+		const val = replaceName(key);
+		const values = patients.filter(
+			(element) =>
+				replaceName(element.name).includes(val) ||
+				(element.phone && element.phone.includes(val)) ||
+				(element.citizenId && element.citizenId.includes(val))
+		);
+
+		setOptions(
+			values.map((item) => ({
+				label: (
+					<Flex align='center' justify='space-between'>
+						{item.name}
+						<span>{item.phone}</span>
+					</Flex>
+				),
+				value: `${item.id}`,
+			}))
+		);
+	};
+
 	return (
 		<div>
 			<div className='container-fluid'>
@@ -23,9 +89,18 @@ const Home = () => {
 								</Typography.Paragraph>
 							</div>
 							<div className='my-3'>
-								<Input.Search
-									enterButton='Tìm kiếm'
+								<AutoComplete
+									ref={inpRef}
+									disabled={isLoading}
 									variant='filled'
+									style={{
+										width: '100%',
+									}}
+									onSelect={(val) => {
+										console.log(val);
+									}}
+									onChange={handleSearch}
+									options={options}
 									prefix={<BiSearchAlt2 size={20} className='text-muted' />}
 									size='large'
 									allowClear
@@ -33,13 +108,26 @@ const Home = () => {
 								/>
 							</div>
 							<div className='text-center mt-4'>
-								<Button type='default' className='px-5' size='large'>
+								<Button
+									onClick={() => setIsVisibleModalAddPatient(true)}
+									type='default'
+									className='px-5'
+									size='large'>
 									Thêm bệnh nhân
 								</Button>
 							</div>
 						</div>
 					</div>
 				</div>
+
+				<AddPatient
+					visible={isVisibleModalAddPatient}
+					onClose={() => setIsVisibleModalAddPatient(false)}
+					onFinish={() => {
+						getPatients();
+						inpRef.current.focus();
+					}}
+				/>
 			</div>
 		</div>
 	);

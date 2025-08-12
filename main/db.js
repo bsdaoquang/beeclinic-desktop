@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 
 const dbPath = path.join(
 	process.env.PORTABLE_EXECUTABLE_DIR || __dirname,
-	'beeclinic.db'
+	'/beeclinic.db'
 );
 
 if (!fs.existsSync(dbPath)) {
@@ -29,7 +29,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 db.serialize(() => {
 	db.run(`CREATE TABLE IF NOT EXISTS patients (
-    id TEXT PRIMARY KEY, -- Mã bệnh nhân
+    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Mã bệnh nhân
     name TEXT NOT NULL, -- Tên bệnh nhân
     age INTEGER, -- Tuổi
     phone TEXT, -- Số điện thoại

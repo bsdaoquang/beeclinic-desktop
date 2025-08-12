@@ -1,7 +1,7 @@
 /** @format */
 
 import { BrowserRouter, Routes, Route as R } from 'react-router-dom';
-import { Home, Patients } from '../screens';
+import { Home, PatientDetail, Patients } from '../screens';
 
 const Router = () => {
 	return (
@@ -15,6 +15,7 @@ const Router = () => {
 				<Routes>
 					<R path='/' index element={<Home />} />
 					<R path='/patients' element={<Patients />} />
+					<R path='/patients/:id' element={<PatientDetail />} />
 				</Routes>
 			</BrowserRouter>
 		</div>

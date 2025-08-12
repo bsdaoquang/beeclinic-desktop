@@ -64,3 +64,20 @@ export function formatDateToString(date: Date): string {
 		date.getMonth() + 1
 	)}/${date.getFullYear()}`;
 }
+
+export const getYearOld = (dob: string): number => {
+	// dob ở dạng YYYY-MM-DD hoặc YYYY/MM/DD
+	const birthDate = new Date(dob);
+	const today = new Date();
+
+	let age = today.getFullYear() - birthDate.getFullYear();
+	const monthDiff = today.getMonth() - birthDate.getMonth();
+	const dayDiff = today.getDate() - birthDate.getDate();
+
+	// Nếu chưa tới sinh nhật trong năm nay thì trừ đi 1 tuổi
+	if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+		age--;
+	}
+
+	return age;
+};
