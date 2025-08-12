@@ -25,7 +25,7 @@ export interface AddPatientProps {
 }
 
 const AddPatient = (props: AddPatientProps) => {
-	const { visible, onClose, patient, onFinish } = props;
+	const { visible, onClose, onFinish } = props;
 
 	const [filelists, setFilelists] = useState<any>([]);
 	const [isLoading, setIsLoading] = useState(false);

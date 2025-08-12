@@ -27,11 +27,11 @@ const HeaderComponent = () => {
 						items={[
 							{
 								label: 'Trang chủ',
-								key: '/',
+								key: '',
 							},
 							{
 								label: 'Bệnh nhân',
-								key: '/patients',
+								key: 'patients',
 							},
 						]}
 						style={{

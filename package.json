@@ -17,7 +17,9 @@
 		},
 		"files": [
 			"dist/**",
-			"main/**"
+			"main/**",
+			"preload/**",
+			"package.json"
 		],
 		"mac": {
 			"target": "dmg"

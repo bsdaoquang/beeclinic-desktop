@@ -1,7 +1,6 @@
 /** @format */
 
-import React from 'react';
-import { Affix, Col, Row, Typography } from 'antd';
+import { Affix, Typography } from 'antd';
 
 const FooterComponent = () => {
 	return (

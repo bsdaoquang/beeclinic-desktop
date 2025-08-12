@@ -1,7 +1,5 @@
 /** @format */
 
-import React from 'react';
-
 const PatientDetail = () => {
 	return <div>PatientDetail</div>;
 };

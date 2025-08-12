@@ -21,8 +21,13 @@ function createWindow() {
 	});
 
 	win.maximize();
-	// Sử dụng địa chỉ của Vite server trong quá trình dev
-	win.loadURL('http://localhost:5173');
+	const isDev = process.env.NODE_ENV === 'development';
+
+	win.loadURL(
+		isDev
+			? 'http://localhost:5173'
+			: `file://${path.join(__dirname, '../dist/index.html')}`
+	);
 }
 
 app.whenReady().then(() => {
