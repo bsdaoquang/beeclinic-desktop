@@ -1,14 +1,15 @@
 /** @format */
 
-import Router from './routers/Router';
-import HeaderComponent from './components/HeaderComponent';
-import FooterComponent from './components/FooterComponent';
-import '../src/styles/index.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import { ConfigProvider, message } from 'antd';
-import { theme } from './styles/theme';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import dayjs, { locale } from 'dayjs';
 import 'dayjs/locale/vi'; // Import ngôn ngữ tiếng Việt cho dayjs
+import '../src/styles/index.css';
+import FooterComponent from './components/FooterComponent';
+import HeaderComponent from './components/HeaderComponent';
+import RouterComponent from './routers/RouterComponent';
+import { theme } from './styles/theme';
+import { HashRouter } from 'react-router-dom';
 
 // Quản lý phần mềm như thế nào?
 // Kể cả tính năng cập nhật phiên bản, quản lý cài đặt, v.v.
@@ -33,11 +34,13 @@ message.config({});
 function App() {
 	return (
 		<ConfigProvider theme={theme} locale={locale as any}>
-			<div style={{ padding: 0, margin: 0 }}>
-				<HeaderComponent />
-				<Router />
-				<FooterComponent />
-			</div>
+			<HashRouter basename='/'>
+				<div style={{ padding: 0, margin: 0 }}>
+					<HeaderComponent />
+					<RouterComponent />
+					<FooterComponent />
+				</div>
+			</HashRouter>
 		</ConfigProvider>
 	);
 }

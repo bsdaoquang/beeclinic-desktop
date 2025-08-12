@@ -3,8 +3,9 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import db from '../main/db.js';
+import { createDatabase } from '../main/db.js';
 import fs from 'fs';
+import db from '../main/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,16 +22,15 @@ function createWindow() {
 	});
 
 	win.maximize();
-	const isDev = process.env.NODE_ENV === 'development';
 
 	win.loadURL(
-		isDev
-			? 'http://localhost:5173'
-			: `file://${path.join(__dirname, '../dist/index.html')}`
+		// 'http://localhost:5173'
+		`file://${path.join(__dirname, '../dist/index.html')}`
 	);
 }
 
 app.whenReady().then(() => {
+	createDatabase();
 	createWindow();
 
 	app.on('activate', () => {

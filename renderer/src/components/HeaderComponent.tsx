@@ -4,6 +4,7 @@ import { Divider, Menu, Space, Typography } from 'antd';
 import { useState } from 'react';
 import { IoNotificationsOutline } from 'react-icons/io5';
 import { formatDateToString } from '../utils/datetime';
+import { Link } from 'react-router-dom';
 
 const HeaderComponent = () => {
 	const [keySelected, setKeySelected] = useState('home');
@@ -20,17 +21,16 @@ const HeaderComponent = () => {
 					<Menu
 						onClick={(e) => {
 							setKeySelected(e.key);
-							window.location.href = `${e.key}`;
 						}}
 						mode='horizontal'
 						selectedKeys={[keySelected]}
 						items={[
 							{
-								label: 'Trang chủ',
-								key: '',
+								label: <Link to='/'>Trang chủ</Link>,
+								key: 'home',
 							},
 							{
-								label: 'Bệnh nhân',
+								label: <Link to='/patients'>Bệnh nhân</Link>,
 								key: 'patients',
 							},
 						]}
