@@ -5,6 +5,8 @@ import {
 	Card,
 	Descriptions,
 	Image,
+	message,
+	Modal,
 	Space,
 	Spin,
 	Typography,
@@ -22,6 +24,8 @@ const PatientDetail = () => {
 	const [patient, setPatient] = useState<PatientModel>();
 	const [isLoading, setIsLoading] = useState(false);
 	const [isVisibleModalPatient, setIsVisibleModalPatient] = useState(false);
+	const [modal, modalHolder] = Modal.useModal();
+	const [messageAPI, messageHolder] = message.useMessage();
 
 	useEffect(() => {
 		id && getPatientDetail();
@@ -39,8 +43,28 @@ const PatientDetail = () => {
 		}
 	};
 
+	const handleDeletePatient = (item: PatientModel) => {
+		modal.confirm({
+			title: 'Xác nhận',
+			content: `Bạn muốn xoá thông tin bệnh nhân ${item.name}?`,
+			onOk: async () => {
+				try {
+					await (window as any).beeclinicAPI.deletePatient(item.id);
+					window.history.back();
+					messageAPI.success(`Đã xoá thông tin bệnh nhân`);
+				} catch (error) {
+					console.log(error);
+					messageAPI.error(`Không thể xoá thông tin bệnh nhân`);
+				}
+			},
+			onCancel: () => console.log('Cancel'),
+		});
+	};
+
 	return (
 		<div className='container-fluid'>
+			{modalHolder}
+			{messageHolder}
 			<div className='container py-3'>
 				{isLoading ? (
 					<div className='text-center'>
@@ -116,7 +140,10 @@ const PatientDetail = () => {
 							</div>
 							<div className='mt-3 text-end'>
 								<Space>
-									<Button danger type='text'>
+									<Button
+										danger
+										type='text'
+										onClick={() => handleDeletePatient(patient)}>
 										Xoá hồ sơ
 									</Button>
 									<Button
