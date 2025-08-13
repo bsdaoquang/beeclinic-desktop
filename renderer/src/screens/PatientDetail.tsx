@@ -4,6 +4,7 @@ import {
 	Button,
 	Card,
 	Descriptions,
+	Divider,
 	Image,
 	message,
 	Modal,
@@ -12,7 +13,7 @@ import {
 	Typography,
 } from 'antd';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import type { PatientModel } from '../types/PatientModel';
 import { formatDateToString, getYearOld } from '../utils/datetime';
 import { AddPatient } from '../modals';
@@ -140,6 +141,12 @@ const PatientDetail = () => {
 							</div>
 							<div className='mt-3 text-end'>
 								<Space>
+									<Link
+										to={`/prescriptions/add-new?patient-id=${id}`}
+										type='link'>
+										Kê đơn
+									</Link>
+									<Divider type='vertical' />
 									<Button
 										danger
 										type='text'

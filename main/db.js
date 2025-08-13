@@ -40,6 +40,17 @@ const db = new sqlite3.Database(dbPath, (err) => {
  * @format
  */
 
+/*
+  Medicine
+  ma_thuoc?: string; // Mã thuốc (nếu có trong danh mục)
+	biet_duoc?: string; // Tên biệt dược (nếu có)
+	ten_thuoc: string; // Tên thuốc (bắt buộc)
+	unit?: string; // Đơn vị tính (viên, ống, gói...)
+	quantity: number; // Số lượng
+	instruction?: string; // Cách dùng
+	expDate?: string; // hạn dùng
+*/
+
 const createDatabase = () => {
 	if (!fs.existsSync(dbPath)) {
 		console.log('Tạo mới cơ sở dữ liệu...');
@@ -79,10 +90,24 @@ const createDatabase = () => {
       thong_tin_don_thuoc_json TEXT, -- JSON string of items
       sent INTEGER DEFAULT 0,      -- 0: chưa gửi, 1: đã gửi
       sent_at TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      reason_for_visit TEXT,           -- Lý do đến khám (tùy chọn)
+      disease_progression TEXT         -- Diễn tiến bệnh (tùy chọn)
       );
     `);
 	});
+
+	db.run(`CREATE TABLE IF NOT EXISTS medicines (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ma_thuoc TEXT,         -- Mã thuốc (nếu có trong danh mục)
+    biet_duoc TEXT,        -- Tên biệt dược (nếu có)
+    ten_thuoc TEXT NOT NULL, -- Tên thuốc (bắt buộc)
+    unit TEXT,             -- Đơn vị tính (viên, ống, gói...)
+    quantity INTEGER,      -- Số lượng
+    instruction TEXT,      -- Cách dùng
+    expDate TEXT           -- Hạn dùng (ISO string hoặc yyyy-mm-dd)
+  )`);
+
 	return dbPath;
 };
 

@@ -1,13 +1,15 @@
 /** @format */
 
-import { Divider, Menu, Space, Typography } from 'antd';
+import { Button, Divider, Menu, Space, Typography } from 'antd';
 import { useState } from 'react';
-import { IoNotificationsOutline } from 'react-icons/io5';
+import { IoNotificationsOutline, IoSettingsOutline } from 'react-icons/io5';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDateToString } from '../utils/datetime';
-import { Link } from 'react-router-dom';
 
 const HeaderComponent = () => {
 	const [keySelected, setKeySelected] = useState('home');
+
+	const navigate = useNavigate();
 
 	return (
 		<div
@@ -23,7 +25,7 @@ const HeaderComponent = () => {
 							setKeySelected(e.key);
 						}}
 						mode='horizontal'
-						selectedKeys={[keySelected]}
+						selectedKeys={[]}
 						items={[
 							{
 								label: <Link to='/'>Trang chủ</Link>,
@@ -32,6 +34,10 @@ const HeaderComponent = () => {
 							{
 								label: <Link to='/patients'>Bệnh nhân</Link>,
 								key: 'patients',
+							},
+							{
+								label: <Link to={'/prescriptions'}>Đơn thuốc</Link>,
+								key: 'prescriptions',
 							},
 						]}
 						style={{
@@ -45,7 +51,18 @@ const HeaderComponent = () => {
 				</div>
 				<div className='col text-end'>
 					<Space>
-						<IoNotificationsOutline size={18} />
+						<Button
+							onClick={() => navigate('/settings')}
+							icon={<IoSettingsOutline size={18} />}
+							type='text'
+							size='small'
+						/>
+						<Divider type='vertical' />
+						<Button
+							icon={<IoNotificationsOutline size={18} />}
+							type='text'
+							size='small'
+						/>
 						<Divider type='vertical' />
 						<Typography.Text>{formatDateToString(new Date())}</Typography.Text>
 					</Space>

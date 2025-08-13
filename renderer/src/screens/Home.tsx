@@ -6,6 +6,7 @@ import { BiSearchAlt2 } from 'react-icons/bi';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
 import { AddPatient } from '../modals';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);
@@ -70,6 +71,8 @@ const Home = () => {
 		);
 	};
 
+	const navigate = useNavigate();
+
 	return (
 		<div>
 			<div className='container-fluid'>
@@ -96,9 +99,9 @@ const Home = () => {
 									style={{
 										width: '100%',
 									}}
-									onSelect={(val) => {
-										console.log(val);
-									}}
+									onSelect={(val) =>
+										navigate(`/prescriptions/add-new?patient-id=${val}`)
+									}
 									onChange={handleSearch}
 									options={options}
 									prefix={<BiSearchAlt2 size={20} className='text-muted' />}

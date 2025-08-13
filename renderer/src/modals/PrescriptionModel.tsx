@@ -10,6 +10,7 @@ export interface PrescriptionItem {
 	unit?: string; // Đơn vị tính (viên, ống, gói...)
 	quantity: number; // Số lượng
 	instruction?: string; // Cách dùng
+	expDate?: string; // hạn dùng
 }
 
 export interface PrescriptionModel {
@@ -25,5 +26,7 @@ export interface PrescriptionModel {
 	thong_tin_don_thuoc: PrescriptionItem[]; // Danh sách thuốc
 	sent?: boolean; // Đã gửi hay chưa
 	sent_at?: string; // Ngày giờ gửi (ISO)
-	created_at?: string; // Ngày tạo
+	created_at?: string; // Ngày tạo,
+	reason_for_visit?: string; // Lý do đến khám
+	disease_progression?: string; // Diễn tiến bệnh
 }

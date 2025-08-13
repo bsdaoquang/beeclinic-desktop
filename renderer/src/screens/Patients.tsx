@@ -123,7 +123,9 @@ const Patients = () => {
 			dataIndex: '',
 			render: (item) => (
 				<Space className='patient-actions'>
-					<Link to={'/'}>Kê đơn</Link>
+					<Link to={`/prescriptions/add-new?patient-id=${item.id}`}>
+						Kê đơn
+					</Link>
 					<Divider
 						type='vertical'
 						style={{

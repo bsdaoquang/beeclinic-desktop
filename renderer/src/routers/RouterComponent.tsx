@@ -1,7 +1,14 @@
 /** @format */
 
 import { Route, Routes } from 'react-router-dom';
-import { Home, PatientDetail, Patients } from '../screens';
+import {
+	AddPrescription,
+	Home,
+	PatientDetail,
+	Patients,
+	Prescriptions,
+	Settings,
+} from '../screens';
 
 const RouterComponent = () => {
 	return (
@@ -15,6 +22,9 @@ const RouterComponent = () => {
 				<Route path='/' index element={<Home />} />
 				<Route path='/patients' element={<Patients />} />
 				<Route path='/patients/:id' element={<PatientDetail />} />
+				<Route path='/prescriptions' element={<Prescriptions />} />
+				<Route path='/prescriptions/add-new' element={<AddPrescription />} />
+				<Route path='/settings' element={<Settings />} />
 			</Routes>
 		</div>
 	);
