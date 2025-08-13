@@ -13,25 +13,45 @@ import {
 	message,
 } from 'antd';
 import dayjs from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { parseDateInput } from '../utils/datetime';
 import { handleSaveFile } from '../utils/handleFile';
+import type { PatientModel } from '../types/PatientModel';
 
 export interface AddPatientProps {
 	visible: boolean;
 	onClose: () => void;
-	patient?: any;
+	patient?: PatientModel;
 	onFinish?: () => void;
 }
 
 const AddPatient = (props: AddPatientProps) => {
-	const { visible, onClose, onFinish } = props;
+	const { visible, onClose, onFinish, patient } = props;
 
 	const [filelists, setFilelists] = useState<any>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [messageAPI, messHolder] = message.useMessage();
 
 	const [form] = Form.useForm();
+
+	useEffect(() => {
+		if (patient) {
+			form.setFieldsValue({
+				...patient,
+				age: patient.age ? dayjs(patient.age) : null,
+			});
+
+			patient.photoUrl &&
+				setFilelists([
+					{
+						uid: '-1',
+						name: patient.photoUrl.split('/').pop(),
+						status: 'done',
+						url: patient.photoUrl,
+					},
+				]);
+		}
+	}, [patient]);
 
 	const handleChangeImage: UploadProps['onChange'] = ({
 		fileList: newFileList,
@@ -54,11 +74,18 @@ const AddPatient = (props: AddPatientProps) => {
 						? await handleSaveFile(vals.photoUrl.file)
 						: '',
 				age: vals.age ? new Date(vals.age) : '',
+				weight: '',
+				ma_dinh_danh_y_te: '',
 			};
 
 			// console.log(data);
 
-			await (window as any).beeclinicAPI.addPatient(data);
+			patient
+				? await (window as any).beeclinicAPI.updatePatientById(
+						`${patient.id}`,
+						data
+				  )
+				: await (window as any).beeclinicAPI.addPatient(data);
 			messageAPI.success('Lưu thông tin bệnh nhân thành công');
 			handleClose();
 			onFinish && onFinish();
@@ -185,19 +212,35 @@ const AddPatient = (props: AddPatientProps) => {
 											</Form.Item>
 										</div>
 									</div>
-									<Form.Item name='email' label='Email'>
-										<Input
-											type='email'
-											autoComplete='email'
-											placeholder='Nhập email'
-											allowClear
-										/>
-									</Form.Item>
+									<div className='row'>
+										<div className='col'>
+											<Form.Item name='bhyt' label='Số thẻ BHYT'>
+												<Input placeholder='Mã số thẻ BHYT' allowClear />
+											</Form.Item>
+										</div>
+										<div className='col'>
+											<Form.Item name='email' label='Email'>
+												<Input
+													type='email'
+													autoComplete='email'
+													placeholder='Nhập email'
+													allowClear
+												/>
+											</Form.Item>
+										</div>
+									</div>
 									<Form.Item name='address' label='Địa chỉ'>
 										<Input
 											autoComplete='address'
 											placeholder='Nhập địa chỉ'
 											allowClear
+										/>
+									</Form.Item>
+
+									<Form.Item name='guardian' label='Thông tin liên hệ khẩn cấp'>
+										<Input
+											allowClear
+											placeholder='Mối quan hệ, Tên, Số điện thoại người thân khi cần liên hệ'
 										/>
 									</Form.Item>
 								</div>

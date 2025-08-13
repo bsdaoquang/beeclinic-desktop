@@ -1,19 +1,23 @@
 /**
- * Những thông tin về bệnh nhân:
+ * Thông tin về bệnh nhân:
  *   - id: string (định danh duy nhất của bệnh nhân)
  *   - name: string (tên bệnh nhân)
- *   - age: number (tuổi của bệnh nhân, ngày tháng năm sinh)
+ *   - age: number (tuổi của bệnh nhân)
  *   - phone: string (số điện thoại)
  *   - address: string (địa chỉ)
- *   - số CMND/CCCD: string (số chứng minh nhân dân hoặc căn cước công dân)
- *   - email: string (email)
- *   - giới tính
+ *   - citizenId: string (số CMND/CCCD)
+ *   - email?: string (email, tùy chọn)
+ *   - gender?: 'male' | 'female' | undefined (giới tính, tùy chọn)
  *   - createdAt: Date (ngày tạo)
  *   - updatedAt: Date (ngày cập nhật)
  *   - medicalHistory: string (lịch sử bệnh án)
  *   - allergies: string (dị ứng)
- *   - link ảnh bệnh nhân: string (đường dẫn đến ảnh bệnh nhân)
+ *   - photoUrl: string (đường dẫn ảnh bệnh nhân)
  *   - notes: string (ghi chú thêm)
+ *   - weight?: number (cân nặng, tùy chọn)
+ *   - ma_dinh_danh_y_te?: string (mã định danh y tế, tùy chọn)
+ *   - bhyt?: string (mã số thẻ bảo hiểm y tế, tùy chọn)
+ *   - guardian?: string (người giám hộ, tùy chọn)
  *
  * @format
  */
@@ -33,4 +37,8 @@ export interface PatientModel {
 	allergies: string;
 	photoUrl: string;
 	notes: string;
+	weight?: number;
+	ma_dinh_danh_y_te?: string;
+	bhyt?: string; // mã số thẻ bảo hiểm y tế
+	guardian?: string;
 }

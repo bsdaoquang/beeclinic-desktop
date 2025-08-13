@@ -24,8 +24,8 @@ function createWindow() {
 	win.maximize();
 
 	win.loadURL(
-		// 'http://localhost:5173'
-		`file://${path.join(__dirname, '../dist/index.html')}`
+		'http://localhost:5173'
+		// `file://${path.join(__dirname, '../dist/index.html')}`
 	);
 }
 
@@ -38,14 +38,35 @@ app.whenReady().then(() => {
 	});
 });
 
-//API lưu bệnh nhân
-
+/*
+ * Thông tin về bệnh nhân:
+ *   - id: string (định danh duy nhất của bệnh nhân)
+ *   - name: string (tên bệnh nhân)
+ *   - age: number (tuổi của bệnh nhân)
+ *   - phone: string (số điện thoại)
+ *   - address: string (địa chỉ)
+ *   - citizenId: string (số CMND/CCCD)
+ *   - email?: string (email, tùy chọn)
+ *   - gender?: 'male' | 'female' | undefined (giới tính, tùy chọn)
+ *   - createdAt: Date (ngày tạo)
+ *   - updatedAt: Date (ngày cập nhật)
+ *   - medicalHistory: string (lịch sử bệnh án)
+ *   - allergies: string (dị ứng)
+ *   - photoUrl: string (đường dẫn ảnh bệnh nhân)
+ *   - notes: string (ghi chú thêm)
+ *   - weight?: number (cân nặng, tùy chọn)
+ *   - ma_dinh_danh_y_te?: string (mã định danh y tế, tùy chọn)
+ *   - bhyt?: string (mã số thẻ bảo hiểm y tế, tùy chọn)
+ *   - guardian?: string (người giám hộ, tùy chọn)
+ *
+ * @format
+ */
 ipcMain.handle('add-patient', (event, patient) => {
 	return new Promise((resolve, reject) => {
 		const query = `
 		INSERT INTO patients (
-			name, age, phone, address, citizenId, email, gender, createdAt, updatedAt, medicalHistory, allergies, photoUrl, notes
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			name, age, phone, address, citizenId, email, gender, createdAt, updatedAt, medicalHistory, allergies, photoUrl, notes, weight, ma_dinh_danh_y_te, bhyt, guardian
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`;
 		db.run(
 			query,
@@ -63,6 +84,10 @@ ipcMain.handle('add-patient', (event, patient) => {
 				patient.allergies,
 				patient.photoUrl,
 				patient.notes,
+				patient.weight,
+				patient.ma_dinh_danh_y_te,
+				patient.bhyt,
+				patient.guardian,
 			],
 			function (err) {
 				if (err) reject(err);
@@ -92,6 +117,58 @@ ipcMain.handle('delete-patient', async (event, id) => {
 			} else {
 				resolve({ success: true, changes: this.changes });
 			}
+		});
+	});
+});
+
+// get patient by id
+ipcMain.handle('get-patient-by-id', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		const query = 'SELECT * FROM patients WHERE id = ?';
+		db.get(query, [id], (err, row) => {
+			if (err) reject(err);
+			else resolve(row);
+		});
+	});
+});
+
+// update patient by id
+ipcMain.handle('update-patient-by-id', async (event, { id, updates }) => {
+	return new Promise((resolve, reject) => {
+		const fields = [
+			'name',
+			'age',
+			'phone',
+			'address',
+			'citizenId',
+			'email',
+			'gender',
+			'medicalHistory',
+			'allergies',
+			'photoUrl',
+			'notes',
+			'weight',
+			'ma_dinh_danh_y_te',
+			'bhyt',
+			'guardian',
+		];
+
+		const setClause = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => `${field} = ?`)
+			.join(', ');
+
+		const values = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => updates[field]);
+
+		// Always update updatedAt
+		const query = `UPDATE patients SET ${setClause}, updatedAt = ? WHERE id = ?`;
+		values.push(new Date().toISOString(), id);
+
+		db.run(query, values, function (err) {
+			if (err) reject(err);
+			else resolve({ success: true, changes: this.changes });
 		});
 	});
 });

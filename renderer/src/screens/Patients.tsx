@@ -1,6 +1,7 @@
 /** @format */
 
 import {
+	Avatar,
 	Button,
 	Divider,
 	Flex,
@@ -29,6 +30,7 @@ const Patients = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [modal, contextHolder] = Modal.useModal();
 	const [messageAPI, messageHolder] = message.useMessage();
+	const [results, setResults] = useState<PatientModel[]>([]);
 
 	useEffect(() => {
 		getPatientsData();
@@ -39,6 +41,7 @@ const Patients = () => {
 		try {
 			const res = await (window as any).beeclinicAPI.getPatients();
 			setPatients(res);
+			setResults(res);
 		} catch (error) {
 			console.log(error);
 		} finally {
@@ -47,6 +50,15 @@ const Patients = () => {
 	};
 
 	const columns: ColumnProps[] = [
+		{
+			key: 'photoUrl',
+			dataIndex: 'photoUrl',
+			render: (url) => <Avatar src={url} />,
+			title: 'Ảnh',
+			width: 70,
+			align: 'center',
+			fixed: 'left',
+		},
 		{
 			key: 'name',
 			title: 'Họ và Tên',
@@ -163,9 +175,8 @@ const Patients = () => {
 
 	const handleSearchPatients = async (val: string) => {
 		try {
-			const items: any[] = await (window as any).beeclinicAPI.getPatients();
 			const value = replaceName(val);
-			const datas = items.filter(
+			const datas = results.filter(
 				(element: any) =>
 					replaceName(element.name).includes(value) ||
 					(element.phone && element.phone.includes(value)) ||
@@ -183,7 +194,7 @@ const Patients = () => {
 			{contextHolder}
 			{messageHolder}
 			<div className='container-fluid'>
-				<div className='container'>
+				<div className=''>
 					<Flex align='center' justify='space-between'>
 						<Typography.Title level={3} type='secondary'>
 							Bệnh nhân
@@ -193,7 +204,7 @@ const Patients = () => {
 								variant='filled'
 								placeholder='Tìm kiếm'
 								onSearch={(val) => handleSearchPatients(val)}
-								onClear={async () => await getPatientsData()}
+								onClear={() => setPatients(results)}
 								style={{
 									minWidth: '40vw',
 								}}
@@ -211,6 +222,9 @@ const Patients = () => {
 					</Flex>
 					<div className='mt-2'>
 						<Table
+							style={{
+								width: '100%',
+							}}
 							columns={columns}
 							bordered
 							size='small'
