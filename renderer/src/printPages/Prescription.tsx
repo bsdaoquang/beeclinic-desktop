@@ -1,6 +1,6 @@
 /** @format */
 
-import type { PrescriptionItem } from '../modals/PrescriptionModel';
+import type { PrescriptionItem } from '../types/PrescriptionModel';
 import type { PatientModel } from '../types/PatientModel';
 import {
 	formatDateToString,

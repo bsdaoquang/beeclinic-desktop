@@ -1,10 +1,9 @@
 /** @format */
 
-import { useEffect, useState } from 'react';
-import type { PrescriptionItem } from '../modals/PrescriptionModel';
-import type { ColumnProps } from 'antd/es/table';
 import {
 	Button,
+	Flex,
+	Input,
 	message,
 	Modal,
 	Space,
@@ -12,13 +11,22 @@ import {
 	Tooltip,
 	Typography,
 } from 'antd';
+import type { ColumnProps } from 'antd/es/table';
+import { useEffect, useState } from 'react';
 import { BiEdit, BiPlus, BiTrash } from 'react-icons/bi';
+import type { PrescriptionItem } from '../types/PrescriptionModel';
+import { replaceName } from '../utils/replaceName';
+import { AddMedicine } from '../modals';
 
 const Storages = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
 	const [results, setResults] = useState<PrescriptionItem[]>([]);
 	const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+	const [isAddMedicine, setIsAddMedicine] = useState(false);
+	const [medicineSelected, setMedicineSelected] =
+		useState<PrescriptionItem | null>(null);
+
 	const [modal, modalHolder] = Modal.useModal();
 	const [messageAPI, messageHolder] = message.useMessage();
 
@@ -60,6 +68,16 @@ const Storages = () => {
 			},
 			onCancel() {},
 		});
+	};
+	const handleSearchMedicine = (val: string) => {
+		const key = replaceName(val);
+		const filtered = medicines.filter(
+			(item) =>
+				replaceName(item.ten_thuoc).includes(key) ||
+				(item.ma_thuoc && item.ma_thuoc.includes(key)) ||
+				(item.biet_duoc && item.biet_duoc.includes(key))
+		);
+		setMedicines(filtered);
 	};
 
 	const columns: ColumnProps<PrescriptionItem>[] = [
@@ -116,7 +134,15 @@ const Storages = () => {
 			fixed: 'right',
 			render: (item: PrescriptionItem) => (
 				<Space>
-					<Button size='small' icon={<BiEdit size={20} />} type='link' />
+					<Button
+						size='small'
+						icon={<BiEdit size={20} />}
+						onClick={() => {
+							setMedicineSelected(item);
+							setIsAddMedicine(true);
+						}}
+						type='link'
+					/>
 					<Tooltip title='Xoá khỏi danh mục thuốc'>
 						<Button
 							size='small'
@@ -181,12 +207,31 @@ const Storages = () => {
 						</Space>
 					</div>
 					<div className='col text-end'>
-						<Button type='link' icon={<BiPlus size={20} />} onClick={() => {}}>
-							Thêm thuốc
-						</Button>
+						<Flex>
+							<Input.Search
+								style={{
+									width: '100%',
+								}}
+								placeholder='Tìm kiếm thuốc'
+								allowClear
+								onChange={(val) => handleSearchMedicine(val.target.value)}
+								onClear={() => setMedicines(results)}
+								onSearch={(value) => handleSearchMedicine(value)}
+								onPressEnter={(e: any) => handleSearchMedicine(e.target.value)}
+							/>
+							<Button
+								type='link'
+								icon={<BiPlus size={20} />}
+								onClick={() => {
+									setIsAddMedicine(true);
+								}}>
+								Thêm thuốc
+							</Button>
+						</Flex>
 					</div>
 				</div>
 				<Table
+					loading={isLoading}
 					rowSelection={{
 						selectedRowKeys,
 						onChange: onSelectChange,
@@ -198,6 +243,19 @@ const Storages = () => {
 					bordered
 				/>
 			</div>
+
+			<AddMedicine
+				visible={isAddMedicine}
+				onClose={() => {
+					setIsAddMedicine(false);
+					setMedicineSelected(null);
+				}}
+				onAdd={(medicine) => {
+					setMedicines([...medicines, medicine]);
+					setIsAddMedicine(false);
+				}}
+				medicine={medicineSelected}
+			/>
 		</div>
 	);
 };

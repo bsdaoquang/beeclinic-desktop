@@ -24,7 +24,7 @@ import {
 import { FaPrint } from 'react-icons/fa6';
 import { Descriptions } from 'antd';
 import { formatDateToString } from '../utils/datetime';
-import type { PrescriptionItem } from '../modals/PrescriptionModel';
+import type { PrescriptionItem } from '../types/PrescriptionModel';
 import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
 import TextArea from 'antd/es/input/TextArea';
 import { IoIosAdd } from 'react-icons/io';

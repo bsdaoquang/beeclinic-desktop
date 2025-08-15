@@ -1,5 +1,6 @@
 /** @format */
 
+import AddMedicine from './AddMedicine';
 import AddPatient from './AddPatient';
 
-export { AddPatient };
+export { AddPatient, AddMedicine };

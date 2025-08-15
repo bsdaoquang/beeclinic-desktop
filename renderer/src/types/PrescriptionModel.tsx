@@ -1,6 +1,6 @@
 /** @format */
 
-import type { PatientModel } from '../types/PatientModel';
+import type { PatientModel } from './PatientModel';
 
 /** @format */
 export interface PrescriptionItem {
