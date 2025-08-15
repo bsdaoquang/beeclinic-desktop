@@ -39,6 +39,10 @@ const HeaderComponent = () => {
 								label: <Link to={'/prescriptions'}>Đơn thuốc</Link>,
 								key: 'prescriptions',
 							},
+							{
+								label: <Link to={'/storages'}>Kho</Link>,
+								key: 'storages',
+							},
 						]}
 						style={{
 							lineHeight: '20px',

@@ -6,6 +6,7 @@ import PatientDetail from './PatientDetail';
 import Patients from './Patients';
 import Prescriptions from './Prescriptions';
 import Settings from './Settings';
+import Storages from './Storages';
 
 export {
 	Patients,
@@ -14,4 +15,5 @@ export {
 	Prescriptions,
 	AddPrescription,
 	Settings,
+	Storages,
 };

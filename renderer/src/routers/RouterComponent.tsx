@@ -8,6 +8,7 @@ import {
 	Patients,
 	Prescriptions,
 	Settings,
+	Storages,
 } from '../screens';
 
 const RouterComponent = () => {
@@ -25,6 +26,7 @@ const RouterComponent = () => {
 				<Route path='/prescriptions' element={<Prescriptions />} />
 				<Route path='/prescriptions/add-new' element={<AddPrescription />} />
 				<Route path='/settings' element={<Settings />} />
+				<Route path='/storages' element={<Storages />} />
 			</Routes>
 		</div>
 	);

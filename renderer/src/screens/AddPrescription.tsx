@@ -24,9 +24,10 @@ import { FaPrint } from 'react-icons/fa6';
 import { Descriptions } from 'antd';
 import { formatDateToString } from '../utils/datetime';
 import type { PrescriptionItem } from '../modals/PrescriptionModel';
-import { generatePrescriptionCode } from '../utils/prescriptions';
+import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
 import TextArea from 'antd/es/input/TextArea';
 import { IoIosAdd } from 'react-icons/io';
+import { BiEdit } from 'react-icons/bi';
 
 /** @format */
 /*
@@ -42,6 +43,7 @@ const AddPrescription = () => {
 		PrescriptionItem[]
 	>([]);
 	const [prescriptionCode, setPrescriptionCode] = useState('');
+	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -50,6 +52,7 @@ const AddPrescription = () => {
 	const [messageAPI, messHolder] = message.useMessage();
 
 	const medicineNameRef = useRef<any>(null);
+	const quantityRef = useRef<any>(null);
 
 	useEffect(() => {
 		form.setFieldValue('loai_don_thuoc', 'c');
@@ -59,7 +62,17 @@ const AddPrescription = () => {
 
 	useEffect(() => {
 		patientId && getPatientDetail();
+		getAllMedicines();
 	}, [patientId]);
+
+	const getAllMedicines = async () => {
+		try {
+			const res = await (window as any).beeclinicAPI.getMedicines();
+			setMedicines(res);
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const getPatientDetail = async () => {
 		setIsLoading(true);
@@ -77,12 +90,75 @@ const AddPrescription = () => {
 		console.log(vals);
 	};
 
-	const handleAddMedicine = (vals: any) => {
+	const handleAddMedicine = async (vals: any) => {
 		// formPres.resetFields();
 		// medicineNameRef.current.focus();
 		// Kiểm tra trong kho có thuốc này chưa, nếu chưa có thì tạo mã thuốc tự động gồm 4 ký tự và thêm vào với số lượng 0,
 		// nếu đã có và số lượng > 0 thì trừ trong kho theo quantity và cập nhật lại kho
 		//
+		const items = [...medicines];
+
+		const indexMedicine = prescriptionItems.findIndex(
+			(element) => element.ten_thuoc === vals.ten_thuoc
+		);
+
+		if (indexMedicine === -1) {
+			const isExitsMedicine = items.find(
+				(element) =>
+					element.ma_thuoc === vals.ma_thuoc &&
+					element.ten_thuoc === vals.ten_thuoc
+			);
+
+			if (isExitsMedicine) {
+				// Đã có thuốc tương tự
+				// nếu số lượng khác 0 tức là có quản lý
+				// Cập nhật số lượng trong kho
+
+				if (isExitsMedicine.quantity > 0) {
+					const count = isExitsMedicine.quantity - vals.quantity;
+					// update to database
+
+					const newData = {
+						...isExitsMedicine,
+						quantity: count,
+					};
+
+					await (window as any).beeclinicAPI.updateMedicineById(
+						isExitsMedicine.id,
+						newData
+					);
+					// update in result
+				}
+
+				// bỏ khỏi danh sách medicine vì đã thêm vào rồi
+				const index = items.findIndex(
+					(element) => element.ma_thuoc === vals.ma_thuoc
+				);
+				items.splice(index, 1);
+				setMedicines(items);
+			} else {
+				// Chưa có, tạo mã và thêm thuốc vào kho với số lượng là 0
+				const newMedicine: PrescriptionItem = {
+					ten_thuoc: vals.ten_thuoc,
+					ma_thuoc: randomAlnum(),
+					unit: vals.unit ?? '',
+					instruction: vals.instruction ?? '',
+					quantity: 0,
+				};
+
+				items.push(newMedicine);
+				setMedicines(items);
+				await (window as any).beeclinicAPI.addMedicine(newMedicine);
+			}
+			prescriptionItems.push(vals);
+		} else {
+			const newPresItems = [...prescriptionItems];
+			newPresItems[indexMedicine] = vals;
+			setPrescriptionItems(newPresItems);
+		}
+
+		formPres.resetFields();
+		medicineNameRef.current.focus();
 	};
 
 	return (
@@ -240,6 +316,12 @@ const AddPrescription = () => {
 															}}>
 															<div className='row'>
 																<div className='col-4'>
+																	<div className='d-none'>
+																		<Form.Item name={'ma_thuoc'}>
+																			<Input />
+																		</Form.Item>
+																	</div>
+
 																	<Form.Item
 																		rules={[
 																			{
@@ -252,14 +334,21 @@ const AddPrescription = () => {
 																		<AutoComplete
 																			ref={medicineNameRef}
 																			autoFocus
+																			onSelect={(name) => {
+																				const medicine = medicines.find(
+																					(element) =>
+																						element.ten_thuoc === name
+																				);
+																				formPres.setFieldsValue(medicine);
+
+																				quantityRef.current.focus();
+																			}}
 																			placeholder='Tên thuốc'
 																			allowClear
-																			options={[
-																				{
-																					label: 'Paracetamol',
-																					value: 'Paracetamol',
-																				},
-																			]}
+																			options={medicines.map((item) => ({
+																				label: item.ten_thuoc,
+																				value: item.ten_thuoc,
+																			}))}
 																		/>
 																	</Form.Item>
 																</div>
@@ -273,7 +362,11 @@ const AddPrescription = () => {
 																		]}
 																		name={'quantity'}
 																		label='Số lượng'>
-																		<InputNumber placeholder='' min={0} />
+																		<InputNumber
+																			ref={quantityRef}
+																			placeholder=''
+																			min={0}
+																		/>
 																	</Form.Item>
 																</div>
 																<div className='col-2'>
@@ -356,6 +449,27 @@ const AddPrescription = () => {
 											</>
 										}
 										dataSource={prescriptionItems}
+										renderItem={(item) => (
+											<List.Item
+												key={`${item.id}`}
+												extra={
+													<Space>
+														{`${item.quantity} ${item.unit}`}
+														<Divider type='vertical' />
+														<Button
+															type='link'
+															icon={<BiEdit size={20} />}
+															size='small'
+															onClick={() => {
+																formPres.setFieldsValue(item);
+																quantityRef.current.focus();
+															}}
+														/>
+													</Space>
+												}>
+												<List.Item.Meta title={`${item.ten_thuoc}`} />
+											</List.Item>
+										)}
 									/>
 								</Card>
 							</div>

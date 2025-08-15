@@ -4,6 +4,7 @@ import type { PatientModel } from '../types/PatientModel';
 
 /** @format */
 export interface PrescriptionItem {
+	id?: number;
 	ma_thuoc?: string; // Mã thuốc (nếu có trong danh mục)
 	biet_duoc?: string; // Tên biệt dược (nếu có)
 	ten_thuoc: string; // Tên thuốc (bắt buộc)

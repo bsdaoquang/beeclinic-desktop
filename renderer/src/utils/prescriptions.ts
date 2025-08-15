@@ -18,4 +18,13 @@ const generatePrescriptionCode = (
 	return `${f}${mid}-${type}`;
 };
 
-export { randomAlnumLower, generatePrescriptionCode };
+const randomAlnum = (len = 6): string => {
+	const chars =
+		'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	let s = '';
+	for (let i = 0; i < len; i++)
+		s += chars[Math.floor(Math.random() * chars.length)];
+	return s;
+};
+
+export { randomAlnumLower, generatePrescriptionCode, randomAlnum };

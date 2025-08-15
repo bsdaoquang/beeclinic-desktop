@@ -339,6 +339,20 @@ ipcMain.handle('get-medicines', async () => {
 	});
 });
 
+// delete medicine by id
+ipcMain.handle('delete-medicine-by-id', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		const query = 'DELETE FROM medicines WHERE id = ?';
+		db.run(query, [id], function (err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve({ success: true, changes: this.changes });
+			}
+		});
+	});
+});
+
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') app.quit();
 });
