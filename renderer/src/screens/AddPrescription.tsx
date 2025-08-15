@@ -1,12 +1,13 @@
 /** @format */
 
 import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { PatientModel } from '../types/PatientModel';
 import {
 	AutoComplete,
 	Button,
 	Card,
+	Checkbox,
 	Divider,
 	Flex,
 	Form,
@@ -27,7 +28,11 @@ import type { PrescriptionItem } from '../modals/PrescriptionModel';
 import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
 import TextArea from 'antd/es/input/TextArea';
 import { IoIosAdd } from 'react-icons/io';
-import { BiEdit } from 'react-icons/bi';
+import { BiEdit, BiInfoCircle, BiTrash } from 'react-icons/bi';
+import { IoClose } from 'react-icons/io5';
+import { FaSave } from 'react-icons/fa';
+import { PrescriptionPrint } from '../printPages';
+import { useReactToPrint } from 'react-to-print';
 
 /** @format */
 /*
@@ -44,6 +49,9 @@ const AddPrescription = () => {
 	>([]);
 	const [prescriptionCode, setPrescriptionCode] = useState('');
 	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
+	const [isAsync, setIsAsync] = useState<null | boolean>(null);
+	const [diagnossic, setDiagnossic] = useState('');
+	const [isPrint, setIsPrint] = useState(false);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -53,11 +61,34 @@ const AddPrescription = () => {
 
 	const medicineNameRef = useRef<any>(null);
 	const quantityRef = useRef<any>(null);
+	const printRef = useRef<HTMLDivElement>(null);
+
+	const printPrescription = useReactToPrint({
+		contentRef: printRef,
+		pageStyle: `
+			@page {
+				size: A5 portrait;
+				margin: 1cm;
+			}
+			@media print {
+				body {
+					-webkit-print-color-adjust: exact;
+				}
+			}
+		`,
+		onAfterPrint: () => {
+			navigate(-1);
+		},
+	});
+
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		form.setFieldValue('loai_don_thuoc', 'c');
 		formPres.setFieldValue('unit', 'viên');
 		setPrescriptionCode(generatePrescriptionCode(facilityCode, 'c'));
+
+		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
 	}, []);
 
 	useEffect(() => {
@@ -86,11 +117,71 @@ const AddPrescription = () => {
 		}
 	};
 
-	const handleAddPrescription = (vals: any) => {
-		console.log(vals);
+	const handleAddPrescription = async (vals: any) => {
+		// save to database
+		if (!patient) {
+			messageAPI.error('Không tìm thấy thông tin bệnh nhân');
+			return;
+		}
+
+		if (prescriptionItems.length === 0) {
+			messageAPI.error('Vui lòng thêm ít nhất một thuốc vào đơn');
+			return;
+		}
+		/*
+				Prescription in DB
+				ma_don_thuoc,
+				patient_id,
+				loai_don_thuoc,
+				diagnosis,
+				note,
+				ngay_gio_ke_don,
+				ngay_tai_kham,
+				thong_tin_don_thuoc_json,
+				sent,
+				sent_at,
+				created_at,
+				reason_for_visit,
+				disease_progression
+			*/
+		const prescriptionData = {
+			ma_don_thuoc: prescriptionCode,
+			patient_id: patient.id,
+			loai_don_thuoc: vals.loai_don_thuoc,
+			diagnosis: vals.diagnosis,
+			note: vals.note ?? '',
+			ngay_gio_ke_don: new Date().toISOString(),
+			ngay_tai_kham: vals.ngay_tai_kham ?? null,
+			thong_tin_don_thuoc_json: JSON.stringify(prescriptionItems),
+			sent: isAsync ? 1 : 0,
+			sent_at: null,
+			created_at: new Date().toISOString(),
+			reason_for_visit: vals.reason_for_visit ?? '',
+			disease_progression: vals.disease_progression ?? '',
+		};
+		try {
+			isAsync && handleAsyncPrescription(prescriptionData);
+
+			await (window as any).beeclinicAPI.addPrescription(prescriptionData);
+			messageAPI.success('Lưu đơn thuốc thành công');
+
+			if (isPrint) {
+				printPrescription();
+			} else {
+				// navigate(-1);
+			}
+		} catch (error) {
+			console.log(error);
+			messageAPI.error('Lưu đơn thuốc thất bại');
+		}
 	};
 
 	const handleAddMedicine = async (vals: any) => {
+		if (!vals.quantity || vals.quantity <= 0) {
+			messageAPI.error('Số lượng thuốc phải lớn hơn 0');
+			quantityRef.current.focus();
+			return;
+		}
 		// formPres.resetFields();
 		// medicineNameRef.current.focus();
 		// Kiểm tra trong kho có thuốc này chưa, nếu chưa có thì tạo mã thuốc tự động gồm 4 ký tự và thêm vào với số lượng 0,
@@ -159,6 +250,10 @@ const AddPrescription = () => {
 
 		formPres.resetFields();
 		medicineNameRef.current.focus();
+	};
+
+	const handleAsyncPrescription = async (prescriptionData: any) => {
+		console.log('Sending prescription to national system:', prescriptionData);
 	};
 
 	return (
@@ -264,6 +359,7 @@ const AddPrescription = () => {
 																]}
 																name={'diagnosis'}>
 																<AutoComplete
+																	onChange={(val) => setDiagnossic(val)}
 																	options={[
 																		{
 																			label: 'Viêm phế quản',
@@ -449,25 +545,53 @@ const AddPrescription = () => {
 											</>
 										}
 										dataSource={prescriptionItems}
-										renderItem={(item) => (
+										renderItem={(item, index) => (
 											<List.Item
+												style={{
+													alignItems: 'flex-start',
+												}}
 												key={`${item.id}`}
 												extra={
 													<Space>
 														{`${item.quantity} ${item.unit}`}
 														<Divider type='vertical' />
-														<Button
-															type='link'
-															icon={<BiEdit size={20} />}
-															size='small'
-															onClick={() => {
-																formPres.setFieldsValue(item);
-																quantityRef.current.focus();
-															}}
-														/>
+														<Tooltip title='Chỉnh sửa'>
+															<Button
+																type='link'
+																icon={<BiEdit size={20} />}
+																size='small'
+																onClick={() => {
+																	formPres.setFieldsValue(item);
+																	quantityRef.current.focus();
+																}}
+															/>
+														</Tooltip>
+														<Tooltip title='Xoá khỏi đơn thuốc'>
+															<Button
+																type='link'
+																danger
+																icon={<IoClose size={23} />}
+																size='small'
+																onClick={() => {
+																	setMedicines([...medicines, item]);
+																	const newItems = [...prescriptionItems];
+																	newItems.splice(index, 1);
+																	setPrescriptionItems(newItems);
+																}}
+															/>
+														</Tooltip>
 													</Space>
 												}>
-												<List.Item.Meta title={`${item.ten_thuoc}`} />
+												<List.Item.Meta
+													title={`${item.ten_thuoc}`}
+													description={
+														<Typography.Text
+															type='secondary'
+															style={{
+																fontSize: 13,
+															}}>{`${item.instruction}`}</Typography.Text>
+													}
+												/>
 											</List.Item>
 										)}
 									/>
@@ -475,24 +599,45 @@ const AddPrescription = () => {
 							</div>
 						</div>
 
-						<div className='text-end mt-3'>
-							<Space>
-								<Button danger type='text'>
-									Huỷ bỏ
-								</Button>
-								<Divider type='vertical' />
-								<Button type='link'>Gửi lên HTDTQG</Button>
-								<Divider type='vertical' />
-								<Button icon={<FaPrint size={16} className='text-muted' />}>
-									In
-								</Button>
-								<Button
-									onClick={() => form.submit()}
-									className='px-5'
-									type='primary'>
-									Lưu và In
-								</Button>
-							</Space>
+						<div className='row mt-3'>
+							<div className='col'>
+								<Checkbox
+									disabled={!isAsync}
+									checked={isAsync ?? false}
+									onChange={(e) => setIsAsync(e.target.checked)}>
+									Đồng bộ lên hệ thống đơn thuốc Quốc Gia{' '}
+									<Tooltip title='Đồng bộ lên hệ thống đơn thuốc Quốc Gia để quản lý và theo dõi, đăng nhập vào hệ thống để lấy access token'>
+										<BiInfoCircle
+											size={18}
+											style={{ fontSize: 12, marginLeft: 4 }}
+										/>
+									</Tooltip>
+								</Checkbox>
+							</div>
+
+							<div className='col text-end'>
+								<Space>
+									<Button danger type='text' onClick={() => navigate(-1)}>
+										Huỷ bỏ
+									</Button>
+									<Divider type='vertical' />
+									<Button
+										onClick={() => form.submit()}
+										icon={<FaSave size={16} className='text-muted' />}>
+										Lưu
+									</Button>
+									<Button
+										icon={<FaPrint size={16} className='text-white' />}
+										onClick={() => {
+											setIsPrint(true);
+											form.submit();
+										}}
+										className='px-5'
+										type='primary'>
+										Lưu và In
+									</Button>
+								</Space>
+							</div>
 						</div>
 					</>
 				) : (
@@ -501,6 +646,17 @@ const AddPrescription = () => {
 					</Typography.Paragraph>
 				)}
 			</div>
+
+			{prescriptionItems.length > 0 && patient && (
+				<div className='d-none d-print-block' ref={printRef}>
+					<PrescriptionPrint
+						patient={patient}
+						prescriptionItems={prescriptionItems}
+						diagnostic={diagnossic}
+						prescriptionCode={prescriptionCode}
+					/>
+				</div>
+			)}
 		</div>
 	);
 };

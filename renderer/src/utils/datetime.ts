@@ -81,3 +81,15 @@ export const getYearOld = (dob: string): number => {
 
 	return age;
 };
+
+export const getDateTimeString = () => {
+	const date = new Date();
+
+	return `${numToString(date.getHours())}:${numToString(
+		date.getMinutes()
+	)}:${numToString(date.getSeconds())}, Ngày ${numToString(
+		date.getDate()
+	)} Tháng ${numToString(date.getMonth() + 1)} Năm ${numToString(
+		date.getFullYear()
+	)}`;
+};
