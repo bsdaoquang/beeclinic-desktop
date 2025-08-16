@@ -185,6 +185,13 @@ const AddMedicine = (props: AddMedicineProps) => {
 				<Form.Item name={'biet_duoc'} label='Biệt dược'>
 					<Input allowClear maxLength={100} placeholder='Nhập biệt dược' />
 				</Form.Item>
+				<Form.Item name={'instruction'} label='Cách dùng'>
+					<Input
+						allowClear
+						maxLength={500}
+						placeholder='Uống, sáng 1 viên, chiều 1 viên'
+					/>
+				</Form.Item>
 				<div className='row'>
 					<div className='col'>
 						<Form.Item name={'unit'} label='Đơn vị tính'>

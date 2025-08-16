@@ -29,7 +29,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { PrescriptionPrint } from '../printPages';
 import type { PatientModel } from '../types/PatientModel';
-import type { PrescriptionItem } from '../types/PrescriptionModel';
+import type {
+	PrescriptionItem,
+	PrescriptionModel,
+} from '../types/PrescriptionModel';
 import { formatDateToString } from '../utils/datetime';
 import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
 
@@ -51,6 +54,11 @@ const AddPrescription = () => {
 	const [isAsync, setIsAsync] = useState<null | boolean>(null);
 	const [diagnossic, setDiagnossic] = useState('');
 	const [isPrint, setIsPrint] = useState(false);
+	const [prescriptionData, setPrescriptionData] = useState<{
+		diagnossics: string[];
+	}>({
+		diagnossics: [],
+	});
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -88,12 +96,38 @@ const AddPrescription = () => {
 		setPrescriptionCode(generatePrescriptionCode(facilityCode, 'c'));
 
 		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
+		getPrescriptionsData();
+		getClinicInfos();
 	}, []);
 
 	useEffect(() => {
 		patientId && getPatientDetail();
 		getAllMedicines();
 	}, [patientId]);
+
+	const getClinicInfos = async () => {};
+
+	const getPrescriptionsData = async () => {
+		try {
+			const res = await (window as any).beeclinicAPI.getPrescriptions();
+
+			const diagnosis: string[] = [];
+
+			res.forEach((item: PrescriptionModel) => {
+				if (
+					diagnosis.findIndex((element) => element === item.diagnosis) === -1
+				) {
+					diagnosis.push(item.diagnosis);
+				}
+			});
+
+			setPrescriptionData({
+				diagnossics: diagnosis,
+			});
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const getAllMedicines = async () => {
 		try {
@@ -359,12 +393,12 @@ const AddPrescription = () => {
 																name={'diagnosis'}>
 																<AutoComplete
 																	onChange={(val) => setDiagnossic(val)}
-																	options={[
-																		{
-																			label: 'Viêm phế quản',
-																			value: 'Viêm phế quản',
-																		},
-																	]}
+																	options={prescriptionData.diagnossics.map(
+																		(item) => ({
+																			label: item,
+																			value: item,
+																		})
+																	)}
 																	allowClear
 																	placeholder='Chẩn đoán'
 																/>
