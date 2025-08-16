@@ -2,6 +2,7 @@
 
 import {
 	Button,
+	Checkbox,
 	DatePicker,
 	Form,
 	Input,
@@ -9,16 +10,15 @@ import {
 	message,
 	Modal,
 	Select,
-	type InputRef,
 } from 'antd';
-import type { PrescriptionItem } from '../types/PrescriptionModel';
-import { parseDateInput } from '../utils/datetime';
 import dayjs from 'dayjs';
 import { useEffect, useRef } from 'react';
+import type { PrescriptionItem } from '../types/PrescriptionModel';
+import { parseDateInput } from '../utils/datetime';
 import { randomAlnumLower } from '../utils/prescriptions';
 
 export interface AddMedicineProps {
-	onAdd: (medicine: PrescriptionItem) => void;
+	onAdd: () => void;
 	onClose: () => void;
 	visible: boolean;
 	medicine?: PrescriptionItem | null;
@@ -50,11 +50,37 @@ const AddMedicine = (props: AddMedicineProps) => {
 		}
 	}, [medicine, visible]);
 
-	const handleAddMedicine = (values: any) => {
-		console.log(values);
-		// onAdd({ ...values, id: medicine?.id });
-		// form.resetFields();
-		// messageAPI.success('Thêm thuốc thành công');
+	const handleAddMedicine = async (values: any) => {
+		const data = {
+			...values,
+			quantity: values.quantity || 0,
+			expDate: values.expDate ? dayjs(values.expDate).toISOString() : null,
+		};
+
+		delete data.isContinue;
+		try {
+			if (medicine && medicine.id) {
+				await (window as any).beeclinicAPI.updateMedicineById(
+					medicine.id,
+					data
+				);
+			} else {
+				await (window as any).beeclinicAPI.addMedicine(data);
+			}
+
+			onAdd();
+
+			if (values.isContinue) {
+				form.resetFields();
+				form.setFieldValue('ma_thuoc', randomAlnumLower(6));
+				form.setFieldValue('expDate', dayjs().add(1, 'year'));
+			} else {
+				handleClose();
+			}
+		} catch (error) {
+			console.log(error);
+			messageAPI.error('Thêm thuốc không thành công');
+		}
 	};
 
 	const handleClose = () => {
@@ -69,10 +95,21 @@ const AddMedicine = (props: AddMedicineProps) => {
 				<Button key='cancel' type='text' danger onClick={handleClose}>
 					Hủy
 				</Button>,
-				<Button className='px-4' key='submit' onClick={() => form.submit()}>
+				<Button
+					key='submit'
+					type='primary'
+					onClick={() => {
+						form.setFieldsValue({ isContinue: false });
+						form.submit();
+					}}>
 					Lưu
 				</Button>,
-				<Button key='reset' type='primary' onClick={() => form.resetFields()}>
+				<Button
+					key='continue'
+					onClick={() => {
+						form.setFieldsValue({ isContinue: true });
+						form.submit();
+					}}>
 					Lưu và Thêm mới
 				</Button>,
 			]}
@@ -82,6 +119,7 @@ const AddMedicine = (props: AddMedicineProps) => {
 			title={medicine ? 'Cập nhật' : 'Thêm thuốc'}>
 			{messageHolder}
 			<Form
+				initialValues={{ isContinue: false }}
 				form={form}
 				layout='vertical'
 				variant='filled'
@@ -123,7 +161,20 @@ const AddMedicine = (props: AddMedicineProps) => {
 						</Form.Item>
 					</div>
 				</div>
-				<Form.Item name={'ten_thuoc'} label='Tên thuốc'>
+				<div className='d-none'>
+					<Form.Item name={'isContinue'} valuePropName='checked'>
+						<Checkbox />
+					</Form.Item>
+				</div>
+				<Form.Item
+					rules={[
+						{
+							required: true,
+							message: 'Tên thuốc không được để trống',
+						},
+					]}
+					name={'ten_thuoc'}
+					label='Tên thuốc'>
 					<Input
 						allowClear
 						maxLength={100}

@@ -435,8 +435,10 @@ const AddPrescription = () => {
 																					(element) =>
 																						element.ten_thuoc === name
 																				);
-																				formPres.setFieldsValue(medicine);
-
+																				formPres.setFieldsValue({
+																					...medicine,
+																					quantity: 1,
+																				});
 																				quantityRef.current.focus();
 																			}}
 																			placeholder='Tên thuốc'

@@ -17,6 +17,7 @@ import { BiEdit, BiPlus, BiTrash } from 'react-icons/bi';
 import type { PrescriptionItem } from '../types/PrescriptionModel';
 import { replaceName } from '../utils/replaceName';
 import { AddMedicine } from '../modals';
+import { formatDateToString } from '../utils/datetime';
 
 const Storages = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +49,6 @@ const Storages = () => {
 	};
 
 	const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
-		console.log('selectedRowKeys changed: ', newSelectedRowKeys);
 		setSelectedRowKeys(newSelectedRowKeys);
 	};
 
@@ -83,6 +83,7 @@ const Storages = () => {
 	const columns: ColumnProps<PrescriptionItem>[] = [
 		{
 			title: 'Mã thuốc',
+			key: 'code',
 			dataIndex: 'ma_thuoc',
 			width: 100,
 			render: (text: string) => <span>{text.toUpperCase()}</span>,
@@ -90,6 +91,7 @@ const Storages = () => {
 		{
 			title: 'Tên thuốc',
 			dataIndex: 'ten_thuoc',
+			key: 'name',
 			width: 250,
 			ellipsis: true,
 			sorter: (a: any, b: any) => a.name.localeCompare(b.name),
@@ -119,10 +121,12 @@ const Storages = () => {
 		},
 		{
 			key: 'expiry_date',
-			dataIndex: 'exDate',
+			dataIndex: 'expDate',
 			title: 'Ngày hết hạn',
 			width: 100,
 			align: 'center',
+			render: (text: string) =>
+				text ? formatDateToString(new Date(text)) : '',
 			sorter: (a: any, b: any) => a.exDate - b.exDate,
 		},
 		{
@@ -241,6 +245,7 @@ const Storages = () => {
 					columns={columns}
 					dataSource={medicines}
 					bordered
+					rowKey={(record) => `${record.id}`}
 				/>
 			</div>
 
@@ -250,9 +255,8 @@ const Storages = () => {
 					setIsAddMedicine(false);
 					setMedicineSelected(null);
 				}}
-				onAdd={(medicine) => {
-					setMedicines([...medicines, medicine]);
-					setIsAddMedicine(false);
+				onAdd={async () => {
+					await getStoragesItems();
 				}}
 				medicine={medicineSelected}
 			/>
