@@ -211,7 +211,7 @@ const AddPrescription = () => {
 
 					const newData = {
 						...isExitsMedicine,
-						quantity: count,
+						quantity: count < 0 ? 0 : count,
 					};
 
 					await (window as any).beeclinicAPI.updateMedicineById(
