@@ -1,15 +1,12 @@
 /** @format */
 
-import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import type { PatientModel } from '../types/PatientModel';
 import {
 	AutoComplete,
 	Button,
 	Card,
 	Checkbox,
+	Descriptions,
 	Divider,
-	Flex,
 	Form,
 	Input,
 	InputNumber,
@@ -21,18 +18,20 @@ import {
 	Tooltip,
 	Typography,
 } from 'antd';
-import { FaPrint } from 'react-icons/fa6';
-import { Descriptions } from 'antd';
-import { formatDateToString } from '../utils/datetime';
-import type { PrescriptionItem } from '../types/PrescriptionModel';
-import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
 import TextArea from 'antd/es/input/TextArea';
-import { IoIosAdd } from 'react-icons/io';
-import { BiEdit, BiInfoCircle, BiTrash } from 'react-icons/bi';
-import { IoClose } from 'react-icons/io5';
+import { useEffect, useRef, useState } from 'react';
+import { BiEdit, BiInfoCircle } from 'react-icons/bi';
 import { FaSave } from 'react-icons/fa';
-import { PrescriptionPrint } from '../printPages';
+import { FaPrint } from 'react-icons/fa6';
+import { IoIosAdd } from 'react-icons/io';
+import { IoClose } from 'react-icons/io5';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
+import { PrescriptionPrint } from '../printPages';
+import type { PatientModel } from '../types/PatientModel';
+import type { PrescriptionItem } from '../types/PrescriptionModel';
+import { formatDateToString } from '../utils/datetime';
+import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
 
 /** @format */
 /*

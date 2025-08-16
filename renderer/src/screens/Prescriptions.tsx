@@ -13,11 +13,10 @@ import {
 } from 'antd';
 import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
+import { BiSync, BiTrash } from 'react-icons/bi';
+import { IoIosSearch } from 'react-icons/io';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import { getShortDateTime } from '../utils/datetime';
-import { BiSync, BiTrash } from 'react-icons/bi';
-import { IoIosSearch, IoMdSearch } from 'react-icons/io';
-import { FaSearch } from 'react-icons/fa';
 
 /*
   Prescription list
@@ -101,7 +100,7 @@ const Prescriptions = () => {
 		}
 	};
 
-	const handleSyncPrescription = async (id: number) => {
+	const handleSyncPrescription = async () => {
 		modalAPI.info({
 			title: 'Đồng bộ đơn thuốc',
 			content:
@@ -113,7 +112,7 @@ const Prescriptions = () => {
 		{
 			key: 'date',
 			title: 'Ngày khám',
-			render: (text, record) => getShortDateTime(record.ngay_gio_ke_don),
+			render: (record) => getShortDateTime(record.ngay_gio_ke_don),
 			width: 100,
 			dataIndex: 'ngay_gio_ke_don',
 			sorter: (a: any, b: any) =>
@@ -148,7 +147,7 @@ const Prescriptions = () => {
 		{
 			key: 'patient',
 			dataIndex: 'patient',
-			render: (text, record) => record.patient?.name,
+			render: (record) => record.patient?.name,
 			width: 100,
 			ellipsis: true,
 		},
@@ -163,7 +162,7 @@ const Prescriptions = () => {
 			key: 'sent',
 			title: 'Đồng bộ',
 			dataIndex: 'sent',
-			render: (text, record) => (
+			render: (record) => (
 				<Typography.Text type={record.sent ? 'success' : 'secondary'}>
 					{record.sent ? 'Đã đồng bộ' : 'Chưa đồng bộ'}
 				</Typography.Text>
@@ -184,7 +183,7 @@ const Prescriptions = () => {
 							disabled={val.sent}
 							type='link'
 							size='small'
-							onClick={() => handleSyncPrescription(val.id as number)}
+							onClick={() => handleSyncPrescription()}
 							icon={<BiSync size={22} />}
 						/>
 					</Tooltip>
@@ -227,7 +226,7 @@ const Prescriptions = () => {
 											Xoá {selectedRowKeys.length} đơn thuốc đã chọn
 										</Button>
 										<Button
-											onClick={() => handleSyncPrescription(1)}
+											onClick={() => handleSyncPrescription()}
 											type='link'
 											size='small'
 											className='mt-2'>
@@ -241,7 +240,7 @@ const Prescriptions = () => {
 							<Input
 								placeholder='Tìm kiếm đơn thuốc'
 								prefix={<IoIosSearch size={20} className='text-muted' />}
-								onChange={(val) => {}}
+								onChange={() => {}}
 								onClear={() => {}}
 								allowClear
 							/>

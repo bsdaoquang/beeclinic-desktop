@@ -1,14 +1,11 @@
 /** @format */
 
 import { Button, Divider, Menu, Space, Typography } from 'antd';
-import { useState } from 'react';
 import { IoNotificationsOutline, IoSettingsOutline } from 'react-icons/io5';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDateToString } from '../utils/datetime';
 
 const HeaderComponent = () => {
-	const [keySelected, setKeySelected] = useState('home');
-
 	const navigate = useNavigate();
 
 	return (
@@ -21,8 +18,9 @@ const HeaderComponent = () => {
 			<div className='row'>
 				<div className='col'>
 					<Menu
-						onClick={(e) => {
-							setKeySelected(e.key);
+						onClick={() => {
+							// setKeySelected(e.key);
+							null;
 						}}
 						mode='horizontal'
 						selectedKeys={[]}

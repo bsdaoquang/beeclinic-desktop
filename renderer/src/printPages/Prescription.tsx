@@ -1,7 +1,7 @@
 /** @format */
 
-import type { PrescriptionItem } from '../types/PrescriptionModel';
 import type { PatientModel } from '../types/PatientModel';
+import type { PrescriptionItem } from '../types/PrescriptionModel';
 import {
 	formatDateToString,
 	getDateTimeString,
@@ -22,14 +22,6 @@ const PrescriptionPrint = ({
 	diagnostic,
 	prescriptionCode = '',
 }: PrescriptionPrintProps) => {
-	const clinicDetail = {
-		name: 'Phòng Khám Đa Khoa BeeClinic',
-		phone: '0123 456 789',
-		address: '123 Đường ABC, Quận 1, TP. Hồ Chí Minh',
-		logo: 'https://beeclinic.vn/logo.png',
-		doctor: 'BS. Nguyễn Văn A',
-	};
-
 	return (
 		<div className='prescription-print'>
 			<div className='text-center py-3'>

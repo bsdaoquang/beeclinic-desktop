@@ -3,10 +3,10 @@
 import { AutoComplete, Button, Flex, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
+import { useNavigate } from 'react-router-dom';
+import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
-import { AddPatient } from '../modals';
-import { Navigate, useNavigate } from 'react-router-dom';
 
 const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);
