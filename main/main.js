@@ -37,30 +37,6 @@ app.whenReady().then(() => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
 });
-
-/*
- * Thông tin về bệnh nhân:
- *   - id: string (định danh duy nhất của bệnh nhân)
- *   - name: string (tên bệnh nhân)
- *   - age: number (tuổi của bệnh nhân)
- *   - phone: string (số điện thoại)
- *   - address: string (địa chỉ)
- *   - citizenId: string (số CMND/CCCD)
- *   - email?: string (email, tùy chọn)
- *   - gender?: 'male' | 'female' | undefined (giới tính, tùy chọn)
- *   - createdAt: Date (ngày tạo)
- *   - updatedAt: Date (ngày cập nhật)
- *   - medicalHistory: string (lịch sử bệnh án)
- *   - allergies: string (dị ứng)
- *   - photoUrl: string (đường dẫn ảnh bệnh nhân)
- *   - notes: string (ghi chú thêm)
- *   - weight?: number (cân nặng, tùy chọn)
- *   - ma_dinh_danh_y_te?: string (mã định danh y tế, tùy chọn)
- *   - bhyt?: string (mã số thẻ bảo hiểm y tế, tùy chọn)
- *   - guardian?: string (người giám hộ, tùy chọn)
- *
- * @format
- */
 ipcMain.handle('add-patient', (event, patient) => {
 	return new Promise((resolve, reject) => {
 		const query = `
@@ -250,6 +226,33 @@ ipcMain.handle('add-prescription', async (event, prescription) => {
 				else resolve({ id: this.lastID });
 			}
 		);
+	});
+});
+
+// get all prescriptions
+ipcMain.handle('get-prescriptions', async () => {
+	return new Promise((resolve, reject) => {
+		db.all(
+			'SELECT * FROM prescriptions ORDER BY created_at DESC',
+			(err, rows) => {
+				if (err) reject(err);
+				else resolve(rows);
+			}
+		);
+	});
+});
+
+// delete prescription by id
+ipcMain.handle('delete-prescription-by-id', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		const query = 'DELETE FROM prescriptions WHERE id = ?';
+		db.run(query, [id], function (err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve({ success: true, changes: this.changes });
+			}
+		});
 	});
 });
 

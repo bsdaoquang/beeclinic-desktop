@@ -93,3 +93,13 @@ export const getDateTimeString = () => {
 		date.getFullYear()
 	)}`;
 };
+
+export const getShortDateTime = (date: string) => {
+	const d = new Date(date);
+
+	return `${numToString(d.getHours())}:${numToString(
+		d.getMinutes()
+	)}, ${numToString(d.getDate())}/${numToString(
+		d.getMonth() + 1
+	)}/${numToString(d.getFullYear())}`;
+};

@@ -14,12 +14,10 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 			updates: data,
 		}),
 	saveFileToAssets: (data) => ipcRenderer.invoke('save-file-to-assets', data),
-
-	// Prescription
 	addPrescription: (data) => ipcRenderer.invoke('add-prescription', data),
-
-	//Medicines
-
+	getPrescriptions: () => ipcRenderer.invoke('get-prescriptions'),
+	deletePrescriptionById: (id) =>
+		ipcRenderer.invoke('delete-prescription-by-id', id),
 	addMedicine: (medicine) => ipcRenderer.invoke('add-medicine', medicine),
 	updateMedicineById: (id, updates) =>
 		ipcRenderer.invoke('update-medicine-by-id', { id, updates }),

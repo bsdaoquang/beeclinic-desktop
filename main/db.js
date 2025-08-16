@@ -8,7 +8,7 @@ import sqlite3 from 'sqlite3';
 sqlite3.verbose();
 
 const dbPath = path.join(app.getPath('userData'), '/beeclinic.db');
-console.log(dbPath);
+// console.log(dbPath);
 
 const db = new sqlite3.Database(dbPath, (err) => {
 	if (err) {
