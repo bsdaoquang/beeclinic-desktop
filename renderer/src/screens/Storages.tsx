@@ -235,6 +235,11 @@ const Storages = () => {
 					</div>
 				</div>
 				<Table
+					pagination={{
+						pageSize: 20,
+						showSizeChanger: true,
+						pageSizeOptions: ['10', '20', '50'],
+					}}
 					loading={isLoading}
 					rowSelection={{
 						selectedRowKeys,

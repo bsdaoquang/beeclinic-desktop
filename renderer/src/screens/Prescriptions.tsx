@@ -3,6 +3,7 @@
 import {
 	Button,
 	Divider,
+	Input,
 	message,
 	Modal,
 	Space,
@@ -15,6 +16,8 @@ import { useEffect, useState } from 'react';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import { getShortDateTime } from '../utils/datetime';
 import { BiSync, BiTrash } from 'react-icons/bi';
+import { IoIosSearch, IoMdSearch } from 'react-icons/io';
+import { FaSearch } from 'react-icons/fa';
 
 /*
   Prescription list
@@ -207,7 +210,7 @@ const Prescriptions = () => {
 			<div className='container-fluid'>
 				<div className='container'>
 					<div className='row py-3'>
-						<div className='col'>
+						<div className='col-8'>
 							<Space align='center'>
 								<Typography.Title className='mb-0' level={3} type='secondary'>
 									Danh sách đơn thuốc
@@ -234,12 +237,26 @@ const Prescriptions = () => {
 								)}
 							</Space>
 						</div>
+						<div className='col'>
+							<Input
+								placeholder='Tìm kiếm đơn thuốc'
+								prefix={<IoIosSearch size={20} className='text-muted' />}
+								onChange={(val) => {}}
+								onClear={() => {}}
+								allowClear
+							/>
+						</div>
 					</div>
 					<Table
 						rowSelection={{
 							selectedRowKeys,
 							onChange: onSelectChange,
 							columnWidth: 50,
+						}}
+						pagination={{
+							pageSize: 20,
+							showSizeChanger: true,
+							pageSizeOptions: ['10', '20', '50'],
 						}}
 						dataSource={prescriptions}
 						columns={columns}

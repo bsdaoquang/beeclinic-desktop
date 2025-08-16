@@ -227,6 +227,11 @@ const Patients = () => {
 							style={{
 								width: '100%',
 							}}
+							pagination={{
+								pageSize: 20,
+								showSizeChanger: true,
+								pageSizeOptions: ['10', '20', '50'],
+							}}
 							columns={columns}
 							bordered
 							size='small'
