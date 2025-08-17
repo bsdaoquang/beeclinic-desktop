@@ -1,6 +1,6 @@
 /** @format */
 
-import { AutoComplete, Button, Flex, Typography } from 'antd';
+import { Alert, AutoComplete, Button, Flex, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,14 @@ import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
 import type { ClinicModel } from '../types/ClinicModel';
+import {
+	collection,
+	doc,
+	getDoc,
+	serverTimestamp,
+	setDoc,
+} from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
 
 const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);
@@ -22,6 +30,7 @@ const Home = () => {
 	useEffect(() => {
 		getPatients();
 		inpRef.current.focus();
+		getClinic();
 	}, []);
 
 	useEffect(() => {
@@ -38,6 +47,46 @@ const Home = () => {
 			);
 		}
 	}, [patients]);
+
+	useEffect(() => {
+		clinicInfos && checkFirebaseConnection();
+	}, [clinicInfos]);
+
+	const getClinic = async () => {
+		try {
+			const res = await (window as any).beeclinicAPI.getClinicInfo();
+			res && res.length > 0 && setClinicInfos(res[0]);
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
+	const checkFirebaseConnection = async () => {
+		if (!clinicInfos) {
+			return;
+		}
+
+		/*
+		Kiểm tra xem trên firebase có item nào có machineId = machineId không
+		// nếu không có tạo mới với clinicInfo
+		// trên firebase lưu các thông tin như: ngày tạo, ngày hết hạn, mã máy, key kích hoạt...
+
+		mỗi khi ứng dụng khởi động sẽ kiểm tra xem có kết nối với firebase khôn
+		*/
+		const machineId = clinicInfos.MachineId;
+
+		const clinicRef = doc(collection(db, 'clinics'), machineId);
+		const clinicSnap = await getDoc(clinicRef);
+
+		// if (!clinicSnap.exists()) {
+		// 	await setDoc(clinicRef, {
+		// 		...clinicInfos,
+		// 		createdAt: serverTimestamp(),
+		// 	});
+
+		// 	console.log('Created new clinic document:', machineId);
+		// }
+	};
 
 	const getPatients = async () => {
 		setIsLoading(true);
