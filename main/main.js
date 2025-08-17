@@ -6,6 +6,9 @@ import { fileURLToPath } from 'url';
 import { createDatabase } from '../main/db.js';
 import fs from 'fs';
 import db from '../main/db.js';
+import pkg from 'node-machine-id';
+
+const { machineIdSync } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -352,6 +355,150 @@ ipcMain.handle('delete-medicine-by-id', async (event, id) => {
 			} else {
 				resolve({ success: true, changes: this.changes });
 			}
+		});
+	});
+});
+
+// clinic_infos
+/*
+	CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+    TenCSKCB TEXT,
+    DiaChi TEXT,
+    DienThoai TEXT,
+    Email TEXT,
+    SoGiayPhepHoatDong TEXT,
+    NgayCapGiayPhep TEXT,
+    NoiCapGiayPhep TEXT,
+    HoTenBS TEXT,
+    SoChungChiHanhNghe TEXT,
+    KhoaPhong TEXT,
+    ChucVu TEXT,
+    MachineId TEXT,
+    AppVersion TEXT,
+    ActivationKey TEXT,
+    CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TEXT
+*/
+
+ipcMain.handle('get-clinic-infos', async () => {
+	return new Promise((resolve, reject) => {
+		db.all(
+			'SELECT * FROM clinic_infos ORDER BY CreatedAt DESC',
+			(err, rows) => {
+				if (err) reject(err);
+				else resolve(rows);
+			}
+		);
+	});
+});
+const machineId = machineIdSync();
+
+// Ensure clinic_infos row with id=1 exists at startup
+function ensureClinicInfo() {
+	return new Promise((resolve, reject) => {
+		db.get('SELECT * FROM clinic_infos WHERE id = 1', (err, row) => {
+			if (err) {
+				reject(err);
+			} else if (row) {
+				resolve({ exists: true, id: 1 });
+			} else {
+				const query = `
+					INSERT INTO clinic_infos (
+						id,
+						CSKCBID,
+						TenCSKCB,
+						DiaChi,
+						DienThoai,
+						Email,
+						SoGiayPhepHoatDong,
+						NgayCapGiayPhep,
+						NoiCapGiayPhep,
+						HoTenBS,
+						SoChungChiHanhNghe,
+						KhoaPhong,
+						ChucVu,
+						MachineId,
+						AppVersion,
+						ActivationKey,
+						CreatedAt,
+						UpdatedAt
+					) VALUES (
+						1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', ?, ?
+					)
+				`;
+				const now = new Date().toISOString();
+				db.run(query, [machineId, now, now], function (insertErr) {
+					if (insertErr) reject(insertErr);
+					else resolve({ created: true, id: 1 });
+				});
+			}
+		});
+	});
+}
+
+// Call ensureClinicInfo when app is ready
+app.whenReady().then(() => {
+	ensureClinicInfo().catch(console.error);
+});
+
+ipcMain.handle('ensure-clinic-info', async () => {
+	return ensureClinicInfo().then(async (result) => {
+		// Always update MachineId if not set
+		return new Promise((resolve, reject) => {
+			db.get('SELECT MachineId FROM clinic_infos WHERE id = 1', (err, row) => {
+				if (err) return reject(err);
+				if (!row) {
+					db.run(
+						'UPDATE clinic_infos SET MachineId = ?, UpdatedAt = ? WHERE id = 1',
+						[id, new Date().toISOString()],
+						function (updateErr) {
+							if (updateErr) reject(updateErr);
+							else resolve(result);
+						}
+					);
+				} else {
+					resolve(result);
+				}
+			});
+		});
+	});
+});
+
+ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
+	return new Promise((resolve, reject) => {
+		const fields = [
+			'CSKCBID',
+			'TenCSKCB',
+			'DiaChi',
+			'DienThoai',
+			'Email',
+			'SoGiayPhepHoatDong',
+			'NgayCapGiayPhep',
+			'NoiCapGiayPhep',
+			'HoTenBS',
+			'SoChungChiHanhNghe',
+			'KhoaPhong',
+			'ChucVu',
+			'MachineId',
+			'AppVersion',
+			'ActivationKey',
+		];
+
+		const setClause = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => `${field} = ?`)
+			.join(', ');
+
+		const values = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => updates[field]);
+
+		const query = `UPDATE clinic_infos SET ${setClause}, UpdatedAt = ? WHERE id = ?`;
+		values.push(new Date().toISOString(), id);
+
+		db.run(query, values, function (err) {
+			if (err) reject(err);
+			else resolve({ success: true, changes: this.changes });
 		});
 	});
 });

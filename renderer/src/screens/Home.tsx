@@ -7,11 +7,13 @@ import { useNavigate } from 'react-router-dom';
 import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
+import type { ClinicModel } from '../types/ClinicModel';
 
 const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);
 	const [patients, setPatients] = useState<PatientModel[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [clinicInfos, setClinicInfos] = useState<ClinicModel>();
 	const [isVisibleModalAddPatient, setIsVisibleModalAddPatient] =
 		useState(false);
 

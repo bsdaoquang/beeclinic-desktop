@@ -1,5 +1,5 @@
 /** @format */
 
 export const numToString = (num: number) => {
-	return num < 9 ? `0${num}` : `${num}`;
+	return num < 10 ? `0${num}` : `${num}`;
 };

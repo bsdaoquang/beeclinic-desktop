@@ -52,6 +52,32 @@ const db = new sqlite3.Database(dbPath, (err) => {
 	expDate?: string; // hạn dùng
 */
 
+/*
+  clinic_infos
+  CSKCBID TEXT,               -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+  TenCSKCB TEXT,
+  DiaChi TEXT,
+  DienThoai TEXT,
+  Email TEXT,
+  
+  SoGiayPhepHoatDong TEXT,
+  NgayCapGiayPhep TEXT,
+  NoiCapGiayPhep TEXT,
+  
+  HoTenBS TEXT,
+  SoChungChiHanhNghe TEXT,
+  KhoaPhong TEXT,
+  ChucVu TEXT,
+  
+  MachineId TEXT,
+  AppVersion TEXT,
+  ActivationKey TEXT,
+  
+  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt TEXT
+  
+*/
+
 const createDatabase = () => {
 	if (!fs.existsSync(dbPath)) {
 		console.log('Tạo mới cơ sở dữ liệu...');
@@ -107,6 +133,28 @@ const createDatabase = () => {
     quantity INTEGER,      -- Số lượng
     instruction TEXT,      -- Cách dùng
     expDate TEXT           -- Hạn dùng (ISO string hoặc yyyy-mm-dd)
+  )`);
+
+	// table of clinic info
+	db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+    TenCSKCB TEXT,
+    DiaChi TEXT,
+    DienThoai TEXT,
+    Email TEXT,
+    SoGiayPhepHoatDong TEXT,
+    NgayCapGiayPhep TEXT,
+    NoiCapGiayPhep TEXT,
+    HoTenBS TEXT,
+    SoChungChiHanhNghe TEXT,
+    KhoaPhong TEXT,
+    ChucVu TEXT,
+    MachineId TEXT,
+    AppVersion TEXT,
+    ActivationKey TEXT,
+    CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TEXT
   )`);
 
 	return dbPath;
