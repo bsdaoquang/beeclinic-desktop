@@ -22,20 +22,17 @@
 			"package.json"
 		],
 		"mac": {
-			"target": "dmg"
+			"target": "dmg",
+			"icon": "assets/icons/icon.icns"
 		},
 		"win": {
-			"target": "nsis"
+			"target": "nsis",
+			"icon": "assets/icons/icon.ico"
 		}
-	},
-	"mac": {
-		"icon": "assets/icons/icon.icns"
-	},
-	"win": {
-		"icon": "assets/icons/icon.ico"
-	},
-	"linux": {
-		"icon": "assets/icons/icon.png"
+		,
+		"linux": {
+			"icon": "assets/icons/icon.png"
+		}
 	},
 	"keywords": [],
 	"author": "",
