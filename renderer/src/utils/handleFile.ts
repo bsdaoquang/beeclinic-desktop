@@ -15,5 +15,5 @@ export const handleSaveFile = async (file: any) => {
 		});
 	};
 	reader.readAsArrayBuffer(originFileObj);
-	return `/assets/files/${replaceName(file.name)}`;
+	return `assets/files/${replaceName(file.name)}`;
 };

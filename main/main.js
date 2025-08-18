@@ -26,10 +26,12 @@ function createWindow() {
 
 	win.maximize();
 
-	win.loadURL(
-		// 'http://localhost:5173'
-		`file://${path.join(__dirname, '../dist/index.html')}`
-	);
+	if (app.isPackaged) {
+		win.loadFile(path.join(__dirname, '../dist/index.html'));
+	} else {
+		win.loadURL('http://localhost:5173');
+		win.webContents.openDevTools();
+	}
 }
 
 app.whenReady().then(() => {
