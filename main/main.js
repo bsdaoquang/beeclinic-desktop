@@ -27,8 +27,8 @@ function createWindow() {
 	win.maximize();
 
 	win.loadURL(
-		'http://localhost:5173'
-		// `file://${path.join(__dirname, '../dist/index.html')}`
+		// 'http://localhost:5173'
+		`file://${path.join(__dirname, '../dist/index.html')}`
 	);
 }
 
