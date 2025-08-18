@@ -14,7 +14,10 @@ const FooterComponent = () => {
 				<div className='row'>
 					<div className='col'>
 						<Typography.Text>
-							<a href='https://yhocso.com'>Y Học Số</a> © 2025
+							<a href='https://yhocso.com' target='_blank'>
+								Y Học Số Co., Ltd.
+							</a>{' '}
+							© 2025
 						</Typography.Text>
 					</div>
 					<div className='col text-end'>

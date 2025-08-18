@@ -5,7 +5,8 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "electron .",
-		"build": "electron-builder"
+		"build": "electron-builder",
+		"build:win": "electron-builder --win nsis"
 	},
 	"type": "module",
 	"build": {
@@ -22,14 +23,19 @@
 			"package.json"
 		],
 		"mac": {
-			"target": "dmg",
+			"target": [
+				"dmg",
+				"zip"
+			],
 			"icon": "assets/icons/icon.icns"
 		},
 		"win": {
-			"target": "nsis",
+			"target": [
+				"nsis",
+				"zip"
+			],
 			"icon": "assets/icons/icon.ico"
-		}
-		,
+		},
 		"linux": {
 			"icon": "assets/icons/icon.png"
 		}

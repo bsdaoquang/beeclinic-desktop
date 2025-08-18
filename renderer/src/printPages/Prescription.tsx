@@ -87,7 +87,7 @@ const PrescriptionPrint = ({
 				{prescriptionItems.length > 0 ? (
 					<>
 						{prescriptionItems.map((item, index) => (
-							<div className='mb-3'>
+							<div className='mb-3' key={`prescription-item-${index}`}>
 								<div
 									className='row'
 									style={{

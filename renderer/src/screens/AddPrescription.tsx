@@ -289,6 +289,7 @@ const AddPrescription = () => {
 				items.push(newMedicine);
 				setMedicines(items);
 				await (window as any).beeclinicAPI.addMedicine(newMedicine);
+				setPrescriptionItems([...prescriptionItems, vals]);
 			}
 			prescriptionItems.push(vals);
 		} else {
@@ -407,7 +408,6 @@ const AddPrescription = () => {
 																		/>
 																		<div className='text-end'>
 																			<Button
-																				disabled={!clinic?.ActivationKey}
 																				iconPosition='end'
 																				icon={<BsArrowRight size={16} />}
 																				type='link'

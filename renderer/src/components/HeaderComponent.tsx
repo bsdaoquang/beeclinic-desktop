@@ -94,12 +94,12 @@ const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 							type='text'
 							size='small'
 						/>
-						<Divider type='vertical' />
+						{/* <Divider type='vertical' />
 						<Button
 							icon={<IoNotificationsOutline size={18} />}
 							type='text'
 							size='small'
-						/>
+						/> */}
 						<Divider type='vertical' />
 						<Typography.Text>{formatDateToString(new Date())}</Typography.Text>
 					</Space>

@@ -38,6 +38,7 @@ import {
 	Form,
 	Input,
 	message,
+	Space,
 	Typography,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -60,6 +61,17 @@ const ClinicInfos = () => {
 	useEffect(() => {
 		getClinic();
 	}, []);
+
+	useEffect(() => {
+		if (isEditing && clinic) {
+			form.setFieldsValue({
+				...clinic,
+				NgayCapGiayPhep: clinic.NgayCapGiayPhep
+					? dayjs(clinic.NgayCapGiayPhep)
+					: null,
+			});
+		}
+	}, [isEditing]);
 
 	const getClinic = async () => {
 		try {
@@ -273,12 +285,19 @@ const ClinicInfos = () => {
 						</Typography.Text>
 					</div>
 				</div>
-				<Button
-					type='link'
-					icon={<BiEdit size={20} />}
-					onClick={() => (isEditing ? form.submit() : setIsEditing(true))}>
-					{isEditing ? 'Cập nhật' : 'Chỉnh sửa'}
-				</Button>
+				<Space>
+					{isEditing && (
+						<Button onClick={() => setIsEditing(false)} type='text' danger>
+							Huỷ bỏ
+						</Button>
+					)}
+					<Button
+						type='link'
+						icon={<BiEdit size={20} />}
+						onClick={() => (isEditing ? form.submit() : setIsEditing(true))}>
+						{isEditing ? 'Cập nhật' : 'Chỉnh sửa'}
+					</Button>
+				</Space>
 			</Flex>
 			<div className='mt-3'>
 				<div className='row'>
