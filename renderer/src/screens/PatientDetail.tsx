@@ -10,13 +10,20 @@ import {
 	Modal,
 	Space,
 	Spin,
+	Table,
 	Typography,
 } from 'antd';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { PatientModel } from '../types/PatientModel';
-import { formatDateToString, getYearOld } from '../utils/datetime';
+import {
+	formatDateToString,
+	getShortDateTime,
+	getYearOld,
+} from '../utils/datetime';
 import { AddPatient } from '../modals';
+import type { PrescriptionModel } from '../types/PrescriptionModel';
+import type { ColumnProps } from 'antd/es/table';
 
 /** @format */
 
@@ -27,9 +34,13 @@ const PatientDetail = () => {
 	const [isVisibleModalPatient, setIsVisibleModalPatient] = useState(false);
 	const [modal, modalHolder] = Modal.useModal();
 	const [messageAPI, messageHolder] = message.useMessage();
+	const [prescriptions, setPrescriptions] = useState<PrescriptionModel[]>([]);
 
 	useEffect(() => {
-		id && getPatientDetail();
+		if (id) {
+			getPatientDetail();
+			getPatientPrescriptions(id);
+		}
 	}, [id]);
 
 	const getPatientDetail = async () => {
@@ -41,6 +52,17 @@ const PatientDetail = () => {
 			console.log(error);
 		} finally {
 			setIsLoading(false);
+		}
+	};
+
+	const getPatientPrescriptions = async (patientId: string) => {
+		try {
+			const res = await (
+				window as any
+			).beeclinicAPI.getPrescriptionsByPatientId(patientId);
+			setPrescriptions(res);
+		} catch (error) {
+			console.log(error);
 		}
 	};
 
@@ -61,6 +83,30 @@ const PatientDetail = () => {
 			onCancel: () => console.log('Cancel'),
 		});
 	};
+
+	const columns: ColumnProps<PrescriptionModel>[] = [
+		{
+			key: 'date',
+			dataIndex: 'ngay_gio_ke_don',
+			render: (text) => getShortDateTime(text),
+			width: 150,
+			title: 'Ngày khám',
+		},
+		{
+			key: 'reason',
+			dataIndex: 'reason_for_visit',
+			title: 'Lý do khám',
+			width: 200,
+			ellipsis: true,
+		},
+		{
+			key: 'diagnostic',
+			dataIndex: 'diagnosis',
+			width: 200,
+			title: 'Chẩn đoán',
+			ellipsis: true,
+		},
+	];
 
 	return (
 		<div className='container-fluid'>
@@ -162,7 +208,14 @@ const PatientDetail = () => {
 								</Space>
 							</div>
 						</Card>
-						<Card size='small' title='Lịch sử khám bệnh' className=''></Card>
+						<Card size='small' title='Lịch sử khám bệnh' className=''>
+							<Table
+								dataSource={prescriptions}
+								columns={columns}
+								bordered
+								size='small'
+							/>
+						</Card>
 					</>
 				) : (
 					<Typography.Paragraph type='secondary'>
