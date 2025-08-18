@@ -1,6 +1,6 @@
 {
 	"name": "beeclinic-desktop",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"main": "main/main.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -38,7 +38,14 @@
 		},
 		"linux": {
 			"icon": "assets/icons/icon.png"
-		}
+		},
+		"publish": [
+			{
+				"provider": "github",
+				"owner": "bsdaoquang",
+				"repo": "beeclinic-desktop"
+			}
+		]
 	},
 	"keywords": [],
 	"author": "",
@@ -49,6 +56,7 @@
 		"electron-builder": "^26.0.12"
 	},
 	"dependencies": {
+		"electron-updater": "^6.6.2",
 		"node-machine-id": "^1.1.12",
 		"sqlite3": "^5.1.7"
 	}

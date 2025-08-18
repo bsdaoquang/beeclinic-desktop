@@ -7,7 +7,9 @@ import { createDatabase } from '../main/db.js';
 import fs from 'fs';
 import db from '../main/db.js';
 import pkg from 'node-machine-id';
+import updatepkg from 'electron-updater';
 
+const { autoUpdater } = updatepkg;
 const { machineIdSync } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -524,6 +526,7 @@ async function ensureClinicInfo() {
 
 // Call ensureClinicInfo when app is ready
 app.whenReady().then(() => {
+	autoUpdater.checkForUpdatesAndNotify();
 	ensureClinicInfo().catch(console.error);
 });
 
