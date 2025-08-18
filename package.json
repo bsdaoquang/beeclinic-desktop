@@ -6,7 +6,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "electron .",
 		"build": "electron-builder",
-		"build:win": "electron-builder --win nsis"
+		"build:mac": "electron-builder --mac dmg zip --publish always",
+		"build:win": "electron-builder --win nsis --publish always"
 	},
 	"type": "module",
 	"build": {
