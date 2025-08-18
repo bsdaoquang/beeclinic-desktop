@@ -17,6 +17,7 @@ import { BiSync, BiTrash } from 'react-icons/bi';
 import { IoIosSearch } from 'react-icons/io';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import { getShortDateTime } from '../utils/datetime';
+import { useNavigate } from 'react-router-dom';
 
 /*
   Prescription list
@@ -100,11 +101,15 @@ const Prescriptions = () => {
 		}
 	};
 
+	const navigate = useNavigate();
+
 	const handleSyncPrescription = async () => {
 		modalAPI.info({
 			title: 'Đồng bộ đơn thuốc',
 			content:
 				'Bạn cần phải đăng nhập vào Hệ thống ĐTQG để lấy mã đồng bộ đơn thuốc này.',
+			onOk: () => navigate('/settings'),
+			okText: 'Đến phần cài đặt',
 		});
 	};
 
@@ -112,7 +117,7 @@ const Prescriptions = () => {
 		{
 			key: 'date',
 			title: 'Ngày khám',
-			render: (record) => getShortDateTime(record.ngay_gio_ke_don),
+			render: (val) => getShortDateTime(val),
 			width: 100,
 			dataIndex: 'ngay_gio_ke_don',
 			sorter: (a: any, b: any) =>

@@ -1,7 +1,7 @@
 /** @format */
 
 import { Tabs } from 'antd';
-import { ClinicInfos } from '../components';
+import { ClinicInfos, HTDTQG } from '../components';
 
 const Settings = () => {
 	return (
@@ -16,6 +16,11 @@ const Settings = () => {
 							key: 'clinic-infos',
 							label: 'Thông tin',
 							children: <ClinicInfos />,
+						},
+						{
+							key: 'clinic-appearance',
+							label: 'Đơn thuốc Quốc Gia',
+							children: <HTDTQG />,
 						},
 					]}
 				/>

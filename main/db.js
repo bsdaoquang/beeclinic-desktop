@@ -137,24 +137,26 @@ const createDatabase = () => {
 
 	// table of clinic info
 	db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
-    TenCSKCB TEXT,
-    DiaChi TEXT,
-    DienThoai TEXT,
-    Email TEXT,
-    SoGiayPhepHoatDong TEXT,
-    NgayCapGiayPhep TEXT,
-    NoiCapGiayPhep TEXT,
-    HoTenBS TEXT,
-    SoChungChiHanhNghe TEXT,
-    KhoaPhong TEXT,
-    ChucVu TEXT,
-    MachineId TEXT,
-    AppVersion TEXT,
-    ActivationKey TEXT,
-    CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TEXT
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+  TenCSKCB TEXT,
+  DiaChi TEXT,
+  DienThoai TEXT,
+  Email TEXT,
+  SoGiayPhepHoatDong TEXT,
+  NgayCapGiayPhep TEXT,
+  NoiCapGiayPhep TEXT,
+  HoTenBS TEXT,
+  SoChungChiHanhNghe TEXT,
+  KhoaPhong TEXT,
+  ChucVu TEXT,
+  MachineId TEXT,
+  AppVersion TEXT,
+  ActivationKey TEXT,
+  ClinicAccessToken TEXT, -- Access token cho phòng khám
+  DoctorAccessToken TEXT, -- Access token cho bác sĩ
+  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt TEXT
   )`);
 
 	return dbPath;

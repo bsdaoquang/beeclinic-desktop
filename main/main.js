@@ -375,23 +375,25 @@ ipcMain.handle('delete-medicine-by-id', async (event, id) => {
 
 // clinic_infos
 /*
-	CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
-    TenCSKCB TEXT,
-    DiaChi TEXT,
-    DienThoai TEXT,
-    Email TEXT,
-    SoGiayPhepHoatDong TEXT,
-    NgayCapGiayPhep TEXT,
-    NoiCapGiayPhep TEXT,
-    HoTenBS TEXT,
-    SoChungChiHanhNghe TEXT,
-    KhoaPhong TEXT,
-    ChucVu TEXT,
-    MachineId TEXT,
-    AppVersion TEXT,
-    ActivationKey TEXT,
-    CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    UpdatedAt TEXT
+  CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+  TenCSKCB TEXT,
+  DiaChi TEXT,
+  DienThoai TEXT,
+  Email TEXT,
+  SoGiayPhepHoatDong TEXT,
+  NgayCapGiayPhep TEXT,
+  NoiCapGiayPhep TEXT,
+  HoTenBS TEXT,
+  SoChungChiHanhNghe TEXT,
+  KhoaPhong TEXT,
+  ChucVu TEXT,
+  MachineId TEXT,
+  AppVersion TEXT,
+  ActivationKey TEXT,
+  ClinicAccessToken TEXT, -- Access token cho phòng khám
+  DoctorAccessToken TEXT, -- Access token cho bác sĩ
+  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt TEXT
 */
 
 ipcMain.handle('get-clinic-infos', async () => {
@@ -408,15 +410,75 @@ ipcMain.handle('get-clinic-infos', async () => {
 const machineId = machineIdSync();
 
 // Ensure clinic_infos row with id=1 exists at startup
-function ensureClinicInfo() {
+async function ensureClinicInfo() {
 	return new Promise((resolve, reject) => {
 		db.get('SELECT * FROM clinic_infos WHERE id = 1', (err, row) => {
 			if (err) {
-				reject(err);
+				// Table might not exist yet, try to create it
+				const createTableQuery = `
+					CREATE TABLE IF NOT EXISTS clinic_infos (
+						id INTEGER PRIMARY KEY,
+						CSKCBID TEXT,
+						TenCSKCB TEXT,
+						DiaChi TEXT,
+						DienThoai TEXT,
+						Email TEXT,
+						SoGiayPhepHoatDong TEXT,
+						NgayCapGiayPhep TEXT,
+						NoiCapGiayPhep TEXT,
+						HoTenBS TEXT,
+						SoChungChiHanhNghe TEXT,
+						KhoaPhong TEXT,
+						ChucVu TEXT,
+						MachineId TEXT,
+						AppVersion TEXT,
+						ActivationKey TEXT,
+						ClinicAccessToken TEXT,
+						DoctorAccessToken TEXT,
+						CreatedAt TEXT,
+						UpdatedAt TEXT
+					)
+				`;
+				db.run(createTableQuery, (createErr) => {
+					if (createErr) return reject(createErr);
+					// After creating table, insert default row
+					const now = new Date().toISOString();
+					const insertQuery = `
+						INSERT INTO clinic_infos (
+							id,
+							CSKCBID,
+							TenCSKCB,
+							DiaChi,
+							DienThoai,
+							Email,
+							SoGiayPhepHoatDong,
+							NgayCapGiayPhep,
+							NoiCapGiayPhep,
+							HoTenBS,
+							SoChungChiHanhNghe,
+							KhoaPhong,
+							ChucVu,
+							MachineId,
+							AppVersion,
+							ActivationKey,
+							ClinicAccessToken,
+							DoctorAccessToken,
+							CreatedAt,
+							UpdatedAt
+						) VALUES (
+							1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', '', '', ?, ?
+						)
+					`;
+					db.run(insertQuery, [machineId, now, now], function (insertErr) {
+						if (insertErr) reject(insertErr);
+						else resolve({ created: true, id: 1 });
+					});
+				});
 			} else if (row) {
 				resolve({ exists: true, id: 1 });
 			} else {
-				const query = `
+				const now = new Date().toISOString();
+				const insertQuery = `
 					INSERT INTO clinic_infos (
 						id,
 						CSKCBID,
@@ -434,14 +496,15 @@ function ensureClinicInfo() {
 						MachineId,
 						AppVersion,
 						ActivationKey,
+						ClinicAccessToken,
+						DoctorAccessToken,
 						CreatedAt,
 						UpdatedAt
 					) VALUES (
-						1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', ?, ?
+						1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', '', '', ?, ?
 					)
 				`;
-				const now = new Date().toISOString();
-				db.run(query, [machineId, now, now], function (insertErr) {
+				db.run(insertQuery, [machineId, now, now], function (insertErr) {
 					if (insertErr) reject(insertErr);
 					else resolve({ created: true, id: 1 });
 				});

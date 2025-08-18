@@ -92,6 +92,7 @@ const Home = () => {
 			await (window as any).beeclinicAPI.updateClinicById(1, {
 				ActivationKey: data.activationKey,
 				MachineId: data.machineId,
+				CreatedAt: data.createdAt,
 			});
 
 			console.log('Updated existing clinic document:', machineId);

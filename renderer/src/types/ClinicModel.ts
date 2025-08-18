@@ -27,4 +27,7 @@ export interface ClinicModel {
 	// Metadata
 	CreatedAt?: string; // Ngày tạo (ISO string)
 	UpdatedAt?: string; // Ngày cập nhật gần nhất
+
+	ClinicAccessToken: string;
+	DoctorAccessToken: string;
 }
