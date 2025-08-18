@@ -12,6 +12,7 @@ import {
 	InputNumber,
 	List,
 	message,
+	Popover,
 	Select,
 	Space,
 	Spin,
@@ -33,15 +34,17 @@ import type {
 	PrescriptionItem,
 	PrescriptionModel,
 } from '../types/PrescriptionModel';
-import { formatDateToString } from '../utils/datetime';
+import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
+import type { ClinicModel } from '../types/ClinicModel';
+import { RxInfoCircled } from 'react-icons/rx';
+import { numToString } from '../utils/numToString';
+import { BsArrowRight } from 'react-icons/bs';
 
 /** @format */
 /*
   Add new prescription by patient id in query
 */
-
-const facilityCode = '12345';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +62,9 @@ const AddPrescription = () => {
 	}>({
 		diagnossics: [],
 	});
+	const [prescriptionsByPatient, setPrescriptionsByPatient] = useState<
+		PrescriptionModel[]
+	>([]);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -69,6 +75,9 @@ const AddPrescription = () => {
 	const medicineNameRef = useRef<any>(null);
 	const quantityRef = useRef<any>(null);
 	const printRef = useRef<HTMLDivElement>(null);
+	const clinic: ClinicModel | undefined = localStorage.getItem('clinic')
+		? JSON.parse(localStorage.getItem('clinic')!)
+		: undefined;
 
 	const printPrescription = useReactToPrint({
 		contentRef: printRef,
@@ -93,23 +102,25 @@ const AddPrescription = () => {
 	useEffect(() => {
 		form.setFieldValue('loai_don_thuoc', 'c');
 		formPres.setFieldValue('unit', 'viên');
-		setPrescriptionCode(generatePrescriptionCode(facilityCode, 'c'));
+		setPrescriptionCode(generatePrescriptionCode(clinic?.CSKCBID ?? '', 'c'));
 
 		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
 		getPrescriptionsData();
 		getClinicInfos();
+		getAllMedicines();
 	}, []);
 
 	useEffect(() => {
-		patientId && getPatientDetail();
-		getAllMedicines();
+		if (patientId) {
+			getPatientDetail();
+		}
 	}, [patientId]);
 
 	const getClinicInfos = async () => {};
 
 	const getPrescriptionsData = async () => {
 		try {
-			const res = await (window as any).beeclinicAPI.getPrescriptions();
+			const res: any = await (window as any).beeclinicAPI.getPrescriptions();
 
 			const diagnosis: string[] = [];
 
@@ -124,6 +135,11 @@ const AddPrescription = () => {
 			setPrescriptionData({
 				diagnossics: diagnosis,
 			});
+
+			const items = res.filter(
+				(element: any) => `${element.patient_id}` === patientId
+			);
+			setPrescriptionsByPatient(items);
 		} catch (error) {
 			console.log(error);
 		}
@@ -185,7 +201,7 @@ const AddPrescription = () => {
 			note: vals.note ?? '',
 			ngay_gio_ke_don: new Date().toISOString(),
 			ngay_tai_kham: vals.ngay_tai_kham ?? null,
-			thong_tin_don_thuoc_json: JSON.stringify(prescriptionItems),
+			thong_tin_don_thuoc_json: prescriptionItems,
 			sent: isAsync ? 1 : 0,
 			sent_at: null,
 			created_at: new Date().toISOString(),
@@ -236,9 +252,9 @@ const AddPrescription = () => {
 			if (isExitsMedicine) {
 				// Đã có thuốc tương tự
 				// nếu số lượng khác 0 tức là có quản lý
-				// Cập nhật số lượng trong kho
+				// Cập nhật số lượng trong kho nếu có khóa kích hoạt
 
-				if (isExitsMedicine.quantity > 0) {
+				if (isExitsMedicine.quantity > 0 && clinic?.ActivationKey) {
 					const count = isExitsMedicine.quantity - vals.quantity;
 					// update to database
 
@@ -347,7 +363,79 @@ const AddPrescription = () => {
 										<Typography.Paragraph style={{ fontWeight: 'bold' }}>
 											Lịch sử khám bệnh
 										</Typography.Paragraph>
-										<List />
+										<List
+											style={{
+												maxHeight: '320px',
+												overflowY: 'auto',
+											}}
+											bordered={false}
+											dataSource={prescriptionsByPatient}
+											rowKey={(item) => `${item.ma_don_thuoc}`}
+											renderItem={(item) => (
+												<List.Item
+													actions={[
+														<Popover
+															content={() => {
+																const vals: PrescriptionItem[] =
+																	item.thong_tin_don_thuoc_json
+																		? JSON.parse(item.thong_tin_don_thuoc_json)
+																		: [];
+
+																return (
+																	<div
+																		style={{
+																			width: 450,
+																		}}>
+																		<List
+																			style={{
+																				maxHeight: '50vh',
+																				overflowY: 'auto',
+																			}}
+																			dataSource={vals}
+																			renderItem={(medicine, index) => (
+																				<List.Item key={`medicine${item.id}`}>
+																					<List.Item.Meta
+																						title={`${numToString(
+																							index + 1
+																						)}. ${medicine.ten_thuoc} x ${
+																							medicine.quantity
+																						} ${medicine.unit}`}
+																						description={medicine.instruction}
+																					/>
+																				</List.Item>
+																			)}
+																		/>
+																		<div className='text-end'>
+																			<Button
+																				disabled={!clinic?.ActivationKey}
+																				iconPosition='end'
+																				icon={<BsArrowRight size={16} />}
+																				type='link'
+																				onClick={() => {
+																					form.setFieldsValue({
+																						diagnosis: item.diagnosis,
+																					});
+																					setPrescriptionItems(vals);
+																				}}>
+																				Sử dụng lại
+																			</Button>
+																		</div>
+																	</div>
+																);
+															}}
+															title='Thông tin thuốc'>
+															<RxInfoCircled size={22} />
+														</Popover>,
+													]}>
+													<List.Item.Meta
+														title={item.diagnosis}
+														description={getShortDateTime(
+															item.created_at as string
+														)}
+													/>
+												</List.Item>
+											)}
+										/>
 									</>
 								</Card>
 							</div>
@@ -410,7 +498,7 @@ const AddPrescription = () => {
 																	placeholder='Loại đơn thuốc'
 																	onChange={(val) => {
 																		const newCode = generatePrescriptionCode(
-																			facilityCode,
+																			clinic?.CSKCBID ?? '',
 																			val
 																		);
 																		setPrescriptionCode(newCode);
@@ -585,7 +673,7 @@ const AddPrescription = () => {
 												style={{
 													alignItems: 'flex-start',
 												}}
-												key={`${item.id}`}
+												key={`prescription-item-${index}`}
 												extra={
 													<Space>
 														{`${item.quantity} ${item.unit}`}
@@ -685,6 +773,7 @@ const AddPrescription = () => {
 			{prescriptionItems.length > 0 && patient && (
 				<div className='d-none d-print-block' ref={printRef}>
 					<PrescriptionPrint
+						clinic={clinic}
 						patient={patient}
 						prescriptionItems={prescriptionItems}
 						diagnostic={diagnossic}

@@ -245,6 +245,20 @@ ipcMain.handle('get-prescriptions', async () => {
 	});
 });
 
+// get precriptions by patient id
+ipcMain.handle('get-prescriptions-by-patient-id', async (event, patientId) => {
+	return new Promise((resolve, reject) => {
+		db.all(
+			'SELECT * FROM prescriptions WHERE patient_id = ? ORDER BY created_at DESC',
+			[patientId],
+			(err, rows) => {
+				if (err) reject(err);
+				else resolve(rows);
+			}
+		);
+	});
+});
+
 // delete prescription by id
 ipcMain.handle('delete-prescription-by-id', async (event, id) => {
 	return new Promise((resolve, reject) => {

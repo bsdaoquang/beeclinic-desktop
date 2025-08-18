@@ -40,6 +40,10 @@ function App() {
 		getClinic();
 	}, []);
 
+	useEffect(() => {
+		clinic && localStorage.setItem('clinic', JSON.stringify(clinic));
+	}, [clinic]);
+
 	const getClinic = async () => {
 		try {
 			const res = await (window as any).beeclinicAPI.getClinicInfo();

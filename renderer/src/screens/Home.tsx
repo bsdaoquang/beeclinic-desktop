@@ -1,7 +1,7 @@
 /** @format */
 
 import { Alert, AutoComplete, Button, Flex, Typography } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { act, useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
 import { AddPatient } from '../modals';
@@ -78,14 +78,24 @@ const Home = () => {
 		const clinicRef = doc(collection(db, 'clinics'), machineId);
 		const clinicSnap = await getDoc(clinicRef);
 
-		// if (!clinicSnap.exists()) {
-		// 	await setDoc(clinicRef, {
-		// 		...clinicInfos,
-		// 		createdAt: serverTimestamp(),
-		// 	});
+		if (!clinicSnap.exists()) {
+			await setDoc(clinicRef, {
+				activationKey: clinicInfos.ActivationKey,
+				machineId: clinicInfos.MachineId,
+				createdAt: clinicInfos.CreatedAt,
+			});
 
-		// 	console.log('Created new clinic document:', machineId);
-		// }
+			console.log('Created new clinic document:', machineId);
+		} else {
+			const data = clinicSnap.data();
+			// đã tồn tại, đồng bộ lại vào local database, tránh gian lận
+			await (window as any).beeclinicAPI.updateClinicById(1, {
+				ActivationKey: data.activationKey,
+				MachineId: data.machineId,
+			});
+
+			console.log('Updated existing clinic document:', machineId);
+		}
 	};
 
 	const getPatients = async () => {

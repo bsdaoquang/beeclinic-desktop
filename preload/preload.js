@@ -19,6 +19,10 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	// getPrescriptionById: (id) => ipcRenderer.invoke('get-prescription-by-id', id),
 	deletePrescriptionById: (id) =>
 		ipcRenderer.invoke('delete-prescription-by-id', id),
+	// get prescriptions by patient id
+	getPrescriptionsByPatientId: (patientId) =>
+		ipcRenderer.invoke('get-prescriptions-by-patient-id', patientId),
+
 	addMedicine: (medicine) => ipcRenderer.invoke('add-medicine', medicine),
 	updateMedicineById: (id, updates) =>
 		ipcRenderer.invoke('update-medicine-by-id', { id, updates }),

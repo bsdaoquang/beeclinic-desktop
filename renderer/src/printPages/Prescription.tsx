@@ -1,5 +1,6 @@
 /** @format */
 
+import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
 import type { PrescriptionItem } from '../types/PrescriptionModel';
 import {
@@ -14,16 +15,39 @@ interface PrescriptionPrintProps {
 	prescriptionItems: PrescriptionItem[];
 	diagnostic?: string;
 	prescriptionCode?: string;
+	clinic?: ClinicModel;
 }
 
 const PrescriptionPrint = ({
 	patient,
 	prescriptionItems,
 	diagnostic,
+	clinic,
 	prescriptionCode = '',
 }: PrescriptionPrintProps) => {
 	return (
 		<div className='prescription-print'>
+			{clinic?.TenCSKCB || clinic?.DiaChi || clinic?.DienThoai ? (
+				<>
+					<div className='row'>
+						<div className='col'>
+							<p
+								style={{
+									fontSize: 18,
+									textTransform: 'uppercase',
+								}}>
+								<b>{clinic?.TenCSKCB ?? ''}</b>
+							</p>
+							<p>{clinic?.DiaChi ?? ''}</p>
+							<p>
+								{clinic?.DienThoai ?? ''}{' '}
+								{clinic?.Email ? ` - ${clinic?.Email}` : ''}
+							</p>
+						</div>
+					</div>
+				</>
+			) : null}
+
 			<div className='text-center py-3'>
 				<h2>Đơn Thuốc</h2>
 				<p>Mã đơn: {prescriptionCode.toUpperCase()}</p>
