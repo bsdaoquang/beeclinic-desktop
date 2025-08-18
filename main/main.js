@@ -43,6 +43,7 @@ app.whenReady().then(() => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
 });
+
 ipcMain.handle('add-patient', (event, patient) => {
 	return new Promise((resolve, reject) => {
 		const query = `
