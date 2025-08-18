@@ -1,21 +1,15 @@
 /** @format */
 
-import { Alert, AutoComplete, Button, Flex, Typography } from 'antd';
-import { act, useEffect, useRef, useState } from 'react';
+import { AutoComplete, Button, Flex, Typography } from 'antd';
+import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
+import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../firebase/firebaseConfig';
 import { AddPatient } from '../modals';
+import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
-import type { ClinicModel } from '../types/ClinicModel';
-import {
-	collection,
-	doc,
-	getDoc,
-	serverTimestamp,
-	setDoc,
-} from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
 
 const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);

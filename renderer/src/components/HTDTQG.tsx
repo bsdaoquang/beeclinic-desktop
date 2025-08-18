@@ -1,9 +1,9 @@
 /** @format */
 
-import { Button, Form, Input, Steps, Typography, type StepProps } from 'antd';
-import type { ClinicModel } from '../types/ClinicModel';
+import { Steps, Typography, type StepProps } from 'antd';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { ClinicModel } from '../types/ClinicModel';
 import LoginCSKCB from './LoginCSKCB';
 
 const HTDTQG = () => {
