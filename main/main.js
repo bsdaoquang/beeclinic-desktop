@@ -44,6 +44,11 @@ app.whenReady().then(() => {
 	});
 });
 
+// get version
+ipcMain.handle('get-version', async () => {
+	return { version: app.getVersion() };
+});
+
 ipcMain.handle('add-patient', (event, patient) => {
 	return new Promise((resolve, reject) => {
 		const query = `

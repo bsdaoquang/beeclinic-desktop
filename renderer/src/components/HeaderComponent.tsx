@@ -1,11 +1,11 @@
 /** @format */
 
-import { Button, Divider, Menu, Space, Tooltip, Typography } from 'antd';
-import { IoNotificationsOutline, IoSettingsOutline } from 'react-icons/io5';
-import { Link, useNavigate } from 'react-router-dom';
-import { formatDateToString } from '../utils/datetime';
-import type { ClinicModel } from '../types/ClinicModel';
+import { Button, Divider, Menu, Space, Tag, Tooltip, Typography } from 'antd';
 import { useEffect, useState } from 'react';
+import { IoSettingsOutline } from 'react-icons/io5';
+import { Link, useNavigate } from 'react-router-dom';
+import type { ClinicModel } from '../types/ClinicModel';
+import { formatDateToString, getShortDateTime } from '../utils/datetime';
 
 const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 	const [isActive, setIsActive] = useState(false);
@@ -27,6 +27,13 @@ const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 			setIsActive(false);
 		}
 	}, [clinic]);
+
+	const expDate =
+		clinic && clinic.CreatedAt
+			? new Date(
+					new Date(clinic.CreatedAt).getTime() + 14 * 24 * 60 * 60 * 1000
+			  )
+			: undefined;
 
 	return (
 		<div
@@ -87,19 +94,26 @@ const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 				</div>
 				<div className='col text-end'>
 					<Space>
-						<Divider type='vertical' />
+						{!clinic?.ActivationKey &&
+							new Date().getTime() -
+								new Date(clinic?.CreatedAt || '').getTime() <=
+								14 * 24 * 60 * 60 * 1000 && (
+								<>
+									<Tooltip
+										title={`Hết hạn vào lúc ${
+											expDate ? getShortDateTime(expDate.toISOString()) : ''
+										}`}>
+										<Tag color='gold'>Dùng thử</Tag>
+									</Tooltip>
+									<Divider type='vertical' />
+								</>
+							)}
 						<Button
 							onClick={() => navigate('/settings')}
 							icon={<IoSettingsOutline size={18} />}
 							type='text'
 							size='small'
 						/>
-						{/* <Divider type='vertical' />
-						<Button
-							icon={<IoNotificationsOutline size={18} />}
-							type='text'
-							size='small'
-						/> */}
 						<Divider type='vertical' />
 						<Typography.Text>{formatDateToString(new Date())}</Typography.Text>
 					</Space>

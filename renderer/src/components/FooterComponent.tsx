@@ -1,8 +1,20 @@
 /** @format */
 
 import { Affix, Typography } from 'antd';
+import { useEffect, useState } from 'react';
 
 const FooterComponent = () => {
+	const [version, setVersion] = useState('');
+
+	useEffect(() => {
+		getVersion();
+	}, []);
+
+	const getVersion = async () => {
+		const response = await (window as any).beeclinicAPI.getVersion();
+		setVersion(response.version);
+	};
+
 	return (
 		<Affix offsetBottom={0}>
 			<div
@@ -22,7 +34,7 @@ const FooterComponent = () => {
 					</div>
 					<div className='col text-end'>
 						<Typography.Text>
-							Ver - <a href=''>All rights reserved</a>
+							<i>Phiên bản: {version}</i> - <a href=''>All rights reserved</a>
 						</Typography.Text>
 					</div>
 				</div>

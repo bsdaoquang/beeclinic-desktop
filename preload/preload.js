@@ -4,6 +4,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('beeclinicAPI', {
+	getVersion: () => ipcRenderer.invoke('get-version'),
 	addPatient: (data) => ipcRenderer.invoke('add-patient', data),
 	getPatients: () => ipcRenderer.invoke('get-patients'),
 	deletePatient: (id) => ipcRenderer.invoke('delete-patient', id),
