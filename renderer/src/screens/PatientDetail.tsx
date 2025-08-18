@@ -219,7 +219,7 @@ const PatientDetail = () => {
 					</>
 				) : (
 					<Typography.Paragraph type='secondary'>
-						Không tìm thấy thông tin bệnh nhân
+						Không tìm thấy thông tin bệnh nhân bạn cần
 					</Typography.Paragraph>
 				)}
 			</div>

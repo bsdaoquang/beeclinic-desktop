@@ -1,6 +1,6 @@
 {
 	"name": "beeclinic-desktop",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"main": "main/main.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -50,7 +50,7 @@
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
-	"description": "",
+	"description": "Phần mềm quản lý phòng khám",
 	"devDependencies": {
 		"electron": "^37.2.5",
 		"electron-builder": "^26.0.12"
