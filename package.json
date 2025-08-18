@@ -1,6 +1,6 @@
 {
 	"name": "beeclinic-desktop",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"main": "main/main.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -27,6 +27,15 @@
 		"win": {
 			"target": "nsis"
 		}
+	},
+	"mac": {
+		"icon": "assets/icons/icon.icns"
+	},
+	"win": {
+		"icon": "assets/icons/icon.ico"
+	},
+	"linux": {
+		"icon": "assets/icons/icon.png"
 	},
 	"keywords": [],
 	"author": "",

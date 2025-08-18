@@ -22,6 +22,7 @@ function createWindow() {
 			contextIsolation: true,
 			nodeIntegration: false,
 		},
+		icon: path.join(__dirname, '../assets/icons/icon.png'), // Linux, Windows
 	});
 
 	win.maximize();

@@ -19,7 +19,8 @@ const FooterComponent = () => {
 					</div>
 					<div className='col text-end'>
 						<Typography.Text>
-							Ver 1.0.0 - <a href=''>All rights reserved</a>
+							Ver {require('../../../package.json').version} -{' '}
+							<a href=''>All rights reserved</a>
 						</Typography.Text>
 					</div>
 				</div>
