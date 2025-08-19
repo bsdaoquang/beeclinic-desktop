@@ -1,6 +1,6 @@
 /** @format */
 
-import { Affix, AutoComplete, Button, Flex, Typography } from 'antd';
+import { AutoComplete, Button, Flex, Typography } from 'antd';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
