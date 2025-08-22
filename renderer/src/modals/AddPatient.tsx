@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { parseDateInput } from '../utils/datetime';
 import { handleSaveFile } from '../utils/handleFile';
 import type { PatientModel } from '../types/PatientModel';
+import { useNavigate } from 'react-router-dom';
 
 export interface AddPatientProps {
 	visible: boolean;
@@ -33,6 +34,7 @@ const AddPatient = (props: AddPatientProps) => {
 	const [messageAPI, messHolder] = message.useMessage();
 
 	const [form] = Form.useForm();
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (patient) {
@@ -80,12 +82,18 @@ const AddPatient = (props: AddPatientProps) => {
 
 			// console.log(data);
 
-			patient
-				? await (window as any).beeclinicAPI.updatePatientById(
-						`${patient.id}`,
-						data
-				  )
-				: await (window as any).beeclinicAPI.addPatient(data);
+			if (patient && patient.id) {
+				await (window as any).beeclinicAPI.updatePatientById(
+					`${patient.id}`,
+					data
+				);
+			} else {
+				const res = await (window as any).beeclinicAPI.addPatient(data);
+				navigate(`/prescriptions/add-new?patient-id=${res.id}`);
+			}
+
+			// patient
+			// 	: await (window as any).beeclinicAPI.addPatient(data);
 			messageAPI.success('Lưu thông tin bệnh nhân thành công');
 			handleClose();
 			onFinish && onFinish();

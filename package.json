@@ -7,8 +7,8 @@
 		"start": "electron .",
 		"build": "electron-builder",
 		"public": "npx electron-builder -mw",
-		"build:mac": "electron-builder --mac dmg zip --publish always",
-		"build:win": "electron-builder --win nsis --publish always"
+		"build:mac": "electron-builder --mac dmg zip",
+		"build:win": "electron-builder --win nsis"
 	},
 	"type": "module",
 	"build": {

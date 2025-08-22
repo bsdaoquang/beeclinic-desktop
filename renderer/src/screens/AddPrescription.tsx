@@ -65,6 +65,7 @@ const AddPrescription = () => {
 	const [prescriptionsByPatient, setPrescriptionsByPatient] = useState<
 		PrescriptionModel[]
 	>([]);
+	const [congkham, setCongkham] = useState(0);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -103,10 +104,10 @@ const AddPrescription = () => {
 		form.setFieldValue('loai_don_thuoc', 'c');
 		formPres.setFieldValue('unit', 'viên');
 		setPrescriptionCode(generatePrescriptionCode(clinic?.CSKCBID ?? '', 'c'));
+		clinic && clinic.CongKham && setCongkham(clinic.CongKham);
 
 		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
 		getPrescriptionsData();
-		getClinicInfos();
 		getAllMedicines();
 	}, []);
 
@@ -115,8 +116,6 @@ const AddPrescription = () => {
 			getPatientDetail();
 		}
 	}, [patientId]);
-
-	const getClinicInfos = async () => {};
 
 	const getPrescriptionsData = async () => {
 		try {
@@ -312,7 +311,7 @@ const AddPrescription = () => {
 	return (
 		<div className='container-fluid'>
 			{messHolder}
-			<div className='container py-3'>
+			<div className='py-3'>
 				{isLoading ? (
 					<div className='text-center p-5'>
 						<Spin />
@@ -320,7 +319,7 @@ const AddPrescription = () => {
 				) : patient ? (
 					<>
 						<div className='row'>
-							<div className='col-4 d-sm-none d-md-block'>
+							<div className='col-3 d-sm-none d-md-block'>
 								<Card
 									title='Thông tin bệnh nhân'
 									size='small'
@@ -348,9 +347,6 @@ const AddPrescription = () => {
 										</Descriptions.Item>
 										<Descriptions.Item label='Cân nặng'>
 											{patient.weight ?? ''}
-										</Descriptions.Item>
-										<Descriptions.Item label='Ngày khám'>
-											{new Date().toLocaleString()}
 										</Descriptions.Item>
 									</Descriptions>
 									<Divider className='mb-3' />
@@ -666,6 +662,11 @@ const AddPrescription = () => {
 																</Tooltip>
 															</Form.Item>
 														</div>
+														<div className='d-none'>
+															<Form.Item name={'gia_ban'}>
+																<InputNumber />
+															</Form.Item>
+														</div>
 													</div>
 												</Form>
 											</>
@@ -723,6 +724,101 @@ const AddPrescription = () => {
 									/>
 								</Card>
 							</div>
+							<div className='col-3 d-sm-none d-md-block'>
+								<Card
+									title='Thông tin phiên khám'
+									size='small'
+									style={{
+										height: 'calc(100vh - 190px)',
+										overflow: 'auto',
+									}}>
+									<Descriptions column={1} size='small'>
+										<Descriptions.Item label='Ngày khám'>
+											{new Date().toLocaleString()}
+										</Descriptions.Item>
+										<Descriptions.Item label='Công khám'>
+											<Typography.Text
+												className='mb-0'
+												editable={{
+													text: congkham.toLocaleString('vi-VN', {
+														style: 'currency',
+														currency: 'VND',
+													}),
+													onChange: (value) => {
+														setCongkham(value ? parseInt(value, 10) : 0);
+													},
+												}}>
+												{congkham.toLocaleString('vi-VN', {
+													style: 'currency',
+													currency: 'VND',
+												})}
+											</Typography.Text>
+										</Descriptions.Item>
+										<Descriptions.Item label='Thuốc'>
+											{prescriptionItems
+												.reduce(
+													(acc, item) =>
+														acc + (item.gia_ban ?? 0) * (item.quantity ?? 0),
+													0
+												)
+												.toLocaleString('vi-VN', {
+													style: 'currency',
+													currency: 'VND',
+												})}
+										</Descriptions.Item>
+										{/* 	<Descriptions.Item label='Dịch vụ'>
+											{prescriptionItems
+												.reduce(
+													(acc, item) =>
+														acc + (item.gia_ban ?? 0) * (item.quantity ?? 0),
+													0
+												)
+												.toLocaleString('vi-VN', {
+													style: 'currency',
+													currency: 'VND',
+												})}
+										</Descriptions.Item> */}
+										<Divider />
+										<Descriptions.Item label='Tổng tiền'>
+											<Typography.Title level={5} className='mb-1'>
+												{(
+													congkham +
+													prescriptionItems.reduce(
+														(acc, item) =>
+															acc + (item.gia_ban ?? 0) * (item.quantity ?? 0),
+														0
+													)
+												).toLocaleString('vi-VN', {
+													style: 'currency',
+													currency: 'VND',
+												})}
+											</Typography.Title>
+										</Descriptions.Item>
+									</Descriptions>
+									<Divider />
+									<Space className='mt-1'>
+										<Button danger type='text' onClick={() => navigate(-1)}>
+											Huỷ bỏ
+										</Button>
+										<Divider type='vertical' />
+										<Button
+											onClick={() => form.submit()}
+											icon={<FaSave size={16} className='text-muted' />}>
+											Lưu
+										</Button>
+										<Button
+											icon={<FaPrint size={16} className='text-white' />}
+											onClick={() => {
+												setIsPrint(true);
+												form.submit();
+											}}
+											className='px-5'
+											type='primary'>
+											Lưu và In
+										</Button>
+									</Space>
+								</Card>
+							</div>
 						</div>
 
 						<div className='row mt-3'>
@@ -739,30 +835,6 @@ const AddPrescription = () => {
 										/>
 									</Tooltip>
 								</Checkbox>
-							</div>
-
-							<div className='col text-end'>
-								<Space>
-									<Button danger type='text' onClick={() => navigate(-1)}>
-										Huỷ bỏ
-									</Button>
-									<Divider type='vertical' />
-									<Button
-										onClick={() => form.submit()}
-										icon={<FaSave size={16} className='text-muted' />}>
-										Lưu
-									</Button>
-									<Button
-										icon={<FaPrint size={16} className='text-white' />}
-										onClick={() => {
-											setIsPrint(true);
-											form.submit();
-										}}
-										className='px-5'
-										type='primary'>
-										Lưu và In
-									</Button>
-								</Space>
 							</div>
 						</div>
 					</>
