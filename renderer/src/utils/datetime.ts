@@ -79,7 +79,7 @@ export const getYearOld = (dob: string): number => {
 		age--;
 	}
 
-	return age;
+	return age < 1 ? 1 : age;
 };
 
 export const getDateTimeString = () => {

@@ -15,6 +15,7 @@ import {
 } from 'antd';
 import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
+import { FaUserCircle } from 'react-icons/fa';
 import { FaUserPlus } from 'react-icons/fa6';
 import { IoClose } from 'react-icons/io5';
 import { Link } from 'react-router-dom';
@@ -53,7 +54,14 @@ const Patients = () => {
 		{
 			key: 'photoUrl',
 			dataIndex: 'photoUrl',
-			render: (url) => <Avatar src={url} />,
+			render: (url) =>
+				url ? (
+					<Avatar className='bg-light' src={url} />
+				) : (
+					<Avatar className='bg-light'>
+						<FaUserCircle size={20} color='#676767' />
+					</Avatar>
+				),
 			title: 'Ảnh',
 			width: 70,
 			align: 'center',

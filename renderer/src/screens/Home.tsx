@@ -149,6 +149,37 @@ const Home = () => {
 							</div>
 							<div className='my-3'>
 								<AutoComplete
+									notFoundContent={
+										<Typography.Text type='secondary'>
+											Không tìm thấy kết quả
+										</Typography.Text>
+									}
+									onInputKeyDown={(e: any) => {
+										const value = e.target.value;
+										if (e.key === 'Enter' && value) {
+											const selectedOption = options.find(
+												(option) => option.value === value
+											);
+											if (selectedOption) {
+												navigate(
+													`/prescriptions/add-new?patient-id=${selectedOption.value}`
+												);
+											} else {
+												// console.log('No matching option found');
+												// Create patient with name = value and navigate to prescriptions
+												(window as any).beeclinicAPI
+													.addPatient({ name: value })
+													.then((res: any) => {
+														navigate(
+															`/prescriptions/add-new?patient-id=${res.id}`
+														);
+													})
+													.catch((error: any) => {
+														console.error('Error creating patient:', error);
+													});
+											}
+										}
+									}}
 									ref={inpRef}
 									disabled={isLoading}
 									variant='filled'

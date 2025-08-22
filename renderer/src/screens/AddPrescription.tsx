@@ -217,7 +217,7 @@ const AddPrescription = () => {
 			if (isPrint) {
 				printPrescription();
 			} else {
-				// navigate(-1);
+				navigate(-1);
 			}
 		} catch (error) {
 			console.log(error);
