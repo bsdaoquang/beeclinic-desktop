@@ -120,10 +120,26 @@ const Storages = () => {
 			sorter: (a: any, b: any) => a.quantity - b.quantity,
 		},
 		{
+			key: 'purchase_price',
+			dataIndex: 'gia_mua',
+			title: 'Giá mua',
+			width: 100,
+			align: 'center',
+			render: (text: number) => text || 0,
+		},
+		{
+			key: 'selling_price',
+			dataIndex: 'gia_ban',
+			title: 'Giá bán',
+			width: 100,
+			align: 'center',
+			render: (text: number) => text || 0,
+		},
+		{
 			key: 'expiry_date',
 			dataIndex: 'expDate',
-			title: 'Ngày hết hạn',
-			width: 100,
+			title: 'Exp',
+			width: 150,
 			align: 'center',
 			render: (text: string) =>
 				text ? formatDateToString(new Date(text)) : '',
@@ -133,7 +149,7 @@ const Storages = () => {
 			key: 'actions',
 			dataIndex: '',
 			title: '',
-			width: 150,
+			width: 70,
 			align: 'right',
 			fixed: 'right',
 			render: (item: PrescriptionItem) => (

@@ -12,6 +12,8 @@ export interface PrescriptionItem {
 	quantity: number; // Số lượng
 	instruction?: string; // Cách dùng
 	expDate?: string; // hạn dùng
+	gia_mua?: number | 0; // Giá mua (nếu có)
+	gia_ban?: number | 0; // Giá bán (nếu có)
 }
 
 export interface PrescriptionModel {

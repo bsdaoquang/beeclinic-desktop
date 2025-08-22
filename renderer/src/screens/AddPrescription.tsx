@@ -284,6 +284,9 @@ const AddPrescription = () => {
 					unit: vals.unit ?? '',
 					instruction: vals.instruction ?? '',
 					quantity: 0,
+					expDate: vals.expDate ? vals.expDate.toISOString() : null,
+					gia_mua: vals.gia_mua ?? 0,
+					gia_ban: vals.gia_ban ?? 0,
 				};
 
 				items.push(newMedicine);

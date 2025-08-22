@@ -40,6 +40,8 @@ const AddMedicine = (props: AddMedicineProps) => {
 			form.setFieldsValue({
 				...medicine,
 				expDate: medicine.expDate ? dayjs(medicine.expDate) : null,
+				gia_mua: medicine.gia_mua ?? 0,
+				gia_ban: medicine.gia_ban ?? 0,
 			});
 		} else {
 			form.setFieldsValue({
@@ -221,6 +223,26 @@ const AddMedicine = (props: AddMedicineProps) => {
 								style={{ width: '100%' }}
 								maxLength={100}
 								placeholder='Nhập số lượng'
+							/>
+						</Form.Item>
+					</div>
+				</div>
+				<div className='row'>
+					<div className='col'>
+						<Form.Item name={'gia_mua'} label='Giá mua'>
+							<InputNumber
+								min={0}
+								style={{ width: '100%' }}
+								placeholder='Nhập giá mua'
+							/>
+						</Form.Item>
+					</div>
+					<div className='col'>
+						<Form.Item name={'gia_ban'} label='Giá bán'>
+							<InputNumber
+								min={0}
+								style={{ width: '100%' }}
+								placeholder='Nhập giá bán'
 							/>
 						</Form.Item>
 					</div>

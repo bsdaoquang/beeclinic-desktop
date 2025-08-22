@@ -286,14 +286,45 @@ ipcMain.handle('delete-prescription-by-id', async (event, id) => {
 
 // medicine
 /*
- id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ma_thuoc TEXT,         -- Mã thuốc (nếu có trong danh mục)
-    biet_duoc TEXT,        -- Tên biệt dược (nếu có)
-    ten_thuoc TEXT NOT NULL, -- Tên thuốc (bắt buộc)
-    unit TEXT,             -- Đơn vị tính (viên, ống, gói...)
-    quantity INTEGER,      -- Số lượng
-    instruction TEXT,      -- Cách dùng
-    expDate TEXT           -- Hạn dùng (ISO string hoặc yyyy-mm-dd)
+
+
+	db.run(`CREATE TABLE IF NOT EXISTS medicines (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ma_thuoc TEXT,         -- Mã thuốc (nếu có trong danh mục)
+  biet_duoc TEXT,        -- Tên biệt dược (nếu có)
+  ten_thuoc TEXT NOT NULL, -- Tên thuốc (bắt buộc)
+  unit TEXT,             -- Đơn vị tính (viên, ống, gói...)
+  quantity INTEGER,      -- Số lượng
+  instruction TEXT,      -- Cách dùng
+  expDate TEXT,          -- Hạn dùng (ISO string hoặc yyyy-mm-dd)
+  gia_mua REAL,          -- Giá mua
+  gia_ban REAL           -- Giá bán
+  )`);
+
+	// table of clinic info
+	db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+  TenCSKCB TEXT,
+  DiaChi TEXT,
+  DienThoai TEXT,
+  Email TEXT,
+  SoGiayPhepHoatDong TEXT,
+  NgayCapGiayPhep TEXT,
+  NoiCapGiayPhep TEXT,
+  HoTenBS TEXT,
+  SoChungChiHanhNghe TEXT,
+  KhoaPhong TEXT,
+  ChucVu TEXT,
+  MachineId TEXT,
+  AppVersion TEXT,
+  ActivationKey TEXT,
+  ClinicAccessToken TEXT, -- Access token cho phòng khám
+  DoctorAccessToken TEXT, -- Access token cho bác sĩ
+  CongKham INTEGER DEFAULT 100000, -- Công khám, mặc định 100000
+  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt TEXT
+  )`);
 */
 // add medicine
 ipcMain.handle('add-medicine', async (event, medicine) => {
@@ -306,8 +337,10 @@ ipcMain.handle('add-medicine', async (event, medicine) => {
 				unit,
 				quantity,
 				instruction,
-				expDate
-			) VALUES (?, ?, ?, ?, ?, ?, ?)
+				expDate,
+				gia_mua,
+				gia_ban
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 		db.run(
 			query,
@@ -319,6 +352,8 @@ ipcMain.handle('add-medicine', async (event, medicine) => {
 				medicine.quantity,
 				medicine.instruction,
 				medicine.expDate,
+				medicine.gia_mua || 0, // Default to 0 if not provided
+				medicine.gia_ban || 0, // Default to 0 if not provided
 			],
 			function (err) {
 				if (err) reject(err);
@@ -339,6 +374,8 @@ ipcMain.handle('update-medicine-by-id', async (event, { id, updates }) => {
 			'quantity',
 			'instruction',
 			'expDate',
+			'gia_mua',
+			'gia_ban',
 		];
 
 		const setClause = fields
@@ -446,6 +483,7 @@ async function ensureClinicInfo() {
 						ActivationKey TEXT,
 						ClinicAccessToken TEXT,
 						DoctorAccessToken TEXT,
+						CongKham INTEGER DEFAULT 100000,
 						CreatedAt TEXT,
 						UpdatedAt TEXT
 					)
@@ -475,9 +513,10 @@ async function ensureClinicInfo() {
 							ClinicAccessToken,
 							DoctorAccessToken,
 							CreatedAt,
-							UpdatedAt
+							UpdatedAt,
+							CongKham,
 						) VALUES (
-							1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', '', '', ?, ?
+							1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', '', '', ?, ?, ?
 						)
 					`;
 					db.run(insertQuery, [machineId, now, now], function (insertErr) {
@@ -510,9 +549,10 @@ async function ensureClinicInfo() {
 						ClinicAccessToken,
 						DoctorAccessToken,
 						CreatedAt,
-						UpdatedAt
+						UpdatedAt,
+						CongKham
 					) VALUES (
-						1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', '', '', ?, ?
+						1, '', '', '', '', '', '', '', '', '', '', '', '', ?, '', '', '', '', ?, ?, ?
 					)
 				`;
 				db.run(insertQuery, [machineId, now, now], function (insertErr) {
@@ -571,6 +611,7 @@ ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
 			'MachineId',
 			'AppVersion',
 			'ActivationKey',
+			'CongKham', // bổ sung công khám
 		];
 
 		const setClause = fields

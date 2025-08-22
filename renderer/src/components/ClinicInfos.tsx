@@ -37,6 +37,7 @@ import {
 	Flex,
 	Form,
 	Input,
+	InputNumber,
 	message,
 	Space,
 	Typography,
@@ -206,6 +207,13 @@ const ClinicInfos = () => {
 							</Form.Item>
 						</div>
 					</div>
+					<Form.Item name={'CongKham'} label='Công khám'>
+						<InputNumber
+							min={0}
+							style={{ width: '100%' }}
+							placeholder='Chi phí cho một lần khám'
+						/>
+					</Form.Item>
 				</Form>
 			</>
 		) : (
@@ -236,6 +244,9 @@ const ClinicInfos = () => {
 					</Descriptions.Item>
 					<Descriptions.Item label='Nơi cấp giấy phép'>
 						{clinic?.NoiCapGiayPhep || ''}
+					</Descriptions.Item>
+					<Descriptions.Item label='Công khám'>
+						{clinic?.CongKham || '0'}
 					</Descriptions.Item>
 					<Descriptions.Item label='Họ tên bác sĩ'>
 						{clinic?.HoTenBS || ''}

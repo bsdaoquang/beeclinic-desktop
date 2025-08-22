@@ -24,6 +24,9 @@ export interface ClinicModel {
 	AppVersion: string; // Phiên bản phần mềm
 	ActivationKey?: string; // Mã kích hoạt (nếu có)
 
+	// Thông tin tài chính
+	CongKham: number; // Công khám
+
 	// Metadata
 	CreatedAt?: string; // Ngày tạo (ISO string)
 	UpdatedAt?: string; // Ngày cập nhật gần nhất
