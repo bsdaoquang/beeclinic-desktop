@@ -40,6 +40,7 @@ import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import type { ServiceModel } from '../types/ServiceModel';
+import { ServicesList } from '../components';
 
 /** @format */
 /*
@@ -162,8 +163,10 @@ const AddPrescription = () => {
 			return;
 		}
 
-		if (prescriptionItems.length === 0) {
-			messageAPI.error('Vui lòng thêm ít nhất một thuốc vào đơn');
+		if (prescriptionItems.length === 0 && prescriptionServices.length === 0) {
+			messageAPI.error(
+				'Vui lòng thêm ít nhất một thuốc hoặc một dịch vụ vào đơn'
+			);
 			return;
 		}
 		/*
@@ -447,7 +450,12 @@ const AddPrescription = () => {
 											{
 												key: '2',
 												label: 'Dịch vụ - Thủ thuật',
-												children: <></>,
+												children: (
+													<ServicesList
+														prescriptionItems={prescriptionServices}
+														onChange={setPrescriptionServices}
+													/>
+												),
 											},
 										]}
 									/>
@@ -496,12 +504,8 @@ const AddPrescription = () => {
 												})}
 										</Descriptions.Item>
 										<Descriptions.Item label='Dịch vụ'>
-											{prescriptionItems
-												.reduce(
-													(acc, item) =>
-														acc + (item.gia_ban ?? 0) * (item.quantity ?? 0),
-													0
-												)
+											{prescriptionServices
+												.reduce((acc, item) => acc + (item.gia ?? 0), 0)
 												.toLocaleString('vi-VN', {
 													style: 'currency',
 													currency: 'VND',
@@ -515,6 +519,10 @@ const AddPrescription = () => {
 													prescriptionItems.reduce(
 														(acc, item) =>
 															acc + (item.gia_ban ?? 0) * (item.quantity ?? 0),
+														0
+													) +
+													prescriptionServices.reduce(
+														(acc, item) => acc + (item.gia ?? 0),
 														0
 													)
 												).toLocaleString('vi-VN', {
