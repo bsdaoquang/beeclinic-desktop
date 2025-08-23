@@ -28,11 +28,7 @@ export interface MedicineListProps {
 	clinic?: ClinicModel;
 }
 
-const MedicinesList = ({
-	prescriptionItems,
-	onChange,
-	clinic,
-}: MedicineListProps) => {
+const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
 
 	const [messageAPI, messHolder] = message.useMessage();
