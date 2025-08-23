@@ -27,6 +27,8 @@ export interface PrescriptionModel {
 	ngay_gio_ke_don: string; // ISO datetime string
 	ngay_tai_kham?: number; // Số ngày (optional)
 	thong_tin_don_thuoc_json: string; // Danh sách thuốc
+	thong_tin_dich_vu_json: string; // Danh sách dịch vụ
+	total?: number; // Tổng tiền
 	sent?: boolean; // Đã gửi hay chưa
 	sent_at?: string; // Ngày giờ gửi (ISO)
 	created_at?: string; // Ngày tạo,

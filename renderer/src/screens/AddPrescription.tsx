@@ -9,37 +9,37 @@ import {
 	Divider,
 	Form,
 	Input,
-	InputNumber,
 	List,
 	message,
 	Popover,
 	Select,
 	Space,
 	Spin,
+	Tabs,
 	Tooltip,
 	Typography,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 import { useEffect, useRef, useState } from 'react';
-import { BiEdit, BiInfoCircle } from 'react-icons/bi';
+import { BiInfoCircle } from 'react-icons/bi';
+import { BsArrowRight } from 'react-icons/bs';
 import { FaSave } from 'react-icons/fa';
 import { FaPrint } from 'react-icons/fa6';
-import { IoIosAdd } from 'react-icons/io';
-import { IoClose } from 'react-icons/io5';
+import { RxInfoCircled } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
+import MedicinesList from '../components/MedicinesList';
 import { PrescriptionPrint } from '../printPages';
+import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
 import type {
 	PrescriptionItem,
 	PrescriptionModel,
 } from '../types/PrescriptionModel';
 import { formatDateToString, getShortDateTime } from '../utils/datetime';
-import { generatePrescriptionCode, randomAlnum } from '../utils/prescriptions';
-import type { ClinicModel } from '../types/ClinicModel';
-import { RxInfoCircled } from 'react-icons/rx';
 import { numToString } from '../utils/numToString';
-import { BsArrowRight } from 'react-icons/bs';
+import { generatePrescriptionCode } from '../utils/prescriptions';
+import type { ServiceModel } from '../types/ServiceModel';
 
 /** @format */
 /*
@@ -52,8 +52,10 @@ const AddPrescription = () => {
 	const [prescriptionItems, setPrescriptionItems] = useState<
 		PrescriptionItem[]
 	>([]);
+	const [prescriptionServices, setPrescriptionServices] = useState<
+		ServiceModel[]
+	>([]);
 	const [prescriptionCode, setPrescriptionCode] = useState('');
-	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
 	const [isAsync, setIsAsync] = useState<null | boolean>(null);
 	const [diagnossic, setDiagnossic] = useState('');
 	const [isPrint, setIsPrint] = useState(false);
@@ -73,8 +75,6 @@ const AddPrescription = () => {
 	const [formPres] = Form.useForm();
 	const [messageAPI, messHolder] = message.useMessage();
 
-	const medicineNameRef = useRef<any>(null);
-	const quantityRef = useRef<any>(null);
 	const printRef = useRef<HTMLDivElement>(null);
 	const clinic: ClinicModel | undefined = localStorage.getItem('clinic')
 		? JSON.parse(localStorage.getItem('clinic')!)
@@ -108,7 +108,6 @@ const AddPrescription = () => {
 
 		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
 		getPrescriptionsData();
-		getAllMedicines();
 	}, []);
 
 	useEffect(() => {
@@ -139,15 +138,6 @@ const AddPrescription = () => {
 				(element: any) => `${element.patient_id}` === patientId
 			);
 			setPrescriptionsByPatient(items);
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
-	const getAllMedicines = async () => {
-		try {
-			const res = await (window as any).beeclinicAPI.getMedicines();
-			setMedicines(res);
 		} catch (error) {
 			console.log(error);
 		}
@@ -201,6 +191,15 @@ const AddPrescription = () => {
 			ngay_gio_ke_don: new Date().toISOString(),
 			ngay_tai_kham: vals.ngay_tai_kham ?? null,
 			thong_tin_don_thuoc_json: prescriptionItems,
+			thong_tin_dich_vu_json: prescriptionServices,
+			// Tổng tiền = tiền thuốc + tiền dịch vụ + công khám
+			total:
+				prescriptionItems.reduce(
+					(acc, item) => acc + (item.gia_ban || 0) * (item.quantity || 0),
+					0
+				) +
+				prescriptionServices.reduce((acc, item) => acc + (item.gia || 0), 0) +
+				(congkham ?? 0),
 			sent: isAsync ? 1 : 0,
 			sent_at: null,
 			created_at: new Date().toISOString(),
@@ -222,86 +221,6 @@ const AddPrescription = () => {
 			console.log(error);
 			messageAPI.error('Lưu đơn thuốc thất bại');
 		}
-	};
-
-	const handleAddMedicine = async (vals: any) => {
-		if (!vals.quantity || vals.quantity <= 0) {
-			messageAPI.error('Số lượng thuốc phải lớn hơn 0');
-			quantityRef.current.focus();
-			return;
-		}
-		// formPres.resetFields();
-		// medicineNameRef.current.focus();
-		// Kiểm tra trong kho có thuốc này chưa, nếu chưa có thì tạo mã thuốc tự động gồm 4 ký tự và thêm vào với số lượng 0,
-		// nếu đã có và số lượng > 0 thì trừ trong kho theo quantity và cập nhật lại kho
-		//
-		const items = [...medicines];
-
-		const indexMedicine = prescriptionItems.findIndex(
-			(element) => element.ten_thuoc === vals.ten_thuoc
-		);
-
-		if (indexMedicine === -1) {
-			const isExitsMedicine = items.find(
-				(element) =>
-					element.ma_thuoc === vals.ma_thuoc &&
-					element.ten_thuoc === vals.ten_thuoc
-			);
-
-			if (isExitsMedicine) {
-				// Đã có thuốc tương tự
-				// nếu số lượng khác 0 tức là có quản lý
-				// Cập nhật số lượng trong kho nếu có khóa kích hoạt
-
-				if (isExitsMedicine.quantity > 0 && clinic?.ActivationKey) {
-					const count = isExitsMedicine.quantity - vals.quantity;
-					// update to database
-
-					const newData = {
-						...isExitsMedicine,
-						quantity: count < 0 ? 0 : count,
-					};
-
-					await (window as any).beeclinicAPI.updateMedicineById(
-						isExitsMedicine.id,
-						newData
-					);
-					// update in result
-				}
-
-				// bỏ khỏi danh sách medicine vì đã thêm vào rồi
-				const index = items.findIndex(
-					(element) => element.ma_thuoc === vals.ma_thuoc
-				);
-				items.splice(index, 1);
-				setMedicines(items);
-			} else {
-				// Chưa có, tạo mã và thêm thuốc vào kho với số lượng là 0
-				const newMedicine: PrescriptionItem = {
-					ten_thuoc: vals.ten_thuoc,
-					ma_thuoc: randomAlnum(),
-					unit: vals.unit ?? '',
-					instruction: vals.instruction ?? '',
-					quantity: 0,
-					expDate: vals.expDate ? vals.expDate.toISOString() : null,
-					gia_mua: vals.gia_mua ?? 0,
-					gia_ban: vals.gia_ban ?? 0,
-				};
-
-				items.push(newMedicine);
-				setMedicines(items);
-				await (window as any).beeclinicAPI.addMedicine(newMedicine);
-				setPrescriptionItems([...prescriptionItems, vals]);
-			}
-			prescriptionItems.push(vals);
-		} else {
-			const newPresItems = [...prescriptionItems];
-			newPresItems[indexMedicine] = vals;
-			setPrescriptionItems(newPresItems);
-		}
-
-		formPres.resetFields();
-		medicineNameRef.current.focus();
 	};
 
 	const handleAsyncPrescription = async (prescriptionData: any) => {
@@ -449,278 +368,88 @@ const AddPrescription = () => {
 									extra={
 										<Typography.Text type='secondary'>{`Mã đơn: ${prescriptionCode.toUpperCase()}`}</Typography.Text>
 									}>
-									<List
-										header={
-											<>
-												<Form
-													layout='vertical'
-													variant='filled'
-													onFinish={handleAddPrescription}
-													form={form}>
-													<Form.Item name={'reason_for_visit'}>
-														<Input placeholder='Lý do đến khám' allowClear />
-													</Form.Item>
+									<Form
+										layout='vertical'
+										variant='filled'
+										onFinish={handleAddPrescription}
+										form={form}>
+										<Form.Item name={'reason_for_visit'}>
+											<Input placeholder='Lý do đến khám' allowClear />
+										</Form.Item>
 
-													<Form.Item name={'disease_progression'}>
-														<TextArea
-															rows={3}
-															allowClear
-															placeholder='Diễn tiến bệnh'
-														/>
-													</Form.Item>
-													<div className='row'>
-														<div className='col-8'>
-															<Form.Item
-																rules={[
-																	{
-																		required: true,
-																		message: 'Nhập chẩn đoán',
-																	},
-																]}
-																name={'diagnosis'}>
-																<AutoComplete
-																	onChange={(val) => setDiagnossic(val)}
-																	options={prescriptionData.diagnossics.map(
-																		(item) => ({
-																			label: item,
-																			value: item,
-																		})
-																	)}
-																	allowClear
-																	placeholder='Chẩn đoán'
-																/>
-															</Form.Item>
-														</div>
-														<div className='col'>
-															<Form.Item name={'loai_don_thuoc'}>
-																<Select
-																	placeholder='Loại đơn thuốc'
-																	onChange={(val) => {
-																		const newCode = generatePrescriptionCode(
-																			clinic?.CSKCBID ?? '',
-																			val
-																		);
-																		setPrescriptionCode(newCode);
-																	}}
-																	options={[
-																		{ label: 'Cơ bản', value: 'c' },
-																		{ label: 'Gây nghiện', value: 'n' },
-																		{ label: 'Hướng thần', value: 'h' },
-																		{ label: 'YHCT', value: 'y' },
-																	]}
-																/>
-															</Form.Item>
-														</div>
-													</div>
-												</Form>
-												<Form
-													layout='vertical'
-													className='mb-0'
-													form={formPres}
-													onFinish={handleAddMedicine}
-													variant='filled'>
-													<div
-														className='row'
-														style={{
-															padding: 0,
-															margin: 0,
-														}}>
-														<div
-															className='col-11'
-															style={{
-																padding: 0,
-															}}>
-															<div className='row'>
-																<div className='col-4'>
-																	<div className='d-none'>
-																		<Form.Item name={'ma_thuoc'}>
-																			<Input />
-																		</Form.Item>
-																	</div>
-
-																	<Form.Item
-																		rules={[
-																			{
-																				required: true,
-																				message: 'Nhập tên thuốc',
-																			},
-																		]}
-																		name={'ten_thuoc'}
-																		label='Tên thuốc'>
-																		<AutoComplete
-																			ref={medicineNameRef}
-																			autoFocus
-																			onSelect={(name) => {
-																				const medicine = medicines.find(
-																					(element) =>
-																						element.ten_thuoc === name
-																				);
-																				formPres.setFieldsValue({
-																					...medicine,
-																					quantity: 1,
-																				});
-																				quantityRef.current.focus();
-																			}}
-																			placeholder='Tên thuốc'
-																			allowClear
-																			options={medicines.map((item) => ({
-																				label: item.ten_thuoc,
-																				value: item.ten_thuoc,
-																			}))}
-																		/>
-																	</Form.Item>
-																</div>
-																<div className='col-2'>
-																	<Form.Item
-																		rules={[
-																			{
-																				required: true,
-																				message: 'Nhập số lượng thuốc',
-																			},
-																		]}
-																		name={'quantity'}
-																		label='Số lượng'>
-																		<InputNumber
-																			ref={quantityRef}
-																			placeholder=''
-																			min={0}
-																		/>
-																	</Form.Item>
-																</div>
-																<div className='col-2'>
-																	<Form.Item name={'unit'} label='ĐVT'>
-																		<Select
-																			options={[
-																				{ label: 'Viên', value: 'viên' },
-																				{ label: 'Ống', value: 'ống' },
-																				{ label: 'Gói', value: 'gói' },
-																				{ label: 'Chai', value: 'chai' },
-																				{ label: 'Lọ', value: 'lọ' },
-																				{ label: 'Tuýp', value: 'tuýp' },
-																				{ label: 'Vỉ', value: 'vỉ' },
-																				{ label: 'Ml', value: 'ml' },
-																				{ label: 'Gam', value: 'g' },
-																				{ label: 'Miếng', value: 'miếng' },
-																			]}
-																		/>
-																	</Form.Item>
-																</div>
-																<div className='col-4'>
-																	<Form.Item
-																		name={'instruction'}
-																		label='Cách dùng'>
-																		<AutoComplete
-																			onSelect={handleAddMedicine}
-																			allowClear
-																			options={[
-																				{
-																					label:
-																						'Uống sau ăn, sáng 1 viên, chiều 1 viên',
-																					value:
-																						'Uống sau ăn, sáng 1 viên, chiều 1 viên',
-																				},
-																				{
-																					label: 'Uống trước ăn, sáng 1 viên',
-																					value: 'Uống trước ăn, sáng 1 viên',
-																				},
-																				{
-																					label:
-																						'Uống sau ăn, ngày 2 lần, mỗi lần 1 viên',
-																					value:
-																						'Uống sau ăn, ngày 2 lần, mỗi lần 1 viên',
-																				},
-																				{
-																					label: 'Uống trước khi ngủ, 1 viên',
-																					value: 'Uống trước khi ngủ, 1 viên',
-																				},
-																				{
-																					label: 'Uống sáng 1 viên, tối 1 viên',
-																					value: 'Uống sáng 1 viên, tối 1 viên',
-																				},
-																				{
-																					label: 'Uống mỗi 8 giờ, 1 viên/lần',
-																					value: 'Uống mỗi 8 giờ, 1 viên/lần',
-																				},
-																			]}
-																		/>
-																	</Form.Item>
-																</div>
-															</div>
-														</div>
-														<div
-															className='col text-end'
-															style={{
-																padding: 0,
-															}}>
-															<Form.Item label=' '>
-																<Tooltip title='Thêm thuốc vào đơn thuốc'>
-																	<Button
-																		type='primary'
-																		onClick={() => formPres.submit()}
-																		icon={<IoIosAdd size={20} />}
-																	/>
-																</Tooltip>
-															</Form.Item>
-														</div>
-														<div className='d-none'>
-															<Form.Item name={'gia_ban'}>
-																<InputNumber />
-															</Form.Item>
-														</div>
-													</div>
-												</Form>
-											</>
-										}
-										dataSource={prescriptionItems}
-										renderItem={(item, index) => (
-											<List.Item
-												style={{
-													alignItems: 'flex-start',
-												}}
-												key={`prescription-item-${index}`}
-												extra={
-													<Space>
-														{`${item.quantity} ${item.unit}`}
-														<Divider type='vertical' />
-														<Tooltip title='Chỉnh sửa'>
-															<Button
-																type='link'
-																icon={<BiEdit size={20} />}
-																size='small'
-																onClick={() => {
-																	formPres.setFieldsValue(item);
-																	quantityRef.current.focus();
-																}}
-															/>
-														</Tooltip>
-														<Tooltip title='Xoá khỏi đơn thuốc'>
-															<Button
-																type='link'
-																danger
-																icon={<IoClose size={23} />}
-																size='small'
-																onClick={() => {
-																	setMedicines([...medicines, item]);
-																	const newItems = [...prescriptionItems];
-																	newItems.splice(index, 1);
-																	setPrescriptionItems(newItems);
-																}}
-															/>
-														</Tooltip>
-													</Space>
-												}>
-												<List.Item.Meta
-													title={`${item.ten_thuoc}`}
-													description={
-														<Typography.Text
-															type='secondary'
-															style={{
-																fontSize: 13,
-															}}>{`${item.instruction}`}</Typography.Text>
-													}
-												/>
-											</List.Item>
-										)}
+										<Form.Item name={'disease_progression'}>
+											<TextArea
+												rows={3}
+												allowClear
+												placeholder='Diễn tiến bệnh'
+											/>
+										</Form.Item>
+										<div className='row'>
+											<div className='col-8'>
+												<Form.Item
+													rules={[
+														{
+															required: true,
+															message: 'Nhập chẩn đoán',
+														},
+													]}
+													name={'diagnosis'}>
+													<AutoComplete
+														onChange={(val) => setDiagnossic(val)}
+														options={prescriptionData.diagnossics.map(
+															(item) => ({
+																label: item,
+																value: item,
+															})
+														)}
+														allowClear
+														placeholder='Chẩn đoán'
+													/>
+												</Form.Item>
+											</div>
+											<div className='col'>
+												<Form.Item name={'loai_don_thuoc'}>
+													<Select
+														placeholder='Loại đơn thuốc'
+														onChange={(val) => {
+															const newCode = generatePrescriptionCode(
+																clinic?.CSKCBID ?? '',
+																val
+															);
+															setPrescriptionCode(newCode);
+														}}
+														options={[
+															{ label: 'Cơ bản', value: 'c' },
+															{ label: 'Gây nghiện', value: 'n' },
+															{ label: 'Hướng thần', value: 'h' },
+															{ label: 'YHCT', value: 'y' },
+														]}
+													/>
+												</Form.Item>
+											</div>
+										</div>
+									</Form>
+									<Tabs
+										size='small'
+										type='card'
+										items={[
+											{
+												key: '1',
+												label: 'Thuốc',
+												children: (
+													<MedicinesList
+														prescriptionItems={prescriptionItems}
+														onChange={setPrescriptionItems}
+														clinic={clinic}
+													/>
+												),
+											},
+											{
+												key: '2',
+												label: 'Dịch vụ - Thủ thuật',
+												children: <></>,
+											},
+										]}
 									/>
 								</Card>
 							</div>
@@ -766,7 +495,7 @@ const AddPrescription = () => {
 													currency: 'VND',
 												})}
 										</Descriptions.Item>
-										{/* 	<Descriptions.Item label='Dịch vụ'>
+										<Descriptions.Item label='Dịch vụ'>
 											{prescriptionItems
 												.reduce(
 													(acc, item) =>
@@ -777,7 +506,7 @@ const AddPrescription = () => {
 													style: 'currency',
 													currency: 'VND',
 												})}
-										</Descriptions.Item> */}
+										</Descriptions.Item>
 										<Divider />
 										<Descriptions.Item label='Tổng tiền'>
 											<Typography.Title level={5} className='mb-1'>
@@ -812,7 +541,6 @@ const AddPrescription = () => {
 												setIsPrint(true);
 												form.submit();
 											}}
-											className='px-5'
 											type='primary'>
 											Lưu và In
 										</Button>

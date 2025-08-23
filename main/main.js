@@ -211,12 +211,14 @@ ipcMain.handle('add-prescription', async (event, prescription) => {
 				ngay_gio_ke_don,
 				ngay_tai_kham,
 				thong_tin_don_thuoc_json,
+				thong_tin_dich_vu_json,
 				sent,
 				sent_at,
 				created_at,
 				reason_for_visit,
-				disease_progression
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				disease_progression,
+				total
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		`;
 		db.run(
 			query,
@@ -229,11 +231,13 @@ ipcMain.handle('add-prescription', async (event, prescription) => {
 				prescription.ngay_gio_ke_don,
 				prescription.ngay_tai_kham,
 				JSON.stringify(prescription.thong_tin_don_thuoc_json),
+				JSON.stringify(prescription.thong_tin_dich_vu_json),
 				prescription.sent ? 1 : 0,
 				prescription.sent_at || null,
 				new Date().toISOString(),
 				prescription.reason_for_visit,
 				prescription.disease_progression,
+				prescription.total || 0,
 			],
 			function (err) {
 				if (err) reject(err);
@@ -629,6 +633,95 @@ ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
 		db.run(query, values, function (err) {
 			if (err) reject(err);
 			else resolve({ success: true, changes: this.changes });
+		});
+	});
+});
+
+// thêm, xoá, sửa dịch vụ - thủ thuật
+/*
+	db.run(`CREATE TABLE IF NOT EXISTS services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ten_dich_vu TEXT NOT NULL,
+    mo_ta TEXT,
+    gia REAL,
+    thoi_gian INTEGER,
+    createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+*/
+
+ipcMain.handle('add-service', async (event, service) => {
+	return new Promise((resolve, reject) => {
+		const query = `
+			INSERT INTO services (
+				ten_dich_vu,
+				mo_ta,
+				gia,
+				thoi_gian,
+				createdAt,
+				updatedAt
+			) VALUES (?, ?, ?, ?, ?, ?)
+		`;
+		const now = new Date().toISOString();
+		db.run(
+			query,
+			[
+				service.ten_dich_vu,
+				service.mo_ta || '',
+				service.gia || 0,
+				service.thoi_gian || 0,
+				now,
+				now,
+			],
+			function (err) {
+				if (err) reject(err);
+				else resolve({ id: this.lastID });
+			}
+		);
+	});
+});
+
+ipcMain.handle('get-services', async () => {
+	return new Promise((resolve, reject) => {
+		db.all('SELECT * FROM services ORDER BY createdAt DESC', (err, rows) => {
+			if (err) reject(err);
+			else resolve(rows);
+		});
+	});
+});
+
+ipcMain.handle('update-service-by-id', async (event, { id, updates }) => {
+	return new Promise((resolve, reject) => {
+		const fields = ['ten_dich_vu', 'mo_ta', 'gia', 'thoi_gian'];
+
+		const setClause = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => `${field} = ?`)
+			.join(', ');
+
+		const values = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => updates[field]);
+
+		const query = `UPDATE services SET ${setClause}, updatedAt = ? WHERE id = ?`;
+		values.push(new Date().toISOString(), id);
+
+		db.run(query, values, function (err) {
+			if (err) reject(err);
+			else resolve({ success: true, changes: this.changes });
+		});
+	});
+});
+
+ipcMain.handle('delete-service-by-id', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		const query = 'DELETE FROM services WHERE id = ?';
+		db.run(query, [id], function (err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve({ success: true, changes: this.changes });
+			}
 		});
 	});
 });

@@ -53,6 +53,18 @@ const db = new sqlite3.Database(dbPath, (err) => {
 */
 
 /*
+  Dịch vụ - thủ thuật của phòng khám
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ten_dich_vu TEXT NOT NULL,
+  mo_ta TEXT,
+  gia REAL,
+  thoi_gian INTEGER,
+  createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+
+*/
+
+/*
   clinic_infos
   CSKCBID TEXT,               -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
   TenCSKCB TEXT,
@@ -85,43 +97,62 @@ const createDatabase = () => {
 
 	db.serialize(() => {
 		db.run(`CREATE TABLE IF NOT EXISTS patients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, -- Mã bệnh nhân
-    name TEXT NOT NULL, -- Tên bệnh nhân
-    age INTEGER, -- Tuổi
-    phone TEXT, -- Số điện thoại
-    address TEXT, -- Địa chỉ
-    citizenId TEXT, -- Số CMND/CCCD
-    email TEXT, -- Email
-    gender TEXT, -- Giới tính: 'male' hoặc 'female'
-    createdAt TEXT NOT NULL, -- Ngày tạo
-    updatedAt TEXT NOT NULL, -- Ngày cập nhật
-    medicalHistory TEXT, -- Tiền sử bệnh
-    allergies TEXT, -- Dị ứng
-    photoUrl TEXT, -- Ảnh đại diện
-    notes TEXT, -- Ghi chú
-    weight REAL, -- Cân nặng (tùy chọn)
-    ma_dinh_danh_y_te TEXT, -- Mã định danh y tế (tùy chọn)
-    bhyt TEXT, -- Mã số thẻ bảo hiểm y tế (tùy chọn)
-    guardian TEXT -- Người giám hộ (tùy chọn)
+  id INTEGER PRIMARY KEY AUTOINCREMENT, -- Mã bệnh nhân
+  name TEXT NOT NULL, -- Tên bệnh nhân
+  age INTEGER, -- Tuổi
+  phone TEXT, -- Số điện thoại
+  address TEXT, -- Địa chỉ
+  citizenId TEXT, -- Số CMND/CCCD
+  email TEXT, -- Email
+  gender TEXT, -- Giới tính: 'male' hoặc 'female'
+  createdAt TEXT NOT NULL, -- Ngày tạo
+  updatedAt TEXT NOT NULL, -- Ngày cập nhật
+  medicalHistory TEXT, -- Tiền sử bệnh
+  allergies TEXT, -- Dị ứng
+  photoUrl TEXT, -- Ảnh đại diện
+  notes TEXT, -- Ghi chú
+  weight REAL, -- Cân nặng (tùy chọn)
+  ma_dinh_danh_y_te TEXT, -- Mã định danh y tế (tùy chọn)
+  bhyt TEXT, -- Mã số thẻ bảo hiểm y tế (tùy chọn)
+  guardian TEXT -- Người giám hộ (tùy chọn)
   )`);
 
+		// Tạo bảng prescriptions nếu chưa có
 		db.run(`CREATE TABLE IF NOT EXISTS prescriptions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      ma_don_thuoc TEXT UNIQUE,
-      patient_id INTEGER NOT NULL,
-      loai_don_thuoc TEXT,         -- 'c'|'n'|'h'|'y'
-      diagnosis TEXT,
-      note TEXT,
-      ngay_gio_ke_don TEXT,        -- ISO string
-      ngay_tai_kham INTEGER,       -- số ngày
-      thong_tin_don_thuoc_json TEXT, -- JSON string of items
-      sent INTEGER DEFAULT 0,      -- 0: chưa gửi, 1: đã gửi
-      sent_at TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      reason_for_visit TEXT,           -- Lý do đến khám (tùy chọn)
-      disease_progression TEXT         -- Diễn tiến bệnh (tùy chọn)
-      );
-    `);
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ma_don_thuoc TEXT UNIQUE,
+  patient_id INTEGER NOT NULL,
+  loai_don_thuoc TEXT,         -- 'c'|'n'|'h'|'y'
+  diagnosis TEXT,
+  note TEXT,
+  ngay_gio_ke_don TEXT,        -- ISO string
+  ngay_tai_kham INTEGER,       -- số ngày
+  thong_tin_don_thuoc_json TEXT, -- JSON string of items
+  thong_tin_dich_vu_json TEXT, -- JSON string of service items
+  total REAL,                  -- Tổng tiền đơn thuốc + dịch vụ
+  sent INTEGER DEFAULT 0,      -- 0: chưa gửi, 1: đã gửi
+  sent_at TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  reason_for_visit TEXT,           -- Lý do đến khám (tùy chọn)
+  disease_progression TEXT         -- Diễn tiến bệnh (tùy chọn)
+  );`);
+
+		// Nếu bảng prescriptions đã tồn tại, thêm cột thong_tin_dich_vu_json nếu chưa có
+		db.all(`PRAGMA table_info(prescriptions);`, (err, columns) => {
+			if (err) return;
+			const hasDichVu = columns.some(
+				(col) => col.name === 'thong_tin_dich_vu_json'
+			);
+			if (!hasDichVu) {
+				db.run(
+					`ALTER TABLE prescriptions ADD COLUMN thong_tin_dich_vu_json TEXT DEFAULT NULL;`
+				);
+			}
+			const hasTotal = columns.some((col) => col.name === 'total');
+			if (!hasTotal) {
+				db.run(`ALTER TABLE prescriptions ADD COLUMN total REAL DEFAULT NULL;`);
+			}
+		});
 	});
 
 	db.run(`CREATE TABLE IF NOT EXISTS medicines (
@@ -160,6 +191,17 @@ const createDatabase = () => {
   CongKham INTEGER DEFAULT 100000, -- Công khám, mặc định 100000
   CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
   UpdatedAt TEXT
+  )`);
+
+	// tạo bảng dịch vụ - thủ thuật
+	db.run(`CREATE TABLE IF NOT EXISTS services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ten_dich_vu TEXT NOT NULL,
+    mo_ta TEXT,
+    gia REAL,
+    thoi_gian INTEGER,
+    createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
 
 	return dbPath;

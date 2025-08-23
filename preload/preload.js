@@ -34,4 +34,10 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	addClinic: (data) => ipcRenderer.invoke('create-clinic-info', data),
 	updateClinicById: (id, updates) =>
 		ipcRenderer.invoke('update-clinic-info-by-id', { id, updates }),
+	// services
+	addService: (service) => ipcRenderer.invoke('add-service', service),
+	updateServiceById: (id, updates) =>
+		ipcRenderer.invoke('update-service-by-id', { id, updates }),
+	getServices: () => ipcRenderer.invoke('get-services'),
+	deleteServiceById: (id) => ipcRenderer.invoke('delete-service-by-id', id),
 });

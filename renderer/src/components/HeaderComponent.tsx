@@ -74,13 +74,27 @@ const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 							},
 							{
 								label: isActive ? (
-									<Link to={'/storages'}>Kho</Link>
+									<Link to={'/storages'}>Thuốc - Vật tư</Link>
 								) : (
 									<Tooltip title='Chức năng này chỉ khả dụng khi có mã kích hoạt'>
-										<Typography.Text type='secondary'>Kho</Typography.Text>
+										<Typography.Text type='secondary'>
+											Thuốc - Vật tư
+										</Typography.Text>
 									</Tooltip>
 								),
 								key: 'storages',
+							},
+							{
+								label: isActive ? (
+									<Link to={'/services'}>Dịch vụ - Thủ thuật</Link>
+								) : (
+									<Tooltip title='Chức năng này chỉ khả dụng khi có mã kích hoạt'>
+										<Typography.Text type='secondary'>
+											Dịch vụ - Thủ thuật
+										</Typography.Text>
+									</Tooltip>
+								),
+								key: 'services',
 							},
 						]}
 						style={{

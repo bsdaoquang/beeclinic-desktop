@@ -69,6 +69,7 @@ const Storages = () => {
 			onCancel() {},
 		});
 	};
+
 	const handleSearchMedicine = (val: string) => {
 		const key = replaceName(val);
 		const filtered = medicines.filter(

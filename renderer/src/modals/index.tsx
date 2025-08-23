@@ -2,5 +2,6 @@
 
 import AddMedicine from './AddMedicine';
 import AddPatient from './AddPatient';
+import AddService from './AddService';
 
-export { AddPatient, AddMedicine };
+export { AddPatient, AddMedicine, AddService };
