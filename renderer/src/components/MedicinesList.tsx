@@ -82,7 +82,7 @@ const MedicinesList = ({
 				// nếu số lượng khác 0 tức là có quản lý
 				// Cập nhật số lượng trong kho nếu có khóa kích hoạt
 
-				if (isExitsMedicine.quantity > 0 && clinic?.ActivationKey) {
+				if (isExitsMedicine.quantity > 0) {
 					const count = isExitsMedicine.quantity - vals.quantity;
 					// update to database
 

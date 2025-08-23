@@ -164,6 +164,17 @@ const Prescriptions = () => {
 			ellipsis: true,
 		},
 		{
+			key: 'total',
+			dataIndex: 'total',
+			title: 'Tổng tiền',
+			render: (val) =>
+				val
+					? val.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })
+					: 0,
+			width: 100,
+			align: 'right',
+		},
+		{
 			key: 'sent',
 			title: 'Đồng bộ',
 			dataIndex: 'sent',
