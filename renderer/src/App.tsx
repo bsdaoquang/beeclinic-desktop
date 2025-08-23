@@ -2,15 +2,26 @@
 
 import { ConfigProvider, message } from 'antd';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {
+	BarElement,
+	CategoryScale,
+	Chart as ChartJS,
+	Legend,
+	LinearScale,
+	LineElement,
+	PointElement,
+	Title,
+	Tooltip,
+} from 'chart.js';
 import dayjs, { locale } from 'dayjs';
 import 'dayjs/locale/vi'; // Import ngôn ngữ tiếng Việt cho dayjs
+import { useEffect, useState } from 'react';
+import { HashRouter } from 'react-router-dom';
 import '../src/styles/index.css';
 import FooterComponent from './components/FooterComponent';
 import HeaderComponent from './components/HeaderComponent';
 import RouterComponent from './routers/RouterComponent';
 import { theme } from './styles/theme';
-import { HashRouter } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import type { ClinicModel } from './types/ClinicModel';
 
 // Quản lý phần mềm như thế nào?
@@ -54,6 +65,19 @@ function App() {
 			console.log(error);
 		}
 	};
+
+	ChartJS.register(
+		CategoryScale,
+		LinearScale,
+		BarElement,
+		LinearScale,
+		PointElement,
+		LineElement,
+		Title,
+		Tooltip,
+		Legend
+	);
+
 	return (
 		<ConfigProvider theme={theme} locale={locale as any}>
 			<HashRouter basename='/'>

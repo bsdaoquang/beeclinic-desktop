@@ -43,7 +43,7 @@ const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 				minHeight: 20,
 			}}>
 			<div className='row'>
-				<div className='col'>
+				<div className='col-8'>
 					<Menu
 						onClick={() => {
 							// setKeySelected(e.key);
@@ -95,6 +95,16 @@ const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
 									</Tooltip>
 								),
 								key: 'services',
+							},
+							{
+								key: 'reports',
+								label: isActive ? (
+									<Link to={'/reports'}>Báo cáo</Link>
+								) : (
+									<Tooltip title='Chức năng này chỉ khả dụng khi có mã kích hoạt'>
+										<Typography.Text type='secondary'>Báo cáo</Typography.Text>
+									</Tooltip>
+								),
 							},
 						]}
 						style={{

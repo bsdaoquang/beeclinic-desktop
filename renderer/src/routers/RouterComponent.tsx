@@ -8,6 +8,7 @@ import {
 	PatientDetail,
 	Patients,
 	Prescriptions,
+	Reports,
 	Services,
 	Settings,
 	Storages,
@@ -56,6 +57,7 @@ const RouterComponent = ({ clinic }: { clinic: ClinicModel | undefined }) => {
 				<Route path='/settings' element={<Settings />} />
 				<Route path='/storages' element={<Storages />} />
 				<Route path='/services' element={<Services />} />
+				<Route path='/reports' element={<Reports />} />
 			</Routes>
 		</div>
 	);
