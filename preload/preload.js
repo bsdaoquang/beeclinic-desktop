@@ -17,7 +17,7 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	saveFileToAssets: (data) => ipcRenderer.invoke('save-file-to-assets', data),
 	addPrescription: (data) => ipcRenderer.invoke('add-prescription', data),
 	getPrescriptions: () => ipcRenderer.invoke('get-prescriptions'),
-	// getPrescriptionById: (id) => ipcRenderer.invoke('get-prescription-by-id', id),
+	getPrescriptionById: (id) => ipcRenderer.invoke('get-prescription-by-id', id),
 	deletePrescriptionById: (id) =>
 		ipcRenderer.invoke('delete-prescription-by-id', id),
 	// get prescriptions by patient id

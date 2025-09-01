@@ -4,6 +4,7 @@ import AddPrescription from './AddPrescription';
 import Home from './Home';
 import PatientDetail from './PatientDetail';
 import Patients from './Patients';
+import PrescriptionDetail from './PrescriptionDetail';
 import Prescriptions from './Prescriptions';
 import Reports from './Reports';
 import Services from './Services';
@@ -15,6 +16,7 @@ export {
 	Home,
 	PatientDetail,
 	Prescriptions,
+	PrescriptionDetail,
 	AddPrescription,
 	Settings,
 	Storages,

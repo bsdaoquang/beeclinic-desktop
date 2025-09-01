@@ -15,9 +15,11 @@ import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
 import { BiSync, BiTrash } from 'react-icons/bi';
 import { IoIosSearch } from 'react-icons/io';
+import { IoInformationCircleOutline } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
+import type { PatientModel } from '../types/PatientModel';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import { getShortDateTime } from '../utils/datetime';
-import { useNavigate } from 'react-router-dom';
 
 /*
   Prescription list
@@ -94,6 +96,7 @@ const Prescriptions = () => {
 					)
 				);
 				messageAPI.success(`Đã xóa ${selectedRowKeys.length} đơn thuốc`);
+				setSelectedRowKeys([]);
 				await getPrescriptionData();
 			} catch (error) {
 				console.log(error);
@@ -128,7 +131,7 @@ const Prescriptions = () => {
 			key: 'prescription_code',
 			title: 'Mã đơn thuốc',
 			dataIndex: 'ma_don_thuoc',
-			width: 90,
+			width: 120,
 			ellipsis: true,
 			render: (text) => text.toUpperCase(),
 		},
@@ -152,8 +155,9 @@ const Prescriptions = () => {
 		{
 			key: 'patient',
 			dataIndex: 'patient',
-			render: (record) => record.patient?.name,
-			width: 100,
+			render: (record: PatientModel) => (record ? record.name : ''),
+			width: 120,
+			title: 'Bệnh nhân',
 			ellipsis: true,
 		},
 		{
@@ -173,10 +177,11 @@ const Prescriptions = () => {
 					: 0,
 			width: 100,
 			align: 'right',
+			sorter: (a: any, b: any) => (a.total || 0) - (b.total || 0),
 		},
 		{
 			key: 'sent',
-			title: 'Đồng bộ',
+			title: 'Trạng thái',
 			dataIndex: 'sent',
 			render: (record) => (
 				<Typography.Text type={record.sent ? 'success' : 'secondary'}>
@@ -193,7 +198,16 @@ const Prescriptions = () => {
 			align: 'right',
 			fixed: 'right',
 			render: (val: PrescriptionModel) => (
-				<Space className='patient-actions'>
+				<Space>
+					<Tooltip title='Xem đơn thuốc'>
+						<Button
+							onClick={() => navigate('/prescriptions/' + val.id)}
+							icon={<IoInformationCircleOutline size={20} />}
+							type='link'
+							size='small'
+							// onClick={() => handleViewPrescription(val.id as number)}
+						/>
+					</Tooltip>
 					<Tooltip title='Đồng bộ lên hệ thống ĐTQG'>
 						<Button
 							disabled={val.sent}

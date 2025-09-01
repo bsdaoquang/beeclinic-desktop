@@ -260,6 +260,16 @@ ipcMain.handle('get-prescriptions', async () => {
 	});
 });
 
+// get prescription by id
+ipcMain.handle('get-prescription-by-id', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		db.get('SELECT * FROM prescriptions WHERE id = ?', [id], (err, row) => {
+			if (err) reject(err);
+			else resolve(row);
+		});
+	});
+});
+
 // get precriptions by patient id
 ipcMain.handle('get-prescriptions-by-patient-id', async (event, patientId) => {
 	return new Promise((resolve, reject) => {
