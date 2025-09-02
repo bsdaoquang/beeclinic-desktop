@@ -574,11 +574,8 @@ ipcMain.handle('delete-service-by-id', async (event, id) => {
 
 // read json cid10 form ../assets/icd-10.json
 const jsonPath = path.join(__dirname, '../assets/icd-10.json');
-
 const icd10Data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 const machineId = machineIdSync();
-
-console.log(icd10Data.length + ' ICD-10 codes loaded');
 
 // Ensure clinic_infos row with id=1 exists at startup
 async function ensureClinicInfo() {
@@ -689,36 +686,38 @@ async function ensureClinicInfo() {
 
 // tự động thêm dữ liệu từ icd10.json vào bảng icd10 nếu bảng rỗng
 async function ensureIcd10Data() {
-	return new Promise((resolve, reject) => {
-		db.get('SELECT COUNT(*) as count FROM icd10', (err, row) => {
-			if (err) return reject(err);
-			if (row.count === 0) {
-				// Bảng icd10 rỗng, thêm dữ liệu từ icd10.json
-				console.log('Bảng icd10 rỗng, đang thêm dữ liệu từ icd10.json');
-				const insertQuery = `
-					INSERT INTO icd10 (code, title, slug)
-					VALUES (?, ?, ?)
-				`;
-				const promises = icd10Data.map((item) => {
-					return new Promise((res, rej) => {
-						db.run(
-							insertQuery,
-							[item.code, item.title, item.slug],
-							function (insertErr) {
-								if (insertErr) rej(insertErr);
-								else res();
-							}
-						);
+	if (jsonPath && icd10Data) {
+		return new Promise((resolve, reject) => {
+			db.get('SELECT COUNT(*) as count FROM icd10', (err, row) => {
+				if (err) return reject(err);
+				if (row.count === 0) {
+					// Bảng icd10 rỗng, thêm dữ liệu từ icd10.json
+					console.log('Bảng icd10 rỗng, đang thêm dữ liệu từ icd10.json');
+					const insertQuery = `
+						INSERT INTO icd10 (code, title, slug)
+						VALUES (?, ?, ?)
+					`;
+					const promises = icd10Data.map((item) => {
+						return new Promise((res, rej) => {
+							db.run(
+								insertQuery,
+								[item.code, item.title, item.slug],
+								function (insertErr) {
+									if (insertErr) rej(insertErr);
+									else res();
+								}
+							);
+						});
 					});
-				});
-				Promise.all(promises)
-					.then(() => resolve({ inserted: true }))
-					.catch(reject);
-			} else {
-				resolve({ exists: true });
-			}
+					Promise.all(promises)
+						.then(() => resolve({ inserted: true }))
+						.catch(reject);
+				} else {
+					resolve({ exists: true });
+				}
+			});
 		});
-	});
+	}
 }
 
 app.on('window-all-closed', () => {
