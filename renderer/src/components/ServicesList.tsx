@@ -67,6 +67,7 @@ const ServicesList = ({ prescriptionItems, onChange }: ServicesListProps) => {
 				}
 				dataSource={prescriptionItems}
 				rowKey={(item) => `service-${item.id}`}
+				locale={{ emptyText: 'Không có dịch vụ nào được chọn' }}
 				renderItem={(item) => (
 					<List.Item
 						extra={

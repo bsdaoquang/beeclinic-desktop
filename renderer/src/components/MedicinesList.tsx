@@ -4,17 +4,19 @@ import {
 	AutoComplete,
 	Button,
 	Divider,
+	Drawer,
 	Form,
 	Input,
 	InputNumber,
 	List,
 	message,
+	Modal,
 	Select,
 	Space,
 	Tooltip,
 	Typography,
 } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { BiEdit } from 'react-icons/bi';
 import { IoIosAdd } from 'react-icons/io';
 import { IoClose } from 'react-icons/io5';
@@ -32,13 +34,62 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
 
 	const [messageAPI, messHolder] = message.useMessage();
+	const [isAddMedicine, setIsAddMedicine] = useState(false);
+	const [dosages, setDosages] = useState<{
+		sang: number | null;
+		trua: number | null;
+		toi: number | null;
+	}>({
+		sang: null,
+		trua: null,
+		toi: null,
+	});
+	const [days, setDays] = useState(7);
+
 	const quantityRef = useRef<any>(null);
 	const medicineNameRef = useRef<any>(null);
+	const sangref = useRef<any>(null);
+	const truaRef = useRef<any>(null);
+	const toiRef = useRef<any>(null);
 	const [formPres] = Form.useForm();
 
 	useEffect(() => {
 		getAllMedicines();
 	}, []);
+
+	useEffect(() => {
+		if (isAddMedicine) {
+			setDosages({
+				sang: 1,
+				trua: 1,
+				toi: 1,
+			});
+		}
+		formPres.setFieldValue('unit', 'Viên');
+	}, [isAddMedicine]);
+
+	useEffect(() => {
+		handleQuantity();
+	}, [dosages, isAddMedicine, days]);
+
+	const handleQuantity = (val?: string) => {
+		if (days) {
+			const unit = val ? val : formPres.getFieldValue('unit') ?? '';
+			formPres.setFieldValue(
+				'instruction',
+				`Uống ${days ? `${days} ngày: ` : ''}${
+					dosages.sang ? `sáng ${dosages.sang} ${unit}, ` : null
+				}${dosages.trua ? `trưa ${dosages.trua} ${unit}, ` : null}${
+					dosages.toi ? `tối ${dosages.toi} ${unit}` : null
+				}`
+			);
+
+			const total =
+				(dosages.sang ?? 0) + (dosages.trua ?? 0) + (dosages.toi ?? 0);
+
+			formPres.setFieldValue('quantity', total * days);
+		}
+	};
 
 	const getAllMedicines = async () => {
 		try {
@@ -55,11 +106,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 			quantityRef.current.focus();
 			return;
 		}
-		// formPres.resetFields();
-		// medicineNameRef.current.focus();
-		// Kiểm tra trong kho có thuốc này chưa, nếu chưa có thì tạo mã thuốc tự động gồm 4 ký tự và thêm vào với số lượng 0,
-		// nếu đã có và số lượng > 0 thì trừ trong kho theo quantity và cập nhật lại kho
-		//
+
 		const items = [...medicines];
 
 		const indexMedicine = prescriptionItems.findIndex(
@@ -131,159 +178,22 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 	};
 
 	return (
-		<div>
+		<div className='mt-0'>
 			{messHolder}
 			<List
-				header={
-					<>
-						<Form
-							layout='vertical'
-							className='mb-0'
-							form={formPres}
-							onFinish={handleAddMedicine}
-							variant='filled'>
-							<div
-								className='row'
-								style={{
-									padding: 0,
-									margin: 0,
-								}}>
-								<div
-									className='col-11'
-									style={{
-										padding: 0,
-									}}>
-									<div className='row'>
-										<div className='col-4'>
-											<div className='d-none'>
-												<Form.Item name={'ma_thuoc'}>
-													<Input />
-												</Form.Item>
-											</div>
-
-											<Form.Item
-												rules={[
-													{
-														required: true,
-														message: 'Nhập tên thuốc',
-													},
-												]}
-												name={'ten_thuoc'}
-												label='Tên thuốc'>
-												<AutoComplete
-													ref={medicineNameRef}
-													autoFocus
-													onSelect={(name) => {
-														const medicine = medicines.find(
-															(element) => element.ten_thuoc === name
-														);
-														formPres.setFieldsValue({
-															...medicine,
-															quantity: 1,
-														});
-														quantityRef.current.focus();
-													}}
-													placeholder='Tên thuốc'
-													allowClear
-													options={medicines.map((item) => ({
-														label: item.ten_thuoc,
-														value: item.ten_thuoc,
-													}))}
-												/>
-											</Form.Item>
-										</div>
-										<div className='col-2'>
-											<Form.Item
-												rules={[
-													{
-														required: true,
-														message: 'Nhập số lượng thuốc',
-													},
-												]}
-												name={'quantity'}
-												label='Số lượng'>
-												<InputNumber ref={quantityRef} placeholder='' min={0} />
-											</Form.Item>
-										</div>
-										<div className='col-2'>
-											<Form.Item name={'unit'} label='ĐVT'>
-												<Select
-													options={[
-														{ label: 'Viên', value: 'viên' },
-														{ label: 'Ống', value: 'ống' },
-														{ label: 'Gói', value: 'gói' },
-														{ label: 'Chai', value: 'chai' },
-														{ label: 'Lọ', value: 'lọ' },
-														{ label: 'Tuýp', value: 'tuýp' },
-														{ label: 'Vỉ', value: 'vỉ' },
-														{ label: 'Ml', value: 'ml' },
-														{ label: 'Gam', value: 'g' },
-														{ label: 'Miếng', value: 'miếng' },
-													]}
-												/>
-											</Form.Item>
-										</div>
-										<div className='col-4'>
-											<Form.Item name={'instruction'} label='Cách dùng'>
-												<AutoComplete
-													onSelect={handleAddMedicine}
-													allowClear
-													options={[
-														{
-															label: 'Uống sau ăn, sáng 1 viên, chiều 1 viên',
-															value: 'Uống sau ăn, sáng 1 viên, chiều 1 viên',
-														},
-														{
-															label: 'Uống trước ăn, sáng 1 viên',
-															value: 'Uống trước ăn, sáng 1 viên',
-														},
-														{
-															label: 'Uống sau ăn, ngày 2 lần, mỗi lần 1 viên',
-															value: 'Uống sau ăn, ngày 2 lần, mỗi lần 1 viên',
-														},
-														{
-															label: 'Uống trước khi ngủ, 1 viên',
-															value: 'Uống trước khi ngủ, 1 viên',
-														},
-														{
-															label: 'Uống sáng 1 viên, tối 1 viên',
-															value: 'Uống sáng 1 viên, tối 1 viên',
-														},
-														{
-															label: 'Uống mỗi 8 giờ, 1 viên/lần',
-															value: 'Uống mỗi 8 giờ, 1 viên/lần',
-														},
-													]}
-												/>
-											</Form.Item>
-										</div>
-									</div>
-								</div>
-								<div
-									className='col text-end'
-									style={{
-										padding: 0,
-									}}>
-									<Form.Item label=' '>
-										<Tooltip title='Thêm thuốc vào đơn thuốc'>
-											<Button
-												type='primary'
-												onClick={() => formPres.submit()}
-												icon={<IoIosAdd size={20} />}
-											/>
-										</Tooltip>
-									</Form.Item>
-								</div>
-								<div className='d-none'>
-									<Form.Item name={'gia_ban'}>
-										<InputNumber />
-									</Form.Item>
-								</div>
-							</div>
-						</Form>
-					</>
+				footer={
+					<div className='text-center'>
+						<Button
+							onClick={() => setIsAddMedicine(true)}
+							type='link'
+							icon={<IoIosAdd size={22} />}>
+							Thêm thuốc
+						</Button>
+					</div>
 				}
+				header={null}
 				dataSource={prescriptionItems}
+				locale={{ emptyText: 'Chưa có thuốc trong đơn' }}
 				renderItem={(item, index) => (
 					<List.Item
 						style={{
@@ -334,6 +244,182 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 					</List.Item>
 				)}
 			/>
+			<Drawer
+				placement='right'
+				onClose={() => {
+					setIsAddMedicine(false);
+					formPres.resetFields();
+					setDays(7);
+					setDosages({
+						sang: 1,
+						toi: 1,
+						trua: 1,
+					});
+					formPres.setFieldValue('quantity', null);
+				}}
+				open={isAddMedicine}
+				width={'30%'}
+				title='Kê đơn thuốc'>
+				<Form
+					layout='vertical'
+					size='large'
+					form={formPres}
+					onFinish={handleAddMedicine}
+					variant='filled'>
+					<div className='d-none'>
+						<Form.Item name='ma_thuoc'>
+							<Input />
+						</Form.Item>
+					</div>
+					<Form.Item name='ten_thuoc' label='Tên thuốc'>
+						<AutoComplete
+							ref={medicineNameRef}
+							autoFocus
+							onSelect={(name) => {
+								const medicine = medicines.find(
+									(element) => element.ten_thuoc === name
+								);
+								formPres.setFieldsValue({
+									...medicine,
+								});
+								quantityRef.current?.focus();
+								handleQuantity(medicine?.unit ?? undefined);
+							}}
+							placeholder='Tên thuốc'
+							allowClear
+							options={medicines.map((item) => ({
+								label: item.ten_thuoc,
+								value: item.ten_thuoc,
+							}))}
+						/>
+					</Form.Item>
+					<div className='row'>
+						<div className='col'>
+							<Form.Item name='unit' label='Đơn vị'>
+								<Select
+									onChange={(value) => handleQuantity(value)}
+									options={[
+										{ label: 'Viên', value: 'viên' },
+										{ label: 'Ống', value: 'ống' },
+										{ label: 'Gói', value: 'gói' },
+										{ label: 'Chai', value: 'chai' },
+										{ label: 'Lọ', value: 'lọ' },
+										{ label: 'Tuýp', value: 'tuýp' },
+										{ label: 'Vỉ', value: 'vỉ' },
+										{ label: 'Ml', value: 'ml' },
+										{ label: 'Gam', value: 'g' },
+										{ label: 'Miếng', value: 'miếng' },
+									]}
+								/>
+							</Form.Item>
+						</div>
+						<div className='col'>
+							<Form.Item name='quantity' label='Số lượng'>
+								<InputNumber
+									ref={quantityRef}
+									min={1}
+									style={{
+										width: '100%',
+									}}
+									placeholder='Nhập số lượng'
+								/>
+							</Form.Item>
+						</div>
+						<div className='col'>
+							<Form.Item label='Số ngày'>
+								<InputNumber
+									min={1}
+									value={days}
+									onChange={(val) => setDays(val ?? 0)}
+									style={{ width: '100%' }}
+									placeholder='Nhập số ngày'
+								/>
+							</Form.Item>
+						</div>
+					</div>
+
+					<Divider orientation='left'>Cách dùng</Divider>
+					<div className='row'>
+						<div className='col'>
+							<Form.Item label='Sáng'>
+								<InputNumber
+									ref={sangref}
+									min={1}
+									value={dosages.sang}
+									onChange={(val) => {
+										setDosages({
+											...dosages,
+											sang: val,
+										});
+									}}
+									style={{ width: '100%' }}
+								/>
+							</Form.Item>
+						</div>
+						<div className='col'>
+							<Form.Item label='Trưa'>
+								<InputNumber
+									ref={truaRef}
+									min={1}
+									value={dosages.trua}
+									onChange={(val) => {
+										setDosages({
+											...dosages,
+											trua: val,
+										});
+									}}
+									style={{ width: '100%' }}
+								/>
+							</Form.Item>
+						</div>
+						<div className='col'>
+							<Form.Item label='Tối'>
+								<InputNumber
+									ref={toiRef}
+									min={1}
+									value={dosages.toi}
+									onChange={(val) =>
+										setDosages({
+											...dosages,
+											toi: val,
+										})
+									}
+									style={{
+										width: '100%',
+									}}
+								/>
+							</Form.Item>
+						</div>
+					</div>
+
+					<Form.Item name='instruction' label='Hướng dẫn sử dụng'>
+						<Input.TextArea rows={2} placeholder='Nhập hướng dẫn sử dụng' />
+					</Form.Item>
+				</Form>
+				<div className='mt-3 '>
+					<Space>
+						<Button danger onClick={() => setIsAddMedicine(false)}>
+							Đóng
+						</Button>
+						<Divider type='vertical' size='large' />
+						<Button
+							type='default'
+							onClick={() => {
+								formPres.submit();
+								setIsAddMedicine(false);
+							}}>
+							Thêm
+						</Button>
+						<Button
+							type='primary'
+							onClick={() => {
+								formPres.submit();
+							}}>
+							Thêm và tiếp tục
+						</Button>
+					</Space>
+				</div>
+			</Drawer>
 		</div>
 	);
 };

@@ -27,6 +27,7 @@ import { FaPrint } from 'react-icons/fa6';
 import { RxInfoCircled } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
+import { useDebounce } from 'use-debounce';
 import { ServicesList } from '../components';
 import MedicinesList from '../components/MedicinesList';
 import { PrescriptionPrint } from '../printPages';
@@ -41,7 +42,6 @@ import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
-import { useDebounce } from 'use-debounce';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
