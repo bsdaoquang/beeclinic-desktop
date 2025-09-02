@@ -40,4 +40,5 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 		ipcRenderer.invoke('update-service-by-id', { id, updates }),
 	getServices: () => ipcRenderer.invoke('get-services'),
 	deleteServiceById: (id) => ipcRenderer.invoke('delete-service-by-id', id),
+	fixIcd10: () => ipcRenderer.invoke('fix-icd-10'),
 });

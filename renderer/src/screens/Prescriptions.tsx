@@ -166,6 +166,7 @@ const Prescriptions = () => {
 			dataIndex: 'diagnosis',
 			width: 200,
 			ellipsis: true,
+			render: (text: string) => text.replace(', ', '/'),
 		},
 		{
 			key: 'total',

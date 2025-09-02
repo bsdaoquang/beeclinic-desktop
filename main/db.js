@@ -18,79 +18,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 	}
 });
 
-/* Thông tin về bệnh nhân:
- *   - id: string (định danh duy nhất của bệnh nhân)
- *   - name: string (tên bệnh nhân)
- *   - age: number (tuổi của bệnh nhân)
- *   - phone: string (số điện thoại)
- *   - address: string (địa chỉ)
- *   - citizenId: string (số CMND/CCCD)
- *   - email?: string (email, tùy chọn)
- *   - gender?: 'male' | 'female' | undefined (giới tính, tùy chọn)
- *   - createdAt: Date (ngày tạo)
- *   - updatedAt: Date (ngày cập nhật)
- *   - medicalHistory: string (lịch sử bệnh án)
- *   - allergies: string (dị ứng)
- *   - photoUrl: string (đường dẫn ảnh bệnh nhân)
- *   - notes: string (ghi chú thêm)
- *   - weight?: number (cân nặng, tùy chọn)
- *   - ma_dinh_danh_y_te?: string (mã định danh y tế, tùy chọn)
- *   - bhyt?: string (mã số thẻ bảo hiểm y tế, tùy chọn)
- *   - guardian?: string (người giám hộ, tùy chọn)
- *
- * @format
- */
-
-/*
-  Medicine
-  ma_thuoc?: string; // Mã thuốc (nếu có trong danh mục)
-	biet_duoc?: string; // Tên biệt dược (nếu có)
-	ten_thuoc: string; // Tên thuốc (bắt buộc)
-	unit?: string; // Đơn vị tính (viên, ống, gói...)
-	quantity: number; // Số lượng
-	instruction?: string; // Cách dùng
-	expDate?: string; // hạn dùng
-*/
-
-/*
-  Dịch vụ - thủ thuật của phòng khám
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ten_dich_vu TEXT NOT NULL,
-  mo_ta TEXT,
-  gia REAL,
-  thoi_gian INTEGER,
-  createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-  updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-
-*/
-
-/*
-  clinic_infos
-  CSKCBID TEXT,               -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
-  TenCSKCB TEXT,
-  DiaChi TEXT,
-  DienThoai TEXT,
-  Email TEXT,
-  
-  SoGiayPhepHoatDong TEXT,
-  NgayCapGiayPhep TEXT,
-  NoiCapGiayPhep TEXT,
-  
-  HoTenBS TEXT,
-  SoChungChiHanhNghe TEXT,
-  KhoaPhong TEXT,
-  ChucVu TEXT,
-  
-  MachineId TEXT,
-  AppVersion TEXT,
-  ActivationKey TEXT,
-  
-  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-  UpdatedAt TEXT
-  
-*/
-
-const createDatabase = () => {
+const createDatabase = async () => {
 	if (!fs.existsSync(dbPath)) {
 		console.log('Tạo mới cơ sở dữ liệu...');
 	}
@@ -153,9 +81,8 @@ const createDatabase = () => {
 				db.run(`ALTER TABLE prescriptions ADD COLUMN total REAL DEFAULT NULL;`);
 			}
 		});
-	});
 
-	db.run(`CREATE TABLE IF NOT EXISTS medicines (
+		db.run(`CREATE TABLE IF NOT EXISTS medicines (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   ma_thuoc TEXT,         -- Mã thuốc (nếu có trong danh mục)
   biet_duoc TEXT,        -- Tên biệt dược (nếu có)
@@ -168,8 +95,8 @@ const createDatabase = () => {
   gia_ban REAL           -- Giá bán
   )`);
 
-	// table of clinic info
-	db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
+		// table of clinic info
+		db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
   TenCSKCB TEXT,
@@ -193,8 +120,8 @@ const createDatabase = () => {
   UpdatedAt TEXT
   )`);
 
-	// tạo bảng dịch vụ - thủ thuật
-	db.run(`CREATE TABLE IF NOT EXISTS services (
+		// tạo bảng dịch vụ - thủ thuật
+		db.run(`CREATE TABLE IF NOT EXISTS services (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     ten_dich_vu TEXT NOT NULL,
     mo_ta TEXT,
@@ -203,6 +130,50 @@ const createDatabase = () => {
     createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
     updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
+
+		// tạo bảng icd10
+		/*
+    icd10 item
+    {
+    "code": "Z98.0",
+    "title": "Tình trạng nối tắt ruột và nối ruột",
+    "slug": "tinh-trang-noi-tat-ruot-va-noi-ruot"
+  }
+  
+  */
+
+		db.run(`CREATE TABLE IF NOT EXISTS icd10 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE,
+    title TEXT,
+    slug TEXT
+  )`);
+
+		db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS icd10_fts USING fts5(
+    code,
+    title,
+    slug,
+    content='icd10',
+    content_rowid='rowid'
+  )`);
+
+		db.run(`CREATE TRIGGER IF NOT EXISTS icd10_fts_update AFTER INSERT ON icd10
+  BEGIN
+    INSERT INTO icd10_fts (code, title, slug)
+    VALUES (new.code, new.title, new.slug);
+  END`);
+
+		db.run(`CREATE TRIGGER IF NOT EXISTS icd10_fts_update AFTER UPDATE ON icd10
+  BEGIN
+    UPDATE icd10_fts SET code = new.code, title = new.title, slug = new.slug
+    WHERE rowid = old.rowid;
+  END`);
+
+		db.run(`CREATE TRIGGER IF NOT EXISTS icd10_fts_delete AFTER DELETE ON icd10
+  BEGIN
+    DELETE FROM icd10_fts WHERE rowid = old.rowid;
+  END`);
+	});
 
 	return dbPath;
 };

@@ -233,7 +233,9 @@ const PrescriptionDetail = () => {
 								{prescription?.disease_progression}
 							</Descriptions.Item>
 							<Descriptions.Item label='Chẩn đoán'>
-								{prescription?.diagnosis}
+								{prescription?.diagnosis
+									? prescription.diagnosis.replace(',', '/')
+									: ''}
 							</Descriptions.Item>
 							<Descriptions.Item label='Ghi chú'>
 								{prescription?.note}

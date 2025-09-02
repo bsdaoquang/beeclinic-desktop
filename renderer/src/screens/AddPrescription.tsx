@@ -1,7 +1,6 @@
 /** @format */
 
 import {
-	AutoComplete,
 	Button,
 	Card,
 	Checkbox,
@@ -28,6 +27,7 @@ import { FaPrint } from 'react-icons/fa6';
 import { RxInfoCircled } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
+import { ServicesList } from '../components';
 import MedicinesList from '../components/MedicinesList';
 import { PrescriptionPrint } from '../printPages';
 import type { ClinicModel } from '../types/ClinicModel';
@@ -36,11 +36,10 @@ import type {
 	PrescriptionItem,
 	PrescriptionModel,
 } from '../types/PrescriptionModel';
+import type { ServiceModel } from '../types/ServiceModel';
 import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
-import type { ServiceModel } from '../types/ServiceModel';
-import { ServicesList } from '../components';
 
 /** @format */
 /*
@@ -138,6 +137,7 @@ const AddPrescription = () => {
 			const items = res.filter(
 				(element: any) => `${element.patient_id}` === patientId
 			);
+
 			setPrescriptionsByPatient(items);
 		} catch (error) {
 			console.log(error);
@@ -189,7 +189,7 @@ const AddPrescription = () => {
 			ma_don_thuoc: prescriptionCode,
 			patient_id: patient.id,
 			loai_don_thuoc: vals.loai_don_thuoc,
-			diagnosis: vals.diagnosis,
+			diagnosis: vals.diagnosis.toString(),
 			note: vals.note ?? '',
 			ngay_gio_ke_don: new Date().toISOString(),
 			ngay_tai_kham: vals.ngay_tai_kham ?? null,
@@ -334,7 +334,10 @@ const AddPrescription = () => {
 																				type='link'
 																				onClick={() => {
 																					form.setFieldsValue({
-																						diagnosis: item.diagnosis,
+																						diagnosis: item.diagnosis.replace(
+																							', ',
+																							'/'
+																						),
 																					});
 																					setPrescriptionItems(vals);
 																				}}>
@@ -349,7 +352,7 @@ const AddPrescription = () => {
 														</Popover>,
 													]}>
 													<List.Item.Meta
-														title={item.diagnosis}
+														title={item.diagnosis.replace(', ', '/')}
 														description={getShortDateTime(
 															item.created_at as string
 														)}
@@ -376,38 +379,10 @@ const AddPrescription = () => {
 										variant='filled'
 										onFinish={handleAddPrescription}
 										form={form}>
-										<Form.Item name={'reason_for_visit'}>
-											<Input placeholder='Lý do đến khám' allowClear />
-										</Form.Item>
-
-										<Form.Item name={'disease_progression'}>
-											<TextArea
-												rows={3}
-												allowClear
-												placeholder='Diễn tiến bệnh'
-											/>
-										</Form.Item>
 										<div className='row'>
 											<div className='col-8'>
-												<Form.Item
-													rules={[
-														{
-															required: true,
-															message: 'Nhập chẩn đoán',
-														},
-													]}
-													name={'diagnosis'}>
-													<AutoComplete
-														onChange={(val) => setDiagnossic(val)}
-														options={prescriptionData.diagnossics.map(
-															(item) => ({
-																label: item,
-																value: item,
-															})
-														)}
-														allowClear
-														placeholder='Chẩn đoán'
-													/>
+												<Form.Item name={'reason_for_visit'}>
+													<Input placeholder='Lý do đến khám' allowClear />
 												</Form.Item>
 											</div>
 											<div className='col'>
@@ -431,6 +406,34 @@ const AddPrescription = () => {
 												</Form.Item>
 											</div>
 										</div>
+
+										<Form.Item name={'disease_progression'}>
+											<TextArea
+												rows={3}
+												allowClear
+												placeholder='Diễn tiến bệnh'
+											/>
+										</Form.Item>
+
+										<Form.Item
+											rules={[
+												{
+													required: true,
+													message: 'Nhập chẩn đoán',
+												},
+											]}
+											name={'diagnosis'}>
+											<Select
+												mode='tags'
+												onChange={(val) => setDiagnossic(val)}
+												options={prescriptionData.diagnossics.map((item) => ({
+													label: item,
+													value: item,
+												}))}
+												allowClear
+												placeholder='Chẩn đoán'
+											/>
+										</Form.Item>
 									</Form>
 									<Tabs
 										size='small'

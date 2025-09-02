@@ -80,7 +80,7 @@ const PrescriptionPrint = ({
 				</div>
 				<p>Số điện thoại: {patient.phone}</p>
 				<p>Địa chỉ: {patient.address}</p>
-				<p>Chẩn đoán: {diagnostic}</p>
+				<p>Chẩn đoán: {diagnostic ? diagnostic.replace(',', '/') : ''}</p>
 			</div>
 			<div className='medicine-content py-3'>
 				<p>Thuốc điều trị:</p>

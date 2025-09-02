@@ -37,9 +37,12 @@ function createWindow() {
 	}
 }
 
-app.whenReady().then(() => {
-	createDatabase();
+app.whenReady().then(async () => {
+	await createDatabase();
+	await ensureIcd10Data();
+	await ensureClinicInfo();
 	createWindow();
+	autoUpdater.checkForUpdatesAndNotify();
 
 	app.on('activate', () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -182,22 +185,6 @@ ipcMain.handle('save-file-to-assets', async (event, { fileName, buffer }) => {
 });
 
 // prescription handle
-/*
-	Prescription table columns
-	id INTEGER PRIMARY KEY AUTOINCREMENT,
-      ma_don_thuoc TEXT UNIQUE,
-      patient_id INTEGER NOT NULL,
-      loai_don_thuoc TEXT,         -- 'c'|'n'|'h'|'y'
-      diagnosis TEXT,
-      note TEXT,
-      ngay_gio_ke_don TEXT,        -- ISO string
-      ngay_tai_kham INTEGER,       -- số ngày
-      thong_tin_don_thuoc_json TEXT, -- JSON string of items
-      sent INTEGER DEFAULT 0,      -- 0: chưa gửi, 1: đã gửi
-      sent_at TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-*/
-
 // save prescription
 ipcMain.handle('add-prescription', async (event, prescription) => {
 	return new Promise((resolve, reject) => {
@@ -299,47 +286,6 @@ ipcMain.handle('delete-prescription-by-id', async (event, id) => {
 });
 
 // medicine
-/*
-
-
-	db.run(`CREATE TABLE IF NOT EXISTS medicines (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ma_thuoc TEXT,         -- Mã thuốc (nếu có trong danh mục)
-  biet_duoc TEXT,        -- Tên biệt dược (nếu có)
-  ten_thuoc TEXT NOT NULL, -- Tên thuốc (bắt buộc)
-  unit TEXT,             -- Đơn vị tính (viên, ống, gói...)
-  quantity INTEGER,      -- Số lượng
-  instruction TEXT,      -- Cách dùng
-  expDate TEXT,          -- Hạn dùng (ISO string hoặc yyyy-mm-dd)
-  gia_mua REAL,          -- Giá mua
-  gia_ban REAL           -- Giá bán
-  )`);
-
-	// table of clinic info
-	db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
-  TenCSKCB TEXT,
-  DiaChi TEXT,
-  DienThoai TEXT,
-  Email TEXT,
-  SoGiayPhepHoatDong TEXT,
-  NgayCapGiayPhep TEXT,
-  NoiCapGiayPhep TEXT,
-  HoTenBS TEXT,
-  SoChungChiHanhNghe TEXT,
-  KhoaPhong TEXT,
-  ChucVu TEXT,
-  MachineId TEXT,
-  AppVersion TEXT,
-  ActivationKey TEXT,
-  ClinicAccessToken TEXT, -- Access token cho phòng khám
-  DoctorAccessToken TEXT, -- Access token cho bác sĩ
-  CongKham INTEGER DEFAULT 100000, -- Công khám, mặc định 100000
-  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-  UpdatedAt TEXT
-  )`);
-*/
 // add medicine
 ipcMain.handle('add-medicine', async (event, medicine) => {
 	return new Promise((resolve, reject) => {
@@ -434,30 +380,6 @@ ipcMain.handle('delete-medicine-by-id', async (event, id) => {
 		});
 	});
 });
-
-// clinic_infos
-/*
-  CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
-  TenCSKCB TEXT,
-  DiaChi TEXT,
-  DienThoai TEXT,
-  Email TEXT,
-  SoGiayPhepHoatDong TEXT,
-  NgayCapGiayPhep TEXT,
-  NoiCapGiayPhep TEXT,
-  HoTenBS TEXT,
-  SoChungChiHanhNghe TEXT,
-  KhoaPhong TEXT,
-  ChucVu TEXT,
-  MachineId TEXT,
-  AppVersion TEXT,
-  ActivationKey TEXT,
-  ClinicAccessToken TEXT, -- Access token cho phòng khám
-  DoctorAccessToken TEXT, -- Access token cho bác sĩ
-  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-  UpdatedAt TEXT
-*/
-
 ipcMain.handle('get-clinic-infos', async () => {
 	return new Promise((resolve, reject) => {
 		db.all(
@@ -469,7 +391,153 @@ ipcMain.handle('get-clinic-infos', async () => {
 		);
 	});
 });
+
+ipcMain.handle('ensure-clinic-info', async () => {
+	return ensureClinicInfo().then(async (result) => {
+		// Always update MachineId if not set
+		return new Promise((resolve, reject) => {
+			db.get('SELECT MachineId FROM clinic_infos WHERE id = 1', (err, row) => {
+				if (err) return reject(err);
+				if (!row) {
+					db.run(
+						'UPDATE clinic_infos SET MachineId = ?, UpdatedAt = ? WHERE id = 1',
+						[id, new Date().toISOString()],
+						function (updateErr) {
+							if (updateErr) reject(updateErr);
+							else resolve(result);
+						}
+					);
+				} else {
+					resolve(result);
+				}
+			});
+		});
+	});
+});
+
+ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
+	return new Promise((resolve, reject) => {
+		const fields = [
+			'CSKCBID',
+			'TenCSKCB',
+			'DiaChi',
+			'DienThoai',
+			'Email',
+			'SoGiayPhepHoatDong',
+			'NgayCapGiayPhep',
+			'NoiCapGiayPhep',
+			'HoTenBS',
+			'SoChungChiHanhNghe',
+			'KhoaPhong',
+			'ChucVu',
+			'MachineId',
+			'AppVersion',
+			'ActivationKey',
+			'CongKham', // bổ sung công khám
+		];
+
+		const setClause = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => `${field} = ?`)
+			.join(', ');
+
+		const values = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => updates[field]);
+
+		const query = `UPDATE clinic_infos SET ${setClause}, UpdatedAt = ? WHERE id = ?`;
+		values.push(new Date().toISOString(), id);
+
+		db.run(query, values, function (err) {
+			if (err) reject(err);
+			else resolve({ success: true, changes: this.changes });
+		});
+	});
+});
+
+ipcMain.handle('add-service', async (event, service) => {
+	return new Promise((resolve, reject) => {
+		const query = `
+			INSERT INTO services (
+				ten_dich_vu,
+				mo_ta,
+				gia,
+				thoi_gian,
+				createdAt,
+				updatedAt
+			) VALUES (?, ?, ?, ?, ?, ?)
+		`;
+		const now = new Date().toISOString();
+		db.run(
+			query,
+			[
+				service.ten_dich_vu,
+				service.mo_ta || '',
+				service.gia || 0,
+				service.thoi_gian || 0,
+				now,
+				now,
+			],
+			function (err) {
+				if (err) reject(err);
+				else resolve({ id: this.lastID });
+			}
+		);
+	});
+});
+
+ipcMain.handle('get-services', async () => {
+	return new Promise((resolve, reject) => {
+		db.all('SELECT * FROM services ORDER BY createdAt DESC', (err, rows) => {
+			if (err) reject(err);
+			else resolve(rows);
+		});
+	});
+});
+
+ipcMain.handle('update-service-by-id', async (event, { id, updates }) => {
+	return new Promise((resolve, reject) => {
+		const fields = ['ten_dich_vu', 'mo_ta', 'gia', 'thoi_gian'];
+
+		const setClause = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => `${field} = ?`)
+			.join(', ');
+
+		const values = fields
+			.filter((field) => updates[field] !== undefined)
+			.map((field) => updates[field]);
+
+		const query = `UPDATE services SET ${setClause}, updatedAt = ? WHERE id = ?`;
+		values.push(new Date().toISOString(), id);
+
+		db.run(query, values, function (err) {
+			if (err) reject(err);
+			else resolve({ success: true, changes: this.changes });
+		});
+	});
+});
+
+ipcMain.handle('delete-service-by-id', async (event, id) => {
+	return new Promise((resolve, reject) => {
+		const query = 'DELETE FROM services WHERE id = ?';
+		db.run(query, [id], function (err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve({ success: true, changes: this.changes });
+			}
+		});
+	});
+});
+
+// read json cid10 form ../assets/icd-10.json
+const jsonPath = path.join(__dirname, '../assets/icd-10.json');
+
+const icd10Data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 const machineId = machineIdSync();
+
+console.log(icd10Data.length + ' ICD-10 codes loaded');
 
 // Ensure clinic_infos row with id=1 exists at startup
 async function ensureClinicInfo() {
@@ -578,163 +646,39 @@ async function ensureClinicInfo() {
 	});
 }
 
-// Call ensureClinicInfo when app is ready
-app.whenReady().then(() => {
-	autoUpdater.checkForUpdatesAndNotify();
-	ensureClinicInfo().catch(console.error);
-});
-
-ipcMain.handle('ensure-clinic-info', async () => {
-	return ensureClinicInfo().then(async (result) => {
-		// Always update MachineId if not set
-		return new Promise((resolve, reject) => {
-			db.get('SELECT MachineId FROM clinic_infos WHERE id = 1', (err, row) => {
-				if (err) return reject(err);
-				if (!row) {
-					db.run(
-						'UPDATE clinic_infos SET MachineId = ?, UpdatedAt = ? WHERE id = 1',
-						[id, new Date().toISOString()],
-						function (updateErr) {
-							if (updateErr) reject(updateErr);
-							else resolve(result);
-						}
-					);
-				} else {
-					resolve(result);
-				}
-			});
-		});
-	});
-});
-
-ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
+// tự động thêm dữ liệu từ icd10.json vào bảng icd10 nếu bảng rỗng
+async function ensureIcd10Data() {
 	return new Promise((resolve, reject) => {
-		const fields = [
-			'CSKCBID',
-			'TenCSKCB',
-			'DiaChi',
-			'DienThoai',
-			'Email',
-			'SoGiayPhepHoatDong',
-			'NgayCapGiayPhep',
-			'NoiCapGiayPhep',
-			'HoTenBS',
-			'SoChungChiHanhNghe',
-			'KhoaPhong',
-			'ChucVu',
-			'MachineId',
-			'AppVersion',
-			'ActivationKey',
-			'CongKham', // bổ sung công khám
-		];
-
-		const setClause = fields
-			.filter((field) => updates[field] !== undefined)
-			.map((field) => `${field} = ?`)
-			.join(', ');
-
-		const values = fields
-			.filter((field) => updates[field] !== undefined)
-			.map((field) => updates[field]);
-
-		const query = `UPDATE clinic_infos SET ${setClause}, UpdatedAt = ? WHERE id = ?`;
-		values.push(new Date().toISOString(), id);
-
-		db.run(query, values, function (err) {
-			if (err) reject(err);
-			else resolve({ success: true, changes: this.changes });
-		});
-	});
-});
-
-// thêm, xoá, sửa dịch vụ - thủ thuật
-/*
-	db.run(`CREATE TABLE IF NOT EXISTS services (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ten_dich_vu TEXT NOT NULL,
-    mo_ta TEXT,
-    gia REAL,
-    thoi_gian INTEGER,
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
-  )`);
-*/
-
-ipcMain.handle('add-service', async (event, service) => {
-	return new Promise((resolve, reject) => {
-		const query = `
-			INSERT INTO services (
-				ten_dich_vu,
-				mo_ta,
-				gia,
-				thoi_gian,
-				createdAt,
-				updatedAt
-			) VALUES (?, ?, ?, ?, ?, ?)
-		`;
-		const now = new Date().toISOString();
-		db.run(
-			query,
-			[
-				service.ten_dich_vu,
-				service.mo_ta || '',
-				service.gia || 0,
-				service.thoi_gian || 0,
-				now,
-				now,
-			],
-			function (err) {
-				if (err) reject(err);
-				else resolve({ id: this.lastID });
-			}
-		);
-	});
-});
-
-ipcMain.handle('get-services', async () => {
-	return new Promise((resolve, reject) => {
-		db.all('SELECT * FROM services ORDER BY createdAt DESC', (err, rows) => {
-			if (err) reject(err);
-			else resolve(rows);
-		});
-	});
-});
-
-ipcMain.handle('update-service-by-id', async (event, { id, updates }) => {
-	return new Promise((resolve, reject) => {
-		const fields = ['ten_dich_vu', 'mo_ta', 'gia', 'thoi_gian'];
-
-		const setClause = fields
-			.filter((field) => updates[field] !== undefined)
-			.map((field) => `${field} = ?`)
-			.join(', ');
-
-		const values = fields
-			.filter((field) => updates[field] !== undefined)
-			.map((field) => updates[field]);
-
-		const query = `UPDATE services SET ${setClause}, updatedAt = ? WHERE id = ?`;
-		values.push(new Date().toISOString(), id);
-
-		db.run(query, values, function (err) {
-			if (err) reject(err);
-			else resolve({ success: true, changes: this.changes });
-		});
-	});
-});
-
-ipcMain.handle('delete-service-by-id', async (event, id) => {
-	return new Promise((resolve, reject) => {
-		const query = 'DELETE FROM services WHERE id = ?';
-		db.run(query, [id], function (err) {
-			if (err) {
-				reject(err);
+		db.get('SELECT COUNT(*) as count FROM icd10', (err, row) => {
+			if (err) return reject(err);
+			if (row.count === 0) {
+				// Bảng icd10 rỗng, thêm dữ liệu từ icd10.json
+				console.log('Bảng icd10 rỗng, đang thêm dữ liệu từ icd10.json');
+				const insertQuery = `
+					INSERT INTO icd10 (code, title, slug)
+					VALUES (?, ?, ?)
+				`;
+				const promises = icd10Data.map((item) => {
+					return new Promise((res, rej) => {
+						db.run(
+							insertQuery,
+							[item.code, item.title, item.slug],
+							function (insertErr) {
+								if (insertErr) rej(insertErr);
+								else res();
+							}
+						);
+					});
+				});
+				Promise.all(promises)
+					.then(() => resolve({ inserted: true }))
+					.catch(reject);
 			} else {
-				resolve({ success: true, changes: this.changes });
+				resolve({ exists: true });
 			}
 		});
 	});
-});
+}
 
 app.on('window-all-closed', () => {
 	if (process.platform !== 'darwin') app.quit();
