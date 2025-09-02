@@ -15,16 +15,24 @@ const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);
 	const [patients, setPatients] = useState<PatientModel[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [clinicInfos, setClinicInfos] = useState<ClinicModel>();
 	const [isVisibleModalAddPatient, setIsVisibleModalAddPatient] =
 		useState(false);
 
 	const inpRef = useRef<any>(null);
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		getPatients();
 		inpRef.current.focus();
-		getClinic();
+
+		// khi vừa vào ứng dụng, cần thực hiện 2 việc
+		/*
+			1. Kiểm tra xem có phải người dùng mới hay không 
+			(không có dữ liệu phòng khám -> tạo mới), nếu đã có -> đồng bộ với dữ liệu trên firebase
+			2. Kiểm tra xem có dữ liệu icd10 không, nếu không có -> tải về từ beeclinic server và lưu vào db local
+		*/
+
+		checkDatas();
 	}, []);
 
 	useEffect(() => {
@@ -42,55 +50,84 @@ const Home = () => {
 		}
 	}, [patients]);
 
-	useEffect(() => {
-		clinicInfos && checkFirebaseConnection();
-	}, [clinicInfos]);
-
-	const getClinic = async () => {
+	const checkDatas = async () => {
 		try {
-			const res = await (window as any).beeclinicAPI.getClinicInfo();
-			res && res.length > 0 && setClinicInfos(res[0]);
+			await getClinic();
+			await checkIcd10datas();
 		} catch (error) {
 			console.log(error);
 		}
 	};
 
-	const checkFirebaseConnection = async () => {
-		if (!clinicInfos) {
-			return;
-		}
-
-		/*
-		Kiểm tra xem trên firebase có item nào có machineId = machineId không
-		// nếu không có tạo mới với clinicInfo
-		// trên firebase lưu các thông tin như: ngày tạo, ngày hết hạn, mã máy, key kích hoạt...
-
-		mỗi khi ứng dụng khởi động sẽ kiểm tra xem có kết nối với firebase khôn
-		*/
-		const machineId = clinicInfos.MachineId;
-
-		const clinicRef = doc(collection(db, 'clinics'), machineId);
-		const clinicSnap = await getDoc(clinicRef);
-
-		if (!clinicSnap.exists()) {
-			await setDoc(clinicRef, {
-				activationKey: clinicInfos.ActivationKey,
-				machineId: clinicInfos.MachineId,
-				createdAt: clinicInfos.CreatedAt,
-			});
-
-			console.log('Created new clinic document:', machineId);
+	// Lấy thông tin phòng khám
+	const getClinic = async () => {
+		console.log(`Kiểm tra thông tin phòng khám`);
+		const machineId = await (window as any).beeclinicAPI.getMachineId();
+		const id = machineId ? machineId.machineId : undefined;
+		const res = await (window as any).beeclinicAPI.getClinicInfo();
+		if (res && res.length > 0) {
+			await handleSyncClinic(res[0]);
 		} else {
-			const data = clinicSnap.data();
-			// đã tồn tại, đồng bộ lại vào local database, tránh gian lận
-			await (window as any).beeclinicAPI.updateClinicById(1, {
-				ActivationKey: data.activationKey,
-				MachineId: data.machineId,
-				CreatedAt: data.createdAt,
-			});
+			const newClinic: any = {
+				MachineId: id,
+				AppVersion:
+					(await (window as any).beeclinicAPI.getVersion()).version ?? '',
+			};
 
-			console.log('Updated existing clinic document:', machineId);
+			await (window as any).beeclinicAPI.addClinic(newClinic);
+			await handleSyncClinic(newClinic);
 		}
+	};
+
+	// check and sync with firebase
+	const handleSyncClinic = async (data: ClinicModel) => {
+		const clinicRef = doc(collection(db, 'clinics'), data.MachineId);
+		const clinicSnap = await getDoc(clinicRef);
+		if (clinicSnap.exists()) {
+			// Nếu đã có thì đồng bộ
+
+			const firebaseData = clinicSnap.data();
+			// Cập nhật lại thông tin mã kích hoạt phòng khám local
+			await (window as any).beeclinicAPI.updateClinicById(data.id, {
+				ActivationKey: firebaseData.ActivationKey,
+				updatedAt: new Date().toISOString(),
+			});
+			console.log('Đã đồng bộ thông tin phòng khám từ Firebase về local');
+		} else {
+			// Nếu chưa có thì tạo mới
+			await setDoc(clinicRef, data);
+			console.log('Đã tạo mới thông tin phòng khám trong Firebase');
+		}
+	};
+
+	const checkIcd10datas = async () => {
+		console.log(`Kiểm tra dữ liệu ICD10`);
+		// kiểm tra xem đã có dữ liệu icd10 chưa
+		const res = await (window as any).beeclinicAPI.getIcd10s();
+		// console.log(res);
+		if (res && res.length > 0) {
+			console.log('Đã có dữ liệu ICD10 trong local');
+		} else {
+			console.log('Chưa có dữ liệu ICD10 trong local');
+			console.log('Download icd10 từ server');
+			const res = await fetch('https://beeclinic.vercel.app/api/v1/icd10');
+			const data = await res.json();
+			if (data.data && data.data.length > 0) {
+				console.log('Đã tải về dữ liệu ICD10 từ server');
+				const promises = data.data.map(async (item: any) => {
+					const newItem = {
+						code: item.code,
+						title: item.title,
+						slug: item.slug,
+					};
+
+					await (window as any).beeclinicAPI.addIcd10(newItem);
+				});
+				await Promise.all(promises);
+				console.log('Đã lưu dữ liệu ICD10 vào local');
+			}
+		}
+		// nếu chưa có thì tải về từ beeclinic server và lưu vào db local
 	};
 
 	const getPatients = async () => {
@@ -126,8 +163,6 @@ const Home = () => {
 			}))
 		);
 	};
-
-	const navigate = useNavigate();
 
 	return (
 		<div>

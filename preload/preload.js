@@ -42,5 +42,11 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 		ipcRenderer.invoke('update-service-by-id', { id, updates }),
 	getServices: () => ipcRenderer.invoke('get-services'),
 	deleteServiceById: (id) => ipcRenderer.invoke('delete-service-by-id', id),
-	fixIcd10: () => ipcRenderer.invoke('fix-icd-10'),
+	// get-machine-id
+	getMachineId: () => ipcRenderer.invoke('get-machine-id'),
+	// get version
+	getVersion: () => ipcRenderer.invoke('get-version'),
+	// icd10
+	getIcd10s: () => ipcRenderer.invoke('get-icd10s'),
+	addIcd10: (data) => ipcRenderer.invoke('add-icd10', data),
 });

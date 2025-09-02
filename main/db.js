@@ -24,6 +24,31 @@ const createDatabase = async () => {
 	}
 
 	db.serialize(() => {
+		// table of clinic info
+		db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  CSKCBID TEXT, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
+  TenCSKCB TEXT,
+  DiaChi TEXT,
+  DienThoai TEXT,
+  Email TEXT,
+  SoGiayPhepHoatDong TEXT,
+  NgayCapGiayPhep TEXT,
+  NoiCapGiayPhep TEXT,
+  HoTenBS TEXT,
+  SoChungChiHanhNghe TEXT,
+  KhoaPhong TEXT,
+  ChucVu TEXT,
+  MachineId TEXT,
+  AppVersion TEXT,
+  ActivationKey TEXT,
+  ClinicAccessToken TEXT, -- Access token cho phòng khám
+  DoctorAccessToken TEXT, -- Access token cho bác sĩ
+  CongKham INTEGER DEFAULT 100000, -- Công khám, mặc định 100000
+  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+  UpdatedAt TEXT
+  )`);
+
 		db.run(`CREATE TABLE IF NOT EXISTS patients (
   id INTEGER PRIMARY KEY AUTOINCREMENT, -- Mã bệnh nhân
   name TEXT NOT NULL, -- Tên bệnh nhân
@@ -95,31 +120,6 @@ const createDatabase = async () => {
   gia_ban REAL           -- Giá bán
   )`);
 
-		// table of clinic info
-		db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  CSKCBID TEXT UNIQUE, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
-  TenCSKCB TEXT,
-  DiaChi TEXT,
-  DienThoai TEXT,
-  Email TEXT,
-  SoGiayPhepHoatDong TEXT,
-  NgayCapGiayPhep TEXT,
-  NoiCapGiayPhep TEXT,
-  HoTenBS TEXT,
-  SoChungChiHanhNghe TEXT,
-  KhoaPhong TEXT,
-  ChucVu TEXT,
-  MachineId TEXT,
-  AppVersion TEXT,
-  ActivationKey TEXT,
-  ClinicAccessToken TEXT, -- Access token cho phòng khám
-  DoctorAccessToken TEXT, -- Access token cho bác sĩ
-  CongKham INTEGER DEFAULT 100000, -- Công khám, mặc định 100000
-  CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
-  UpdatedAt TEXT
-  )`);
-
 		// tạo bảng dịch vụ - thủ thuật
 		db.run(`CREATE TABLE IF NOT EXISTS services (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -131,48 +131,12 @@ const createDatabase = async () => {
     updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
 
-		// tạo bảng icd10
-		/*
-    icd10 item
-    {
-    "code": "Z98.0",
-    "title": "Tình trạng nối tắt ruột và nối ruột",
-    "slug": "tinh-trang-noi-tat-ruot-va-noi-ruot"
-  }
-  
-  */
-
 		db.run(`CREATE TABLE IF NOT EXISTS icd10 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     code TEXT UNIQUE,
     title TEXT,
     slug TEXT
   )`);
-
-		db.run(`CREATE VIRTUAL TABLE IF NOT EXISTS icd10_fts USING fts5(
-    code,
-    title,
-    slug,
-    content='icd10',
-    content_rowid='rowid'
-  )`);
-
-		db.run(`CREATE TRIGGER IF NOT EXISTS icd10_fts_update AFTER INSERT ON icd10
-  BEGIN
-    INSERT INTO icd10_fts (code, title, slug)
-    VALUES (new.code, new.title, new.slug);
-  END`);
-
-		db.run(`CREATE TRIGGER IF NOT EXISTS icd10_fts_update AFTER UPDATE ON icd10
-  BEGIN
-    UPDATE icd10_fts SET code = new.code, title = new.title, slug = new.slug
-    WHERE rowid = old.rowid;
-  END`);
-
-		db.run(`CREATE TRIGGER IF NOT EXISTS icd10_fts_delete AFTER DELETE ON icd10
-  BEGIN
-    DELETE FROM icd10_fts WHERE rowid = old.rowid;
-  END`);
 	});
 
 	return dbPath;
