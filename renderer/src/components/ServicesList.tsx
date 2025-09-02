@@ -1,9 +1,9 @@
 /** @format */
 
-import { useEffect, useRef, useState } from 'react';
-import type { ServiceModel } from '../types/ServiceModel';
 import { AutoComplete, Button, List } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
+import type { ServiceModel } from '../types/ServiceModel';
 
 export interface ServicesListProps {
 	prescriptionItems: ServiceModel[];

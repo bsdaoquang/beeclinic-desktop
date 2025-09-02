@@ -10,13 +10,12 @@ import {
 	InputNumber,
 	List,
 	message,
-	Modal,
 	Select,
 	Space,
 	Tooltip,
 	Typography,
 } from 'antd';
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BiEdit } from 'react-icons/bi';
 import { IoIosAdd } from 'react-icons/io';
 import { IoClose } from 'react-icons/io5';
