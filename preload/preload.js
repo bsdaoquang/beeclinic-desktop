@@ -18,12 +18,14 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	addPrescription: (data) => ipcRenderer.invoke('add-prescription', data),
 	getPrescriptions: () => ipcRenderer.invoke('get-prescriptions'),
 	getPrescriptionById: (id) => ipcRenderer.invoke('get-prescription-by-id', id),
+	getDiagnosis: () => ipcRenderer.invoke('get-all-diagnosis-in-prescription'),
 	deletePrescriptionById: (id) =>
 		ipcRenderer.invoke('delete-prescription-by-id', id),
 	// get prescriptions by patient id
 	getPrescriptionsByPatientId: (patientId) =>
 		ipcRenderer.invoke('get-prescriptions-by-patient-id', patientId),
-
+	// search diagnosis from icd10 search-icd-diagnosis
+	searchIcdDiagnosis: (key) => ipcRenderer.invoke('search-icd-diagnosis', key),
 	addMedicine: (medicine) => ipcRenderer.invoke('add-medicine', medicine),
 	updateMedicineById: (id, updates) =>
 		ipcRenderer.invoke('update-medicine-by-id', { id, updates }),

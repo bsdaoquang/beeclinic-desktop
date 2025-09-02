@@ -40,11 +40,8 @@ import type { ServiceModel } from '../types/ServiceModel';
 import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
-
-/** @format */
-/*
-  Add new prescription by patient id in query
-*/
+import { replaceName } from '../utils/replaceName';
+import { useDebounce } from 'use-debounce';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -57,23 +54,27 @@ const AddPrescription = () => {
 	>([]);
 	const [prescriptionCode, setPrescriptionCode] = useState('');
 	const [isAsync, setIsAsync] = useState<null | boolean>(null);
-	const [diagnossic, setDiagnossic] = useState('');
+	const [diagnostics, setDiagnostics] = useState<string[]>([]);
 	const [isPrint, setIsPrint] = useState(false);
-	const [prescriptionData, setPrescriptionData] = useState<{
-		diagnossics: string[];
-	}>({
-		diagnossics: [],
-	});
+
 	const [prescriptionsByPatient, setPrescriptionsByPatient] = useState<
 		PrescriptionModel[]
 	>([]);
 	const [congkham, setCongkham] = useState(0);
+	const [diagnosisOptions, setDiagnosisOptions] = useState<
+		{
+			label: string;
+			value: string;
+		}[]
+	>([]);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
 	const [form] = Form.useForm();
 	const [formPres] = Form.useForm();
 	const [messageAPI, messHolder] = message.useMessage();
+	const [searchText, setSearchText] = useState('');
+	const [searchKey] = useDebounce(searchText, 300);
 
 	const printRef = useRef<HTMLDivElement>(null);
 	const clinic: ClinicModel | undefined = localStorage.getItem('clinic')
@@ -107,7 +108,12 @@ const AddPrescription = () => {
 		clinic && clinic.CongKham && setCongkham(clinic.CongKham);
 
 		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
-		getPrescriptionsData();
+
+		// Lấy danh sách những chẩn đoán trước đó của phòng khám
+		getAllDiagnosis();
+
+		// Lấy danh sách lịch sử khám của bệnh nhân
+		getPrescriptionsByPatientId();
 	}, []);
 
 	useEffect(() => {
@@ -116,29 +122,22 @@ const AddPrescription = () => {
 		}
 	}, [patientId]);
 
-	const getPrescriptionsData = async () => {
+	useEffect(() => {
+		if (searchKey && searchKey.length >= 3) {
+			getIcd10Diagnosis(searchKey);
+		}
+	}, [searchKey]);
+
+	const getIcd10Diagnosis = async (key: string) => {
+		const text = replaceName(key);
 		try {
-			const res: any = await (window as any).beeclinicAPI.getPrescriptions();
-
-			const diagnosis: string[] = [];
-
-			res.forEach((item: PrescriptionModel) => {
-				if (
-					diagnosis.findIndex((element) => element === item.diagnosis) === -1
-				) {
-					diagnosis.push(item.diagnosis);
-				}
-			});
-
-			setPrescriptionData({
-				diagnossics: diagnosis,
-			});
-
-			const items = res.filter(
-				(element: any) => `${element.patient_id}` === patientId
+			const res = await (window as any).beeclinicAPI.searchIcdDiagnosis(text);
+			setDiagnosisOptions(
+				res.map((item: any) => ({
+					label: item,
+					value: item,
+				}))
 			);
-
-			setPrescriptionsByPatient(items);
 		} catch (error) {
 			console.log(error);
 		}
@@ -169,22 +168,6 @@ const AddPrescription = () => {
 			);
 			return;
 		}
-		/*
-				Prescription in DB
-				ma_don_thuoc,
-				patient_id,
-				loai_don_thuoc,
-				diagnosis,
-				note,
-				ngay_gio_ke_don,
-				ngay_tai_kham,
-				thong_tin_don_thuoc_json,
-				sent,
-				sent_at,
-				created_at,
-				reason_for_visit,
-				disease_progression
-			*/
 		const prescriptionData = {
 			ma_don_thuoc: prescriptionCode,
 			patient_id: patient.id,
@@ -223,6 +206,31 @@ const AddPrescription = () => {
 		} catch (error) {
 			console.log(error);
 			messageAPI.error('Lưu đơn thuốc thất bại');
+		}
+	};
+
+	const getAllDiagnosis = async () => {
+		try {
+			const res = await (window as any).beeclinicAPI.getDiagnosis();
+			setDiagnosisOptions(
+				res.map((item: any) => ({
+					label: item,
+					value: item,
+				}))
+			);
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
+	const getPrescriptionsByPatientId = async () => {
+		try {
+			const res = await (
+				window as any
+			).beeclinicAPI.getPrescriptionsByPatientId(patientId);
+			setPrescriptionsByPatient(res);
+		} catch (error) {
+			console.log(error);
 		}
 	};
 
@@ -352,7 +360,7 @@ const AddPrescription = () => {
 														</Popover>,
 													]}>
 													<List.Item.Meta
-														title={item.diagnosis.replace(', ', '/')}
+														title={item.diagnosis.replace(',', ' / ')}
 														description={getShortDateTime(
 															item.created_at as string
 														)}
@@ -416,6 +424,7 @@ const AddPrescription = () => {
 										</Form.Item>
 
 										<Form.Item
+											help='Nhập hoặc tìm kiếm chẩn đoán, có thể chọn nhiều chẩn đoán bằng cách nhập và nhấn Enter.'
 											rules={[
 												{
 													required: true,
@@ -425,17 +434,32 @@ const AddPrescription = () => {
 											name={'diagnosis'}>
 											<Select
 												mode='tags'
-												onChange={(val) => setDiagnossic(val)}
-												options={prescriptionData.diagnossics.map((item) => ({
-													label: item,
-													value: item,
-												}))}
+												onChange={(val) => setDiagnostics(val)}
+												showSearch
+												options={diagnosisOptions}
+												filterOption={(input, option) => {
+													return option
+														? replaceName(option.label).includes(
+																replaceName(input)
+														  )
+														: false;
+												}}
+												onSearch={async (val) => {
+													if (val && val.length >= 3) {
+														setSearchText(val);
+													} else {
+														getAllDiagnosis();
+													}
+												}}
+												onSelect={() => setSearchText('')}
 												allowClear
 												placeholder='Chẩn đoán'
+												notFoundContent={'Không tìm thấy chẩn đoán phù hợp'}
 											/>
 										</Form.Item>
 									</Form>
 									<Tabs
+										className='mt-5'
 										size='small'
 										type='card'
 										items={[
@@ -474,7 +498,7 @@ const AddPrescription = () => {
 									}}>
 									<Descriptions column={1} size='small'>
 										<Descriptions.Item label='Ngày khám'>
-											{new Date().toLocaleString()}
+											{new Date().toLocaleString('vi-VN')}
 										</Descriptions.Item>
 										<Descriptions.Item label='Công khám'>
 											<Typography.Text
@@ -590,7 +614,7 @@ const AddPrescription = () => {
 						clinic={clinic}
 						patient={patient}
 						prescriptionItems={prescriptionItems}
-						diagnostic={diagnossic}
+						diagnostic={diagnostics.toString()}
 						prescriptionCode={prescriptionCode}
 					/>
 				</div>

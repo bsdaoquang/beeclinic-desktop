@@ -187,9 +187,9 @@ const PrescriptionDetail = () => {
 									type='text'>
 									Xóa phiên khám
 								</Button>
-								<Button type='primary' ghost>
+								{/* <Button type='primary' ghost>
 									Sử dụng lại
-								</Button>
+								</Button> */}
 							</Space>
 						</div>
 					</div>
@@ -234,7 +234,7 @@ const PrescriptionDetail = () => {
 							</Descriptions.Item>
 							<Descriptions.Item label='Chẩn đoán'>
 								{prescription?.diagnosis
-									? prescription.diagnosis.replace(',', '/')
+									? prescription.diagnosis.replace(',', ' / ')
 									: ''}
 							</Descriptions.Item>
 							<Descriptions.Item label='Ghi chú'>

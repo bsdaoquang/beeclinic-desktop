@@ -247,6 +247,31 @@ ipcMain.handle('get-prescriptions', async () => {
 	});
 });
 
+// get all diagnosis in prescription
+ipcMain.handle('get-all-diagnosis-in-prescription', async (event) => {
+	return new Promise((resolve, reject) => {
+		db.all('SELECT diagnosis FROM prescriptions', (err, rows) => {
+			if (err) {
+				reject(err);
+			} else {
+				/*
+				// console.log(rows);
+				[
+  { diagnosis: 'Viêm họng cấp' },
+  { diagnosis: 'Viêm phế quản,Tăng huyết áp' },
+  { diagnosis: 'Viêm họng cấp,Đái tháo đường type II' }
+]
+				*/
+				// chuyển dữ liệu thành 1 danh sách các chẩn đoán, tách bởi dấu phẩy, không trùng lặp
+				const diagnosisList = Array.from(
+					new Set(rows.flatMap((row) => row.diagnosis.split(',')))
+				);
+				resolve(diagnosisList);
+			}
+		});
+	});
+});
+
 // get prescription by id
 ipcMain.handle('get-prescription-by-id', async (event, id) => {
 	return new Promise((resolve, reject) => {
@@ -266,6 +291,22 @@ ipcMain.handle('get-prescriptions-by-patient-id', async (event, patientId) => {
 			(err, rows) => {
 				if (err) reject(err);
 				else resolve(rows);
+			}
+		);
+	});
+});
+
+// tìm kiếm chẩn đoán từ icd10 table, icd10 fts5 đã làm trước đó, dựa trên key người dùng nhập theo slug hoặc code
+// trả về dang <code>-<slug>
+
+ipcMain.handle('search-icd-diagnosis', async (event, key) => {
+	return new Promise((resolve, reject) => {
+		db.all(
+			'SELECT * FROM icd10 WHERE slug LIKE ? OR code LIKE ?',
+			[`%${key}%`, `%${key}%`],
+			(err, rows) => {
+				if (err) reject(err);
+				else resolve(rows.map((row) => `${row.code} ${row.title}`));
 			}
 		);
 	});

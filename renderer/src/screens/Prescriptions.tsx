@@ -165,8 +165,8 @@ const Prescriptions = () => {
 			title: 'Chẩn đoán',
 			dataIndex: 'diagnosis',
 			width: 200,
-			ellipsis: true,
-			render: (text: string) => text.replace(', ', '/'),
+			ellipsis: false,
+			render: (text: string) => text.replace(',', ' / '),
 		},
 		{
 			key: 'total',
