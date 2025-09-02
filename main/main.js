@@ -39,10 +39,10 @@ function createWindow() {
 
 app.whenReady().then(async () => {
 	await createDatabase();
-	await ensureIcd10Data();
-	await ensureClinicInfo();
-	createWindow();
 	autoUpdater.checkForUpdatesAndNotify();
+	createWindow();
+
+	await ensureClinicInfo();
 
 	app.on('activate', () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -574,7 +574,9 @@ ipcMain.handle('delete-service-by-id', async (event, id) => {
 
 // read json cid10 form ../assets/icd-10.json
 const jsonPath = path.join(__dirname, '../assets/icd-10.json');
-const icd10Data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
+const icd10Data = jsonPath
+	? JSON.parse(fs.readFileSync(jsonPath, 'utf-8'))
+	: null;
 const machineId = machineIdSync();
 
 // Ensure clinic_infos row with id=1 exists at startup
@@ -686,38 +688,36 @@ async function ensureClinicInfo() {
 
 // tự động thêm dữ liệu từ icd10.json vào bảng icd10 nếu bảng rỗng
 async function ensureIcd10Data() {
-	if (jsonPath && icd10Data) {
-		return new Promise((resolve, reject) => {
-			db.get('SELECT COUNT(*) as count FROM icd10', (err, row) => {
-				if (err) return reject(err);
-				if (row.count === 0) {
-					// Bảng icd10 rỗng, thêm dữ liệu từ icd10.json
-					console.log('Bảng icd10 rỗng, đang thêm dữ liệu từ icd10.json');
-					const insertQuery = `
+	return new Promise((resolve, reject) => {
+		db.get('SELECT COUNT(*) as count FROM icd10', (err, row) => {
+			if (err) return reject(err);
+			if (row.count === 0) {
+				// Bảng icd10 rỗng, thêm dữ liệu từ icd10.json
+				console.log('Bảng icd10 rỗng, đang thêm dữ liệu từ icd10.json');
+				const insertQuery = `
 						INSERT INTO icd10 (code, title, slug)
 						VALUES (?, ?, ?)
 					`;
-					const promises = icd10Data.map((item) => {
-						return new Promise((res, rej) => {
-							db.run(
-								insertQuery,
-								[item.code, item.title, item.slug],
-								function (insertErr) {
-									if (insertErr) rej(insertErr);
-									else res();
-								}
-							);
-						});
+				const promises = icd10Data.map((item) => {
+					return new Promise((res, rej) => {
+						db.run(
+							insertQuery,
+							[item.code, item.title, item.slug],
+							function (insertErr) {
+								if (insertErr) rej(insertErr);
+								else res();
+							}
+						);
 					});
-					Promise.all(promises)
-						.then(() => resolve({ inserted: true }))
-						.catch(reject);
-				} else {
-					resolve({ exists: true });
-				}
-			});
+				});
+				Promise.all(promises)
+					.then(() => resolve({ inserted: true }))
+					.catch(reject);
+			} else {
+				resolve({ exists: true });
+			}
 		});
-	}
+	});
 }
 
 app.on('window-all-closed', () => {
