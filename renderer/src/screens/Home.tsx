@@ -1,6 +1,6 @@
 /** @format */
 
-import { AutoComplete, Button, Flex, Typography } from 'antd';
+import { AutoComplete, Button, Flex, Modal, Progress, Typography } from 'antd';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
@@ -17,6 +17,10 @@ const Home = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isVisibleModalAddPatient, setIsVisibleModalAddPatient] =
 		useState(false);
+	const [isAddDatas, setIsAddDatas] = useState(false);
+	const [icd10Datas, setIcd10Datas] = useState<any[]>([]);
+	const [updatePercent, setUpdatePercent] = useState(0);
+	const [messageUpdate, setMessageUpdate] = useState('');
 
 	const inpRef = useRef<any>(null);
 	const navigate = useNavigate();
@@ -49,6 +53,12 @@ const Home = () => {
 			);
 		}
 	}, [patients]);
+
+	useEffect(() => {
+		if (icd10Datas.length > 0) {
+			handleSaveIcd10Datas();
+		}
+	}, [icd10Datas]);
 
 	const checkDatas = async () => {
 		try {
@@ -108,13 +118,23 @@ const Home = () => {
 		if (res && res.length > 0) {
 			console.log('Đã có dữ liệu ICD10 trong local');
 		} else {
-			console.log('Chưa có dữ liệu ICD10 trong local');
-			console.log('Download icd10 từ server');
-			const res = await fetch('https://beeclinic.vercel.app/api/v1/icd10');
-			const data = await res.json();
-			if (data.data && data.data.length > 0) {
-				console.log('Đã tải về dữ liệu ICD10 từ server');
-				const promises = data.data.map(async (item: any) => {
+			setMessageUpdate('Đang tải dữ liệu ICD10 từ server...');
+			const result = await fetch('https://beeclinic.vercel.app/api/v1/icd10');
+			const data = await result.json();
+			setIcd10Datas(data.data);
+		}
+	};
+
+	const handleSaveIcd10Datas = async () => {
+		try {
+			if (icd10Datas.length > 0) {
+				setIsAddDatas(true);
+				setMessageUpdate(
+					'Đã tải dữ liệu ICD10 từ server, tiến hành lưu vào local...'
+				);
+				// await handleSaveIcd10Datas();
+				setMessageUpdate('Đang lưu dữ liệu ICD10 vào local...');
+				const promises = icd10Datas.map(async (item: any) => {
 					const newItem = {
 						code: item.code,
 						title: item.title,
@@ -122,12 +142,17 @@ const Home = () => {
 					};
 
 					await (window as any).beeclinicAPI.addIcd10(newItem);
+					setUpdatePercent((prev) => prev + 100 / icd10Datas.length);
 				});
 				await Promise.all(promises);
 				console.log('Đã lưu dữ liệu ICD10 vào local');
+				setMessageUpdate('Đã lưu xong dữ liệu ICD10 vào local');
 			}
+		} catch (error) {
+			console.log(error);
+		} finally {
+			setIsAddDatas(false);
 		}
-		// nếu chưa có thì tải về từ beeclinic server và lưu vào db local
 	};
 
 	const getPatients = async () => {
@@ -271,6 +296,19 @@ const Home = () => {
 						inpRef.current.focus();
 					}}
 				/>
+
+				<Modal
+					title='Bổ sung dữ liệu'
+					closable={false}
+					centered
+					style={{ minHeight: 400 }}
+					footer={null}
+					open={isAddDatas}>
+					<div className='p-4'>
+						<Typography.Paragraph>{messageUpdate}</Typography.Paragraph>
+						<Progress percent={Math.round(updatePercent)} showInfo />
+					</div>
+				</Modal>
 			</div>
 		</div>
 	);

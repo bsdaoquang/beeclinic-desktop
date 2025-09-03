@@ -133,7 +133,7 @@ const createDatabase = async () => {
 
 		db.run(`CREATE TABLE IF NOT EXISTS icd10 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    code TEXT UNIQUE,
+    code TEXT,
     title TEXT,
     slug TEXT
   )`);
