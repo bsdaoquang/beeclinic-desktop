@@ -63,7 +63,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 
 	useEffect(() => {
 		handleQuantity();
-	}, [dosages, isAddMedicine, days]);
+	}, [dosages, days]);
 
 	const handleQuantity = (val?: string) => {
 		if (days) {
@@ -222,6 +222,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 										onClick={() => {
 											formPres.setFieldsValue(item);
 											quantityRef.current.focus();
+											setIsAddMedicine(true);
 										}}
 									/>
 								</Tooltip>
@@ -260,6 +261,11 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 					setIsAddMedicine(false);
 					formPres.resetFields();
 					setDays(7);
+					setDosages({
+						sang: null,
+						toi: null,
+						trua: null,
+					});
 					formPres.setFieldValue('quantity', null);
 				}}
 				open={isAddMedicine}
