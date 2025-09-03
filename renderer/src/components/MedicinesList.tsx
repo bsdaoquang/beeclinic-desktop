@@ -3,6 +3,7 @@
 import {
 	AutoComplete,
 	Button,
+	Checkbox,
 	Divider,
 	Drawer,
 	Form,
@@ -57,14 +58,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 	}, []);
 
 	useEffect(() => {
-		if (isAddMedicine) {
-			setDosages({
-				sang: 1,
-				trua: 1,
-				toi: 1,
-			});
-		}
-		formPres.setFieldValue('unit', 'Viên');
+		formPres.setFieldValue('unit', 'viên');
 	}, [isAddMedicine]);
 
 	useEffect(() => {
@@ -73,13 +67,15 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 
 	const handleQuantity = (val?: string) => {
 		if (days) {
-			const unit = val ? val : formPres.getFieldValue('unit') ?? '';
+			const unit = (
+				val ? val : formPres.getFieldValue('unit') ?? ''
+			).toLowerCase();
 			formPres.setFieldValue(
 				'instruction',
 				`Uống ${days ? `${days} ngày: ` : ''}${
-					dosages.sang ? `sáng ${dosages.sang} ${unit}, ` : null
-				}${dosages.trua ? `trưa ${dosages.trua} ${unit}, ` : null}${
-					dosages.toi ? `tối ${dosages.toi} ${unit}` : null
+					dosages.sang ? `sáng ${dosages.sang} ${unit}, ` : ''
+				}${dosages.trua ? `trưa ${dosages.trua} ${unit}, ` : ''}${
+					dosages.toi ? `tối ${dosages.toi} ${unit}` : ''
 				}`
 			);
 
@@ -166,6 +162,21 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 			}
 			// prescriptionItems.push(vals);
 			onChange([...prescriptionItems, vals]);
+
+			const isContinue = vals.isContinue;
+			setDosages({
+				sang: null,
+				toi: null,
+				trua: null,
+			});
+
+			if (isContinue) {
+				formPres.resetFields();
+				setDays(7);
+				formPres.setFieldValue('quantity', null);
+			} else {
+				setIsAddMedicine(false);
+			}
 		} else {
 			const newPresItems = [...prescriptionItems];
 			newPresItems[indexMedicine] = vals;
@@ -249,11 +260,6 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 					setIsAddMedicine(false);
 					formPres.resetFields();
 					setDays(7);
-					setDosages({
-						sang: 1,
-						toi: 1,
-						trua: 1,
-					});
 					formPres.setFieldValue('quantity', null);
 				}}
 				open={isAddMedicine}
@@ -269,8 +275,14 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						<Form.Item name='ma_thuoc'>
 							<Input />
 						</Form.Item>
+						<Form.Item name='isContinue'>
+							<Checkbox />
+						</Form.Item>
 					</div>
-					<Form.Item name='ten_thuoc' label='Tên thuốc'>
+					<Form.Item
+						name='ten_thuoc'
+						label='Tên thuốc'
+						rules={[{ required: true, message: 'Vui lòng nhập tên thuốc' }]}>
 						<AutoComplete
 							ref={medicineNameRef}
 							autoFocus
@@ -313,7 +325,10 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							</Form.Item>
 						</div>
 						<div className='col'>
-							<Form.Item name='quantity' label='Số lượng'>
+							<Form.Item
+								name='quantity'
+								label='Số lượng'
+								rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}>
 								<InputNumber
 									ref={quantityRef}
 									min={1}
@@ -404,14 +419,15 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						<Button
 							type='default'
 							onClick={() => {
+								formPres.setFieldValue('isContinue', false);
 								formPres.submit();
-								setIsAddMedicine(false);
 							}}>
 							Thêm
 						</Button>
 						<Button
 							type='primary'
 							onClick={() => {
+								formPres.setFieldValue('isContinue', true);
 								formPres.submit();
 							}}>
 							Thêm và tiếp tục
