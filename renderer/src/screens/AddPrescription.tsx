@@ -360,7 +360,7 @@ const AddPrescription = () => {
 														</Popover>,
 													]}>
 													<List.Item.Meta
-														title={item.diagnosis.replace(',', ' / ')}
+														title={item.diagnosis.replace(/,/g, ' / ')}
 														description={getShortDateTime(
 															item.created_at as string
 														)}

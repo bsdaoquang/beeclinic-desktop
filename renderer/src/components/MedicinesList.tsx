@@ -343,7 +343,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							<Form.Item label='Sáng'>
 								<InputNumber
 									ref={sangref}
-									min={1}
+									min={0}
 									value={dosages.sang}
 									onChange={(val) => {
 										setDosages({
@@ -359,7 +359,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							<Form.Item label='Trưa'>
 								<InputNumber
 									ref={truaRef}
-									min={1}
+									min={0}
 									value={dosages.trua}
 									onChange={(val) => {
 										setDosages({
@@ -375,7 +375,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							<Form.Item label='Tối'>
 								<InputNumber
 									ref={toiRef}
-									min={1}
+									min={0}
 									value={dosages.toi}
 									onChange={(val) =>
 										setDosages({
