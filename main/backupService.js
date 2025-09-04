@@ -164,6 +164,12 @@ const listBackups = async (oAuth2Client, folderName = 'BeeClinic Backup') => {
 	return data.files || [];
 };
 
+const deleteBackup = async (oAuth2Client, fileId) => {
+	const drive = google.drive({ version: 'v3', auth: oAuth2Client });
+	await drive.files.delete({ fileId });
+	return { ok: true };
+};
+
 const deleteOldBackups = async (
 	oAuth2Client,
 	keep = 7,
@@ -252,4 +258,4 @@ const restoreFromDrive = async (
 	return { ok: true };
 };
 
-export { runFullBackup, listBackups, restoreFromDrive };
+export { runFullBackup, listBackups, restoreFromDrive, deleteBackup };

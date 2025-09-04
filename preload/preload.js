@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	connectGoogle: () => ipcRenderer.invoke('backup:connectGoogle'),
 	isConnected: () => ipcRenderer.invoke('backup:isConnected'),
 	run: (payload) => ipcRenderer.invoke('backup:run', payload),
+	delete: (payload) => ipcRenderer.invoke('backup:delete', payload),
 	list: () => ipcRenderer.invoke('backup:list'),
 	restore: (payload) => ipcRenderer.invoke('backup:restore', payload),
 	setSchedule: (payload) => ipcRenderer.invoke('backup:schedule:set', payload),
