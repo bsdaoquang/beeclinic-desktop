@@ -1,6 +1,6 @@
 /** @format */
 
-import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import fs from 'fs';
 import cron from 'node-cron';
 import pkg from 'node-machine-id';
@@ -11,11 +11,9 @@ import {
 	listBackups,
 	restoreFromDrive,
 	runFullBackup,
-	deleteBackup,
 } from './backupService.js';
 import { GoogleAuth } from './googleAuth.js';
 import dotenv from 'dotenv';
-import { createUpdateManager } from './updateManager.js';
 
 dotenv.config();
 
@@ -120,14 +118,6 @@ app.whenReady().then(async () => {
 	});
 });
 
-// open external link
-ipcMain.handle('open-external', async (_e, url) => {
-	if (!/^(https?:|mailto:|tel:)/i.test(url))
-		throw new Error('URL không hợp lệ');
-	await shell.openExternal(url);
-	return { ok: true };
-});
-
 // connect to google
 // ====== IPC: Google Drive Connect ======
 ipcMain.handle('backup:connectGoogle', async () => {
@@ -144,23 +134,12 @@ ipcMain.handle('backup:run', async (e, { passphrase, keep = 7 }) => {
 	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
 	googleAuth.setTokens(savedTokens);
 
-	// backup tất cả các bảng, trừ bảng icd10 (có thể tải lại từ nguồn khác)
-	// Exclude icd10 table from backup by passing an excludeTables option
 	const uploaded = await runFullBackup(googleAuth.getClient(), {
 		paths: [DB_PATH, FILES_DIR],
 		passphrase,
 		keep,
-		excludeTables: ['icd10'],
 	});
 	return uploaded;
-});
-
-// delete backup file
-ipcMain.handle('backup:delete', async (e, { fileId }) => {
-	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
-	googleAuth.setTokens(savedTokens);
-	const r = await deleteBackup(googleAuth.getClient(), fileId);
-	return r;
 });
 
 // ====== IPC: List Backups ======
@@ -185,20 +164,6 @@ ipcMain.handle('backup:restore', async (e, { fileId, passphrase }) => {
 		extractToDir: extractTo,
 	});
 	return r;
-});
-
-// kiểm tra đã bật tự động backup chưa
-ipcMain.handle('backup:schedule:check', async () => {
-	return { isScheduled: !!cronTask };
-});
-
-// Tắt tự động backup
-ipcMain.handle('backup:schedule:stop', async () => {
-	if (cronTask) {
-		cronTask.stop();
-		cronTask = null;
-	}
-	return { ok: true };
 });
 
 // ====== Lịch tự động (mặc định 20:00 hằng ngày) ======
