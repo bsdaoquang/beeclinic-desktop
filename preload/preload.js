@@ -53,4 +53,14 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	// icd10
 	getIcd10s: () => ipcRenderer.invoke('get-icd10s'),
 	addIcd10: (data) => ipcRenderer.invoke('add-icd10', data),
+	connectGoogle: () => ipcRenderer.invoke('backup:connectGoogle'),
+	isConnected: () => ipcRenderer.invoke('backup:isConnected'),
+	run: (payload) => ipcRenderer.invoke('backup:run', payload),
+	list: () => ipcRenderer.invoke('backup:list'),
+	restore: (payload) => ipcRenderer.invoke('backup:restore', payload),
+	setSchedule: (payload) => ipcRenderer.invoke('backup:schedule:set', payload),
+	onScheduledOk: (cb) =>
+		ipcRenderer.on('backup:scheduled:ok', (_, ts) => cb(ts)),
+	onScheduledErr: (cb) =>
+		ipcRenderer.on('backup:scheduled:err', (_, msg) => cb(msg)),
 });

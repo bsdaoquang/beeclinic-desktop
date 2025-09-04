@@ -1,7 +1,7 @@
 /** @format */
 
 import { Tabs } from 'antd';
-import { ClinicInfos, HTDTQG } from '../components';
+import { ClinicBackup, ClinicInfos, HTDTQG } from '../components';
 
 const Settings = () => {
 	return (
@@ -11,6 +11,7 @@ const Settings = () => {
 					defaultActiveKey='clinic-infos'
 					className='settings-tabs'
 					tabPosition='left'
+					size='small'
 					items={[
 						{
 							key: 'clinic-infos',
@@ -21,6 +22,11 @@ const Settings = () => {
 							key: 'clinic-appearance',
 							label: 'Đơn thuốc Quốc Gia',
 							children: <HTDTQG />,
+						},
+						{
+							key: 'clinic-backup',
+							label: 'Sao lưu & Phục hồi',
+							children: <ClinicBackup />,
 						},
 					]}
 				/>
