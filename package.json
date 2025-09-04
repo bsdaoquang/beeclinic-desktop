@@ -65,7 +65,12 @@
 		"electron-builder": "^26.0.12"
 	},
 	"dependencies": {
+		"archiver": "^7.0.1",
+		"dotenv": "^17.2.2",
 		"electron-updater": "^6.6.2",
+		"googleapis": "^159.0.0",
+		"mime-types": "^3.0.1",
+		"node-cron": "^4.2.1",
 		"node-machine-id": "^1.1.12",
 		"sqlite3": "^5.1.7"
 	}

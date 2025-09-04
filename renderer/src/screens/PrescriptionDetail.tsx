@@ -30,6 +30,7 @@ import {
 	getYearOld,
 } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
+import { BsArrowLeft } from 'react-icons/bs';
 
 const PrescriptionDetail = () => {
 	const { id } = useParams<{ id: string }>();
@@ -134,7 +135,16 @@ const PrescriptionDetail = () => {
 					size='small'
 					dataSource={services}
 					renderItem={(item, index) => (
-						<List.Item key={item.id}>
+						<List.Item
+							key={item.id}
+							extra={
+								<span>
+									{item.gia?.toLocaleString('vi-VN', {
+										style: 'currency',
+										currency: 'VND',
+									})}
+								</span>
+							}>
 							<List.Item.Meta
 								title={`${numToString(index + 1)}. ${item.ten_dich_vu}`}
 								description={`${item.mo_ta}`}
@@ -166,12 +176,22 @@ const PrescriptionDetail = () => {
 				<div className='col-sm-12 col-md-8 offset-md-2'>
 					<div className='row'>
 						<div className='col'>
-							<Typography.Title level={3} type='secondary' className='mb-0'>
-								Chi tiết đơn thuốc
-							</Typography.Title>
-							<Typography.Text type='secondary'>
-								Mã đơn: <span>{prescription?.ma_don_thuoc?.toUpperCase()}</span>
-							</Typography.Text>
+							<Space align='start'>
+								<Button
+									icon={<BsArrowLeft className='text-muted' size={20} />}
+									type='link'
+									onClick={() => navigate(-1)}
+								/>
+								<div>
+									<Typography.Title level={3} type='secondary' className='mb-0'>
+										Chi tiết đơn thuốc
+									</Typography.Title>
+									<Typography.Text type='secondary'>
+										Mã đơn:{' '}
+										<span>{prescription?.ma_don_thuoc?.toUpperCase()}</span>
+									</Typography.Text>
+								</div>
+							</Space>
 						</div>
 						<div className='col text-end'>
 							<Space>
@@ -235,6 +255,14 @@ const PrescriptionDetail = () => {
 							<Descriptions.Item label='Chẩn đoán'>
 								{prescription?.diagnosis
 									? prescription.diagnosis.replace(/,/g, ' / ')
+									: ''}
+							</Descriptions.Item>
+							<Descriptions.Item label='Tổng tiền'>
+								{prescription?.total
+									? prescription.total.toLocaleString('vi-VN', {
+											style: 'currency',
+											currency: 'VND',
+									  })
 									: ''}
 							</Descriptions.Item>
 							<Descriptions.Item label='Ghi chú'>

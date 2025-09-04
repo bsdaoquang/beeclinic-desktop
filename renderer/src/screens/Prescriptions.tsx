@@ -13,13 +13,14 @@ import {
 } from 'antd';
 import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
-import { BiSync, BiTrash } from 'react-icons/bi';
+import { BiHome, BiSync, BiTrash } from 'react-icons/bi';
 import { IoIosSearch } from 'react-icons/io';
-import { IoInformationCircleOutline } from 'react-icons/io5';
+import { IoHome, IoInformationCircleOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import type { PatientModel } from '../types/PatientModel';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import { getShortDateTime } from '../utils/datetime';
+import { BsArrowLeft } from 'react-icons/bs';
 
 /*
   Prescription list
@@ -195,7 +196,7 @@ const Prescriptions = () => {
 			key: 'actions',
 			dataIndex: '',
 			title: '',
-			width: 50,
+			width: 100,
 			align: 'right',
 			fixed: 'right',
 			render: (val: PrescriptionModel) => (
@@ -238,13 +239,20 @@ const Prescriptions = () => {
 			{messageHolder}
 			{modalHolder}
 			<div className='container-fluid'>
-				<div className='container'>
+				<div className=''>
 					<div className='row py-3'>
 						<div className='col-8'>
 							<Space align='center'>
-								<Typography.Title className='mb-0' level={3} type='secondary'>
-									Danh sách đơn thuốc
-								</Typography.Title>
+								<Space>
+									<Button
+										icon={<IoHome className='text-muted' size={20} />}
+										type='text'
+										onClick={() => navigate('/')}
+									/>
+									<Typography.Title className='mb-0' level={3} type='secondary'>
+										Danh sách đơn thuốc
+									</Typography.Title>
+								</Space>
 								<Divider type='vertical' />
 								{selectedRowKeys.length > 0 && (
 									<>

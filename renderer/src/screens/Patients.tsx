@@ -17,8 +17,8 @@ import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
 import { FaUserCircle } from 'react-icons/fa';
 import { FaUserPlus } from 'react-icons/fa6';
-import { IoClose } from 'react-icons/io5';
-import { Link } from 'react-router-dom';
+import { IoClose, IoHome } from 'react-icons/io5';
+import { Link, useNavigate } from 'react-router-dom';
 import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { formatDateToString, getYearOld } from '../utils/datetime';
@@ -199,6 +199,8 @@ const Patients = () => {
 		}
 	};
 
+	const navigate = useNavigate();
+
 	return (
 		<div>
 			{contextHolder}
@@ -206,9 +208,18 @@ const Patients = () => {
 			<div className='container-fluid'>
 				<div className=''>
 					<Flex align='center' justify='space-between'>
-						<Typography.Title level={3} type='secondary'>
-							Bệnh nhân
-						</Typography.Title>
+						<div>
+							<Space align='start'>
+								<Button
+									icon={<IoHome className='text-muted' size={20} />}
+									type='text'
+									onClick={() => navigate('/')}
+								/>
+								<Typography.Title level={3} type='secondary'>
+									Bệnh nhân
+								</Typography.Title>
+							</Space>
+						</div>
 						<Space>
 							<Input.Search
 								variant='filled'

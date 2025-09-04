@@ -1,19 +1,41 @@
 /** @format */
 
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import fs from 'fs';
+import cron from 'node-cron';
+import pkg from 'node-machine-id';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { createDatabase } from '../main/db.js';
-import fs from 'fs';
-import db from '../main/db.js';
-import pkg from 'node-machine-id';
-import updatepkg from 'electron-updater';
+import db, { createDatabase } from '../main/db.js';
+import {
+	listBackups,
+	restoreFromDrive,
+	runFullBackup,
+} from './backupService.js';
+import { GoogleAuth } from './googleAuth.js';
+import dotenv from 'dotenv';
 
-const { autoUpdater } = updatepkg;
+dotenv.config();
+
 const { machineIdSync } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// google auth connect and backup
+const googleAuth = new GoogleAuth({
+	clientId: process.env.GOOGLE_CLIENT_ID,
+	clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+});
+
+let savedTokens = null;
+
+// đường dẫn dữ liệu thực
+const DB_PATH = path.join(app.getPath('userData'), 'beeclinic.db');
+const FILES_DIR = path.join(app.getPath('userData'), 'attachments');
+if (!fs.existsSync(FILES_DIR)) {
+	fs.mkdirSync(FILES_DIR);
+}
 
 function createWindow() {
 	const win = new BrowserWindow({
@@ -44,7 +66,89 @@ app.whenReady().then(async () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
 });
-// autoUpdater.checkForUpdatesAndNotify();
+
+// connect to google
+// ====== IPC: Google Drive Connect ======
+ipcMain.handle('backup:connectGoogle', async () => {
+	const url = googleAuth.getAuthUrl();
+	// mở system browser để login
+	await shell.openExternal(url);
+	const tokens = await googleAuth.startLocalServerWaitForCode();
+	savedTokens = tokens;
+	return { ok: true };
+});
+
+// ====== IPC: Run Backup Now ======
+ipcMain.handle('backup:run', async (e, { passphrase, keep = 7 }) => {
+	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
+	googleAuth.setTokens(savedTokens);
+
+	const uploaded = await runFullBackup(googleAuth.getClient(), {
+		paths: [DB_PATH, FILES_DIR],
+		passphrase,
+		keep,
+	});
+	return uploaded;
+});
+
+// ====== IPC: List Backups ======
+ipcMain.handle('backup:list', async () => {
+	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
+	googleAuth.setTokens(savedTokens);
+	const files = await listBackups(googleAuth.getClient());
+	return files;
+});
+
+// ====== IPC: Restore ======
+ipcMain.handle('backup:restore', async (e, { fileId, passphrase }) => {
+	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
+	googleAuth.setTokens(savedTokens);
+
+	// CẢNH BÁO: cần đảm bảo đóng DB/khóa app trước khi ghi đè
+	// Tốt nhất: backup hiện tại trước, tắt các kết nối DB, sau đó restore và prompt restart app.
+	const extractTo = app.getPath('userData');
+	const r = await restoreFromDrive(googleAuth.getClient(), {
+		fileId,
+		passphrase,
+		extractToDir: extractTo,
+	});
+	return r;
+});
+
+// ====== Lịch tự động (mặc định 20:00 hằng ngày) ======
+let cronTask = null;
+ipcMain.handle(
+	'backup:schedule:set',
+	async (e, { cronExp = '0 20 * * *', passphrase, keep = 7 }) => {
+		if (cronTask) cronTask.stop();
+		cronTask = cron.schedule(
+			cronExp,
+			async () => {
+				try {
+					if (!savedTokens) return; // chưa kết nối thì thôi
+					googleAuth.setTokens(savedTokens);
+					await runFullBackup(googleAuth.getClient(), {
+						paths: [DB_PATH, FILES_DIR],
+						passphrase,
+						keep,
+					});
+					win?.webContents.send(
+						'backup:scheduled:ok',
+						new Date().toISOString()
+					);
+				} catch (err) {
+					win?.webContents.send('backup:scheduled:err', err.message);
+				}
+			},
+			{ timezone: 'Asia/Ho_Chi_Minh' }
+		);
+		return { ok: true };
+	}
+);
+
+ipcMain.handle('backup:isConnected', async () => {
+	return { ok: !!savedTokens };
+});
 
 // get version
 ipcMain.handle('get-version', async () => {
@@ -606,14 +710,6 @@ ipcMain.handle('get-icd10s', async () => {
 		});
 	});
 });
-
-// add icd10
-// icd10 item
-/*
-	title
-	code 
-	slug
-*/
 
 ipcMain.handle('add-icd10', async (event, icd10) => {
 	return new Promise((resolve, reject) => {

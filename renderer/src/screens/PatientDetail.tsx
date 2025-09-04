@@ -13,8 +13,8 @@ import {
 	Table,
 	Typography,
 } from 'antd';
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { use, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { PatientModel } from '../types/PatientModel';
 import {
 	formatDateToString,
@@ -24,6 +24,7 @@ import {
 import { AddPatient } from '../modals';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import type { ColumnProps } from 'antd/es/table';
+import { IoInformationCircleOutline } from 'react-icons/io5';
 
 /** @format */
 
@@ -35,6 +36,8 @@ const PatientDetail = () => {
 	const [modal, modalHolder] = Modal.useModal();
 	const [messageAPI, messageHolder] = message.useMessage();
 	const [prescriptions, setPrescriptions] = useState<PrescriptionModel[]>([]);
+
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		if (id) {
@@ -104,7 +107,21 @@ const PatientDetail = () => {
 			dataIndex: 'diagnosis',
 			width: 200,
 			title: 'Chẩn đoán',
-			ellipsis: true,
+			render: (text) => text.replace(/,/g, ' / '),
+		},
+		{
+			key: 'price',
+			dataIndex: 'total',
+			render: (text) =>
+				text
+					? text.toLocaleString('vi-VN', {
+							style: 'currency',
+							currency: 'VND',
+					  })
+					: '',
+			width: 150,
+			align: 'right',
+			title: 'Tổng tiền',
 		},
 	];
 
@@ -209,11 +226,19 @@ const PatientDetail = () => {
 							</div>
 						</Card>
 						<Card size='small' title='Lịch sử khám bệnh' className=''>
+							<Typography.Text type='secondary'>
+								Bấm vào đơn thuốc để xem chi tiết{' '}
+							</Typography.Text>
 							<Table
 								dataSource={prescriptions}
 								columns={columns}
 								bordered
 								size='small'
+								onRow={(record) => ({
+									onClick: () => {
+										navigate('/prescriptions/' + record.id);
+									},
+								})}
 							/>
 						</Card>
 					</>
