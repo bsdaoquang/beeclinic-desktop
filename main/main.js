@@ -11,6 +11,7 @@ import {
 	listBackups,
 	restoreFromDrive,
 	runFullBackup,
+	deleteBackup,
 } from './backupService.js';
 import { GoogleAuth } from './googleAuth.js';
 import dotenv from 'dotenv';
@@ -134,12 +135,23 @@ ipcMain.handle('backup:run', async (e, { passphrase, keep = 7 }) => {
 	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
 	googleAuth.setTokens(savedTokens);
 
+	// backup tất cả các bảng, trừ bảng icd10 (có thể tải lại từ nguồn khác)
+	// Exclude icd10 table from backup by passing an excludeTables option
 	const uploaded = await runFullBackup(googleAuth.getClient(), {
 		paths: [DB_PATH, FILES_DIR],
 		passphrase,
 		keep,
+		excludeTables: ['icd10'],
 	});
 	return uploaded;
+});
+
+// delete backup file
+ipcMain.handle('backup:delete', async (e, { fileId }) => {
+	if (!savedTokens) throw new Error('Chưa kết nối Google Drive');
+	googleAuth.setTokens(savedTokens);
+	const r = await deleteBackup(googleAuth.getClient(), fileId);
+	return r;
 });
 
 // ====== IPC: List Backups ======
