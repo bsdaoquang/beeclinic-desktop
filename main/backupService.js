@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import archiver from 'archiver';
 import { google } from 'googleapis';
 import { lookup as mimeLookup } from 'mime-types';
+import unzip from 'unzipper';
 
 // Utility: nén thành .zip ở file tạm
 const zipPathsToFile = async (paths, outZipPath) => {
@@ -79,7 +80,7 @@ const decryptFileAesGcm = async (inPath, outPath, passphrase) => {
 	const stats = fs.statSync(inPath);
 	const tag = Buffer.alloc(16);
 	fs.readSync(fd, tag, 0, 16, stats.size - 16);
-	const dataStart = 36; // 4 + 16 + 12
+	const dataStart = 32; // 4 + 16 + 12
 	const dataLen = stats.size - dataStart - 16;
 
 	const key = crypto.scryptSync(passphrase, salt, 32);
@@ -248,7 +249,6 @@ const restoreFromDrive = async (
 
 	// extract zip
 	await new Promise((resolve, reject) => {
-		const unzip = require('unzipper');
 		fs.createReadStream(zipPath)
 			.pipe(unzip.Extract({ path: extractToDir }))
 			.on('error', reject)
