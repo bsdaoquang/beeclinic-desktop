@@ -14,14 +14,47 @@ import {
 	Settings,
 	Storages,
 } from '../screens';
-import type { ClinicModel } from '../types/ClinicModel';
+import type { BackupFile, ClinicModel } from '../types/ClinicModel';
+
+declare global {
+	interface Window {
+		beeclinicAPI: {
+			check: () => Promise<void>;
+			downloadUpdate: () => Promise<void>;
+			installUpdate: () => Promise<void>;
+			getVersion: () => Promise<{ version: string }>;
+			openExternal: (url: string) => Promise<{ ok: boolean }>;
+			onChecking: (cb: () => void) => void;
+			onAvailable: (cb: (info: any) => void) => void;
+			onNotAvailable: (cb: (info: any) => void) => void;
+			onError: (cb: (e: any) => void) => void;
+			onProgress: (cb: (p: any) => void) => void;
+			onDownloaded: (cb: (info: any) => void) => void;
+			connectGoogle: () => Promise<{ ok: boolean }>;
+			isConnected: () => Promise<{ ok: boolean }>;
+			run: (p: { passphrase: string; keep?: number }) => Promise<any>;
+			delete: (p: { fileId: string }) => Promise<any>;
+			list: () => Promise<Array<BackupFile>>;
+			restore: (p: { fileId: string; passphrase: string }) => Promise<any>;
+			setSchedule: (p: {
+				cronExp?: string;
+				passphrase: string;
+				keep?: number;
+			}) => Promise<{ ok: boolean }>;
+			onScheduledOk: (cb: (ts: string) => void) => void;
+			onScheduledErr: (cb: (msg: string) => void) => void;
+			checkSchedule: () => Promise<{ isScheduled: boolean }>;
+			stopSchedule: () => Promise<{ ok: boolean }>;
+		};
+	}
+}
 
 const RouterComponent = ({ clinic }: { clinic: ClinicModel | undefined }) => {
 	return (
 		<div
 			className='p-2'
 			style={{
-				height: 'calc(100vh - 90px)',
+				height: 'calc(100vh - 100px)',
 				overflow: 'auto',
 			}}>
 			{clinic &&

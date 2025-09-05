@@ -1,6 +1,14 @@
 /** @format */
 
-import { AutoComplete, Button, Flex, Modal, Progress, Typography } from 'antd';
+import {
+	AutoComplete,
+	Button,
+	Flex,
+	Modal,
+	Progress,
+	Space,
+	Typography,
+} from 'antd';
 import { collection, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
@@ -195,17 +203,29 @@ const Home = () => {
 				<div className='container'>
 					<div className='row mt-5'>
 						<div className='col-8 offset-2'>
-							<div className='mb-5'>
-								<Typography.Title level={1} type='secondary' className='mb-0'>
-									Bee Clinic
-								</Typography.Title>
-								<Typography.Paragraph
-									type='secondary'
-									style={{
-										fontSize: 18,
-									}}>
-									Phần mềm quản lý phòng khám
-								</Typography.Paragraph>
+							<div className='mb-5 pt-5'>
+								<Space size={8} style={{ alignItems: 'flex-start' }}>
+									<img
+										src='/assets/icons/icon.png'
+										alt='logo'
+										style={{ width: 80, height: 80 }}
+									/>
+									<div>
+										<Typography.Title
+											level={1}
+											type='secondary'
+											className='mb-0'>
+											Bee Clinic
+										</Typography.Title>
+										<Typography.Paragraph
+											type='secondary'
+											style={{
+												fontSize: 18,
+											}}>
+											Phần mềm quản lý phòng khám
+										</Typography.Paragraph>
+									</div>
+								</Space>
 							</div>
 
 							<div className='my-3'>
@@ -267,24 +287,6 @@ const Home = () => {
 									Thêm bệnh nhân
 								</Button>
 							</div>
-						</div>
-					</div>
-					<div
-						className='mt-5'
-						style={{
-							bottom: 100,
-							left: 100,
-							right: 100,
-							position: 'absolute',
-						}}>
-						<div className='text-center'>
-							<Typography.Paragraph type='secondary' className='mb-1'>
-								Một sản phẩm của Công ty TNHH Y Học Số
-							</Typography.Paragraph>
-							<Typography.Text className='text-muted'>
-								Hãy chia sẻ phầm mềm nếu bạn thấy nó hữu ích, nếu không vui lòng
-								góp ý cho tôi qua số điện thoại 0328323686 (zalo). Xin cám ơn!
-							</Typography.Text>
 						</div>
 					</div>
 				</div>

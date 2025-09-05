@@ -31,35 +31,7 @@ import { FaGoogleDrive } from 'react-icons/fa6';
 import BackupModal from '../modals/BackupModal';
 import { MdSettingsBackupRestore } from 'react-icons/md';
 import { GoTrash } from 'react-icons/go';
-
-interface BackupFile {
-	id: string;
-	name: string;
-	createdTime: string;
-	size: string;
-}
-
-declare global {
-	interface Window {
-		beeclinicAPI: {
-			connectGoogle: () => Promise<{ ok: boolean }>;
-			isConnected: () => Promise<{ ok: boolean }>;
-			run: (p: { passphrase: string; keep?: number }) => Promise<any>;
-			delete: (p: { fileId: string }) => Promise<any>;
-			list: () => Promise<Array<BackupFile>>;
-			restore: (p: { fileId: string; passphrase: string }) => Promise<any>;
-			setSchedule: (p: {
-				cronExp?: string;
-				passphrase: string;
-				keep?: number;
-			}) => Promise<{ ok: boolean }>;
-			onScheduledOk: (cb: (ts: string) => void) => void;
-			onScheduledErr: (cb: (msg: string) => void) => void;
-			checkSchedule: () => Promise<{ isScheduled: boolean }>;
-			stopSchedule: () => Promise<{ ok: boolean }>;
-		};
-	}
-}
+import type { BackupFile } from '../types/ClinicModel';
 
 const ClinicBackup = () => {
 	// kiểm tra kết nối internet
