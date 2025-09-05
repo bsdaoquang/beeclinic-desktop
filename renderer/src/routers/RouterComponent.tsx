@@ -24,10 +24,7 @@ declare global {
 			check: () => Promise<void>;
 			getClinicInfo: () => Promise<ClinicModel[]>;
 			addClinic: (data: any) => Promise<{ ok: boolean }>;
-			updateClinicById: (
-				id: number,
-				data: ClinicModel
-			) => Promise<{ ok: boolean }>;
+			updateClinicById: (id: number, data: any) => Promise<{ ok: boolean }>;
 			downloadUpdate: () => Promise<void>;
 			installUpdate: () => Promise<void>;
 			getVersion: () => Promise<{ version: string }>;

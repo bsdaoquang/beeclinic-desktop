@@ -56,15 +56,26 @@ const Routers = () => {
 			if (_id) {
 				const res = await handleAPI(`/clinic/${_id}`);
 				if (res) {
-					await handleAPI(`/clinic/${_id}`, data, 'put');
-					dispatch(addClinic(res));
+					await window.beeclinicAPI.updateClinicById(data.id, {
+						ActivationKey: res.ActivationKey,
+					});
+
+					// dispatch(addClinic(res));
 				}
+				dispatch(
+					addClinic({
+						...data,
+						ActivationKey: res ? res.ActivationKey : '',
+					})
+				);
 			} else {
 				const newData = { ...data };
 				delete newData._id;
 				const res = await handleAPI('/clinic', newData, 'post');
 				// update local db with _id from server
-				await window.beeclinicAPI.updateClinicById(data.id, res);
+				await window.beeclinicAPI.updateClinicById(data.id, {
+					ActivationKey: res.ActivationKey,
+				});
 				dispatch(addClinic(res));
 			}
 		} else {
