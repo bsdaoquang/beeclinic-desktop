@@ -16,6 +16,7 @@ import {
 	Button,
 	Divider,
 	Flex,
+	Input,
 	message,
 	Modal,
 	Space,
@@ -54,6 +55,8 @@ declare global {
 			}) => Promise<{ ok: boolean }>;
 			onScheduledOk: (cb: (ts: string) => void) => void;
 			onScheduledErr: (cb: (msg: string) => void) => void;
+			checkSchedule: () => Promise<{ isScheduled: boolean }>;
+			stopSchedule: () => Promise<{ ok: boolean }>;
 		};
 	}
 }
@@ -67,7 +70,7 @@ const ClinicBackup = () => {
 	const [isBackupManual, setIsBackupManual] = useState(false);
 	const [isLoadBackups, setIsLoadBackups] = useState(false);
 	const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
-
+	const [isTurnOnAutoBackup, setIsTurnOnAutoBackup] = useState(false);
 	const [messageApi, messageHolder] = message.useMessage();
 	const [modalAPI, modalHolder] = Modal.useModal();
 
@@ -101,6 +104,7 @@ const ClinicBackup = () => {
 	useEffect(() => {
 		if (isConnected) {
 			getBackupList();
+			checkAutoBackup();
 		}
 	}, [isConnected]);
 
@@ -108,6 +112,11 @@ const ClinicBackup = () => {
 	const checkConnection = async () => {
 		const result = await window.beeclinicAPI.isConnected();
 		setIsConnected(result.ok);
+	};
+
+	const checkAutoBackup = async () => {
+		const result = await window.beeclinicAPI.checkSchedule();
+		setIsTurnOnAutoBackup(result.isScheduled);
 	};
 
 	const getBackupList = async () => {
@@ -133,6 +142,15 @@ const ClinicBackup = () => {
 			</div>
 		);
 	}
+
+	const handleRestore = async (fileId: string, passphrase: string) => {
+		try {
+			await window.beeclinicAPI.restore({ fileId, passphrase });
+			messageApi.success('Phục hồi dữ liệu thành công.');
+		} catch (error) {
+			messageApi.error('Phục hồi dữ liệu thất bại. Vui lòng thử lại.');
+		}
+	};
 
 	const handleConnectGoogle = async () => {
 		const result = await window.beeclinicAPI.connectGoogle();
@@ -190,7 +208,42 @@ const ClinicBackup = () => {
 							type='link'
 							icon={<MdSettingsBackupRestore size={22} />}
 							onClick={() => {
-								/* Xử lý phục hồi từ bản sao lưu */
+								modalAPI.confirm({
+									title: 'Xác nhận phục hồi dữ liệu',
+									content:
+										'Bạn có chắc chắn muốn phục hồi dữ liệu từ bản sao lưu này? Hành động này sẽ ghi đè dữ liệu hiện tại.',
+									okText: 'Phục hồi',
+									okType: 'primary',
+									cancelText: 'Hủy',
+									onOk: () => {
+										// Hiển thị modal nhập passphrase
+										let inputPassphrase = '';
+										modalAPI.confirm({
+											title: 'Khôi phục dữ liệu',
+											content: (
+												<Input.Password
+													className='w-100'
+													placeholder='Mật khẩu của bản sao lưu'
+													onChange={(e) => {
+														inputPassphrase = e.target.value;
+													}}
+												/>
+											),
+											okText: 'Xác nhận',
+											okType: 'primary',
+											cancelText: 'Hủy',
+											onOk: () => {
+												if (!inputPassphrase) {
+													messageApi.error(
+														'Vui lòng nhập mật khẩu sao lưu để phục hồi dữ liệu.'
+													);
+													return Promise.reject();
+												}
+												return handleRestore(item.id, inputPassphrase);
+											},
+										});
+									},
+								});
 							}}
 						/>
 					</Tooltip>
@@ -212,6 +265,87 @@ const ClinicBackup = () => {
 			fixed: 'right',
 		},
 	];
+
+	const handleChangeAutoBackup = () => {
+		if (isTurnOnAutoBackup) {
+			modalAPI.confirm({
+				title: 'Tắt sao lưu tự động',
+				content:
+					'Bạn có chắc chắn muốn tắt sao lưu tự động hàng ngày? Bạn sẽ phải sao lưu thủ công để đảm bảo an toàn dữ liệu.',
+				okText: 'Tắt sao lưu',
+				okType: 'danger',
+				cancelText: 'Hủy',
+				onOk: async () => {
+					const res = await window.beeclinicAPI.stopSchedule();
+					if (res.ok) {
+						messageApi.success('Đã tắt sao lưu tự động.');
+						setIsTurnOnAutoBackup(false);
+					} else {
+						messageApi.error('Tắt sao lưu tự động thất bại. Vui lòng thử lại.');
+					}
+				},
+			});
+		} else {
+			// Hiển thị modal nhập passphrase
+			let inputPassphrase = '';
+			let inputKeep = '7';
+			modalAPI.confirm({
+				title: 'Bật sao lưu tự động hàng ngày',
+				content: (
+					<div>
+						<p>
+							Vui lòng nhập mật khẩu để mã hóa dữ liệu sao lưu và số bản sao lưu
+							tối đa được giữ trên Google Drive. Dự liệu sẽ được sao lưu tự động
+							hàng ngày lúc 8 giờ tối.
+						</p>
+						<Input.Password
+							className='mb-2'
+							placeholder='Mật khẩu của bản sao lưu'
+							onChange={(e) => {
+								inputPassphrase = e.target.value;
+							}}
+						/>
+						<Input
+							type='number'
+							min={1}
+							placeholder='Số bản sao lưu tối đa được giữ (mặc định 7)'
+							value={inputKeep}
+							onChange={(e) => {
+								inputKeep = e.target.value;
+							}}
+						/>
+					</div>
+				),
+				okText: 'Xác nhận',
+				okType: 'primary',
+				cancelText: 'Hủy',
+				onOk: async () => {
+					if (!inputPassphrase) {
+						messageApi.error(
+							'Vui lòng nhập mật khẩu sao lưu để bật sao lưu tự động.'
+						);
+						return Promise.reject();
+					}
+					const keepNum = Number(inputKeep);
+					if (isNaN(keepNum) || keepNum < 1) {
+						messageApi.error('Số bản sao lưu tối đa phải là số nguyên dương.');
+						return Promise.reject();
+					}
+					const res = await window.beeclinicAPI.setSchedule({
+						cronExp: '0 20 * * *', // Hàng ngày lúc 8 giờ tối
+						passphrase: inputPassphrase,
+						keep: keepNum,
+					});
+					if (res.ok) {
+						messageApi.success('Đã bật sao lưu tự động hàng ngày.');
+						setIsTurnOnAutoBackup(true);
+					} else {
+						messageApi.error('Bật sao lưu tự động thất bại. Vui lòng thử lại.');
+					}
+				},
+			});
+		}
+	};
 
 	return (
 		<div className='container'>
@@ -262,8 +396,11 @@ const ClinicBackup = () => {
 				{isConnected ? (
 					<>
 						<Space className='mb-2'>
-							<Switch />
-							<Button type='text' size='small'>
+							<Switch
+								value={isTurnOnAutoBackup}
+								onChange={handleChangeAutoBackup}
+							/>
+							<Button type='text' size='small' onClick={handleChangeAutoBackup}>
 								Bật sao lưu tự động hàng ngày
 							</Button>
 						</Space>

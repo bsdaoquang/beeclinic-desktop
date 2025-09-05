@@ -64,4 +64,6 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 		ipcRenderer.on('backup:scheduled:ok', (_, ts) => cb(ts)),
 	onScheduledErr: (cb) =>
 		ipcRenderer.on('backup:scheduled:err', (_, msg) => cb(msg)),
+	checkSchedule: () => ipcRenderer.invoke('backup:schedule:check'),
+	stopSchedule: () => ipcRenderer.invoke('backup:schedule:stop'),
 });
