@@ -40,6 +40,7 @@ import {
 	InputNumber,
 	message,
 	Space,
+	Tag,
 	Typography,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -53,6 +54,7 @@ import {
 	getShortDateTime,
 	parseDateInput,
 } from '../utils/datetime';
+import handleAPI from '../apis/handleAPI';
 
 const ClinicInfos = () => {
 	const [isEditing, setIsEditing] = useState(false);
@@ -83,11 +85,15 @@ const ClinicInfos = () => {
 					? dayjs(values.NgayCapGiayPhep).format('YYYY-MM-DD')
 					: null,
 			};
-			await (window as any).beeclinicAPI.updateClinicById(1, data);
-
+			await (window as any).beeclinicAPI.updateClinicById(clinic.id, data);
 			messageAPI.success('Cập nhật thông tin phòng khám thành công');
 			dispatch(updateClinic(data));
 			setIsEditing(false); // switch back to view mode
+
+			const isOnline = navigator.onLine;
+			if (clinic._id && isOnline) {
+				await handleAPI('/clinic/' + clinic._id, data, 'put');
+			}
 		} catch (error) {
 			messageAPI.error('Cập nhật thông tin phòng khám thất bại');
 			console.log(`Không thể cập nhật thông tin phòng khám: ${error}`); // eslint-disable-line no-console
@@ -251,14 +257,8 @@ const ClinicInfos = () => {
 					<Descriptions.Item label='Chức vụ'>
 						{clinic?.ChucVu || ''}
 					</Descriptions.Item>
-					<Descriptions.Item label='Mã máy'>
-						{clinic?.MachineId || ''}
-					</Descriptions.Item>
 					<Descriptions.Item label='Phiên bản phần mềm'>
 						{clinic?.AppVersion || ''}
-					</Descriptions.Item>
-					<Descriptions.Item label='Mã kích hoạt'>
-						{clinic?.ActivationKey || ''}
 					</Descriptions.Item>
 					<Descriptions.Item label='Ngày tạo'>
 						{clinic?.CreatedAt ? getShortDateTime(clinic.CreatedAt) : ''}
@@ -274,11 +274,19 @@ const ClinicInfos = () => {
 	return (
 		<div>
 			{messageHolder}
-			<Flex align='center' justify='space-between'>
+			<Flex align='flex-start' justify='space-between'>
 				<div>
-					<Typography.Title level={3} className='mb-0' type='secondary'>
-						Thông tin phòng khám
-					</Typography.Title>
+					<Space>
+						<Typography.Title level={3} className='mb-0' type='secondary'>
+							Thông tin phòng khám
+						</Typography.Title>
+						{clinic.ActivationKey ? (
+							<Tag color='success'>Đã kích hoạt</Tag>
+						) : (
+							<Tag color='warning'>Chưa kích hoạt</Tag>
+						)}
+					</Space>
+
 					<div className='col-8'>
 						<Typography.Text type='secondary'>
 							Những thông tin này sẽ được sử dụng để gửi đơn thuốc Quốc Gia và
