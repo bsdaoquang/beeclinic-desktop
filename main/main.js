@@ -1,6 +1,6 @@
 /** @format */
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import fs from 'fs';
 import cron from 'node-cron';
 import pkg from 'node-machine-id';
@@ -15,6 +15,7 @@ import {
 } from './backupService.js';
 import { GoogleAuth } from './googleAuth.js';
 import dotenv from 'dotenv';
+import { createUpdateManager } from './updateManager.js';
 
 dotenv.config();
 
@@ -38,7 +39,39 @@ if (!fs.existsSync(FILES_DIR)) {
 	fs.mkdirSync(FILES_DIR);
 }
 
-function createWindow() {
+const backupBeforeUpdate = async (phase) => {
+	// Hỏi người dùng có muốn backup không (đề xuất có)
+	const { response } = await dialog.showMessageBox(win, {
+		type: 'question',
+		buttons: ['Backup & tiếp tục', 'Bỏ qua', 'Huỷ'],
+		defaultId: 0,
+		cancelId: 2,
+		message:
+			phase === 'before-install'
+				? 'Cài đặt phiên bản mới. Bạn có muốn backup thêm một lần nữa không?'
+				: 'Chuẩn bị tải bản cập nhật. Bạn có muốn backup trước khi tải không?',
+		noLink: true,
+	});
+
+	if (response === 2) throw new Error('User cancelled update');
+
+	if (response === 0) {
+		// chạy backup cloud (nếu đã kết nối) – hoặc backup cục bộ
+		if (savedTokens) {
+			googleAuth.setTokens(savedTokens);
+			await runFullBackup(googleAuth.getClient(), {
+				paths: [
+					path.join(app.getPath('userData'), 'beeclinic.sqlite'),
+					path.join(app.getPath('userData'), 'attachments'),
+				],
+				passphrase: globalThis.__USER_BACKUP_PASSPHRASE__ || '', // bạn tự quản lý lấy từ settings
+				keep: 7,
+			});
+		}
+	}
+};
+
+async function createWindow() {
 	const win = new BrowserWindow({
 		width: 800,
 		height: 600,
@@ -58,6 +91,25 @@ function createWindow() {
 		win.loadURL('http://localhost:5173');
 		// win.webContents.openDevTools();
 	}
+
+	// Tạo update manager
+	const updater = createUpdateManager({
+		win,
+		onAskBackupAndUpdate: backupBeforeUpdate,
+		channel: 'latest', // hoặc 'beta'
+	});
+
+	ipcMain.handle('updater:check', async () => {
+		return await updater.check();
+	});
+	ipcMain.handle('updater:download', async () => {
+		return await updater.download();
+	});
+	ipcMain.handle('updater:installNow', async () => {
+		return await updater.installNow();
+	});
+
+	return win;
 }
 
 app.whenReady().then(async () => {
@@ -66,6 +118,14 @@ app.whenReady().then(async () => {
 	app.on('activate', () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
+});
+
+// open external link
+ipcMain.handle('open-external', async (_e, url) => {
+	if (!/^(https?:|mailto:|tel:)/i.test(url))
+		throw new Error('URL không hợp lệ');
+	await shell.openExternal(url);
+	return { ok: true };
 });
 
 // connect to google

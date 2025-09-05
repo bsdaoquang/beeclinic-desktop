@@ -35,3 +35,10 @@ export interface ClinicModel {
 	ClinicAccessToken: string;
 	DoctorAccessToken: string;
 }
+
+export interface BackupFile {
+	id: string;
+	name: string;
+	createdTime: string;
+	size: string;
+}

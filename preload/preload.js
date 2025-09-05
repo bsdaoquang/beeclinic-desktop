@@ -62,4 +62,22 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 		ipcRenderer.on('backup:scheduled:err', (_, msg) => cb(msg)),
 	checkSchedule: () => ipcRenderer.invoke('backup:schedule:check'),
 	stopSchedule: () => ipcRenderer.invoke('backup:schedule:stop'),
+
+	// open external link
+	openExternal: (url) => ipcRenderer.invoke('open-external', url),
+
+	// updater
+	check: () => ipcRenderer.invoke('updater:check'),
+	download: () => ipcRenderer.invoke('updater:download'),
+	install: () => ipcRenderer.invoke('updater:install'),
+
+	onChecking: (cb) => ipcRenderer.on('updater:checking', () => cb()),
+	onAvailable: (cb) =>
+		ipcRenderer.on('updater:available', (_, info) => cb(info)),
+	onNotAvailable: (cb) =>
+		ipcRenderer.on('updater:not-available', (_, info) => cb(info)),
+	onError: (cb) => ipcRenderer.on('updater:error', (_, e) => cb(e)),
+	onProgress: (cb) => ipcRenderer.on('updater:progress', (_, p) => cb(p)),
+	onDownloaded: (cb) =>
+		ipcRenderer.on('updater:downloaded', (_, info) => cb(info)),
 });
