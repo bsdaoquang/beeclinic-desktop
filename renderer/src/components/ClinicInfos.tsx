@@ -92,7 +92,9 @@ const ClinicInfos = () => {
 
 			const isOnline = navigator.onLine;
 			if (clinic._id && isOnline) {
-				await handleAPI('/clinic/' + clinic._id, data, 'put');
+				const newData = { ...data };
+				delete newData.ActivationKey; // không cập nhật activation key
+				await handleAPI('/clinic/' + clinic._id, newData, 'put');
 			}
 		} catch (error) {
 			messageAPI.error('Cập nhật thông tin phòng khám thất bại');
