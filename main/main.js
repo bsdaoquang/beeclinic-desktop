@@ -178,6 +178,20 @@ ipcMain.handle('backup:restore', async (e, { fileId, passphrase }) => {
 	return r;
 });
 
+// kiểm tra đã bật tự động backup chưa
+ipcMain.handle('backup:schedule:check', async () => {
+	return { isScheduled: !!cronTask };
+});
+
+// Tắt tự động backup
+ipcMain.handle('backup:schedule:stop', async () => {
+	if (cronTask) {
+		cronTask.stop();
+		cronTask = null;
+	}
+	return { ok: true };
+});
+
 // ====== Lịch tự động (mặc định 20:00 hằng ngày) ======
 let cronTask = null;
 ipcMain.handle(
