@@ -11,8 +11,6 @@ import type { ClinicModel } from '../types/ClinicModel';
 import RouterComponent from './RouterComponent';
 
 const Routers = () => {
-	const isOnline = navigator.onLine;
-
 	const dispatch = useDispatch();
 
 	useEffect(() => {
@@ -49,32 +47,31 @@ const Routers = () => {
 		// xử lý dữ liệu bất đồng bộ
 		// đồng bộ dữ liệu với server
 		// nếu có internet
+		const isOnline = window.navigator.onLine;
+
 		if (isOnline) {
-			// đồng bộ dữ liệu
-			// Đồng bộ như thế nào để dữ liệu luôn đúng và không bị mất mát
-
-			// khi người dùng cập nhật, cũng cập nhật lên server
-			// như vậy chỉ cần cập nhật từ server về
-			// mỗi lần truy cập ứng dụng sẽ kiểm tra và đồng bộ dữ liệu, để đảm bảo dữ liệu chính xác, đặc biệt là mã kích hoạt
-
-			// get data from server and compare with local data
-			// if different, update local data
-			// else do nothing
-
-			// nếu chưa có dữ liệu trên server thì tạo mới
-			const res = await handleAPI('/clinic/machine/' + data.MachineId);
-
-			if (res) {
-				dispatch(addClinic(res));
-				await window.beeclinicAPI.updateClinicById(data.id, res);
+			const _id = data._id;
+			// if _id -> get by _id and update
+			// else -> add new
+			if (_id) {
+				const res = await handleAPI(`/clinic/${_id}`);
+				if (res) {
+					await handleAPI(`/clinic/${_id}`, data, 'put');
+					console.log('Đã đồng bộ dữ liệu clinic info với server');
+					dispatch(addClinic(res));
+				}
 			} else {
 				const newData = { ...data };
-				newData.id && delete newData.id; // xóa id để tránh lỗi khi thêm mới
-				const addRes = await handleAPI('/clinic', newData, 'post');
-				dispatch(addClinic(addRes));
+				delete newData._id;
+				const res = await handleAPI('/clinic', newData, 'post');
+				// update local db with _id from server
+				await window.beeclinicAPI.updateClinicById(data.id, res);
+				console.log('Đã thêm mới clinic info, với _id từ server');
+				dispatch(addClinic(res));
 			}
 		} else {
 			console.log('Không có kết nối internet, không thể đồng bộ dữ liệu');
+			dispatch(addClinic(data));
 		}
 	};
 
