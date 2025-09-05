@@ -1,6 +1,7 @@
 /** @format */
 
 export interface ClinicModel {
+	_id?: string;
 	id: number;
 	// Thông tin cơ sở khám chữa bệnh
 	CSKCBID: string; // Mã cơ sở KCB (bắt buộc khi gửi đơn thuốc quốc gia)
