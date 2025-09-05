@@ -23,6 +23,7 @@ import { IoClose } from 'react-icons/io5';
 import type { ClinicModel } from '../types/ClinicModel';
 import type { PrescriptionItem } from '../types/PrescriptionModel';
 import { randomAlnum } from '../utils/prescriptions';
+import { replaceName } from '../utils/replaceName';
 
 export interface MedicineListProps {
 	prescriptionItems: PrescriptionItem[];
@@ -304,6 +305,16 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							}}
 							placeholder='Tên thuốc'
 							allowClear
+							showSearch
+							style={{ width: '100%' }}
+							filterSort={(optionA, optionB) =>
+								(optionA?.value ?? '').localeCompare(optionB?.value ?? '')
+							}
+							filterOption={(inputValue, option) =>
+								replaceName(option?.value ?? '').includes(
+									replaceName(inputValue)
+								)
+							}
 							options={medicines.map((item) => ({
 								label: item.ten_thuoc,
 								value: item.ten_thuoc,
