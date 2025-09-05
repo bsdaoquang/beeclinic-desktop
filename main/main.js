@@ -1,6 +1,6 @@
 /** @format */
 
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import fs from 'fs';
 import cron from 'node-cron';
 import pkg from 'node-machine-id';
@@ -15,6 +15,7 @@ import {
 } from './backupService.js';
 import { GoogleAuth } from './googleAuth.js';
 import dotenv from 'dotenv';
+import { createUpdateManager } from './updateManager.js';
 
 dotenv.config();
 
@@ -117,6 +118,14 @@ app.whenReady().then(async () => {
 	app.on('activate', () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
+});
+
+// open external link
+ipcMain.handle('open-external', async (_e, url) => {
+	if (!/^(https?:|mailto:|tel:)/i.test(url))
+		throw new Error('URL không hợp lệ');
+	await shell.openExternal(url);
+	return { ok: true };
 });
 
 // connect to google
