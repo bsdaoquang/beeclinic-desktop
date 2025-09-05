@@ -293,6 +293,16 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						<AutoComplete
 							ref={medicineNameRef}
 							autoFocus
+							showSearch
+							filterOption={(inputValue, option) =>
+								replaceName(option!.value).includes(replaceName(inputValue))
+							}
+							filterSort={(optionA, optionB) =>
+								(optionA!.value ?? '')
+									.toLowerCase()
+									.localeCompare((optionB!.value ?? '').toLowerCase())
+							}
+							style={{ width: '100%' }}
 							onSelect={(name) => {
 								const medicine = medicines.find(
 									(element) => element.ten_thuoc === name
