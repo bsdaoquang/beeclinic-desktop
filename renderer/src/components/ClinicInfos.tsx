@@ -45,6 +45,8 @@ import {
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { BiEdit } from 'react-icons/bi';
+import { useDispatch, useSelector } from 'react-redux';
+import { clinicSelector, updateClinic } from '../store/reducers/clinic-reducer';
 import type { ClinicModel } from '../types/ClinicModel';
 import {
 	formatDateToString,
@@ -53,15 +55,13 @@ import {
 } from '../utils/datetime';
 
 const ClinicInfos = () => {
-	const [clinic, setClinic] = useState<ClinicModel>();
 	const [isEditing, setIsEditing] = useState(false);
 
 	const [messageAPI, messageHolder] = message.useMessage();
 	const [form] = Form.useForm();
 
-	useEffect(() => {
-		getClinic();
-	}, []);
+	const clinic = useSelector(clinicSelector);
+	const dispatch = useDispatch();
 
 	useEffect(() => {
 		if (isEditing && clinic) {
@@ -73,15 +73,6 @@ const ClinicInfos = () => {
 			});
 		}
 	}, [isEditing]);
-
-	const getClinic = async () => {
-		try {
-			const res = await (window as any).beeclinicAPI.getClinicInfo();
-			setClinic(res[0]);
-		} catch (error) {
-			console.log(`Không thể lấy thông tin phòng khám: ${error}`); // eslint-disable-line no-console
-		}
-	};
 
 	const handleUpdateClinic = async (values: ClinicModel) => {
 		// gọi cập nhật, sau đó chuyển đến màn hình view, load lại clinic
@@ -95,7 +86,7 @@ const ClinicInfos = () => {
 			await (window as any).beeclinicAPI.updateClinicById(1, data);
 
 			messageAPI.success('Cập nhật thông tin phòng khám thành công');
-			await getClinic(); // reload clinic info
+			dispatch(updateClinic(data));
 			setIsEditing(false); // switch back to view mode
 		} catch (error) {
 			messageAPI.error('Cập nhật thông tin phòng khám thất bại');

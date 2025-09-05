@@ -3,14 +3,16 @@
 import { Button, Divider, Menu, Space, Tag, Tooltip, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { IoSettingsOutline } from 'react-icons/io5';
+import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import type { ClinicModel } from '../types/ClinicModel';
+import { clinicSelector } from '../store/reducers/clinic-reducer';
 import { formatDateToString, getShortDateTime } from '../utils/datetime';
 
-const HeaderComponent = ({ clinic }: { clinic?: ClinicModel }) => {
+const HeaderComponent = () => {
 	const [isActive, setIsActive] = useState(false);
 
 	const navigate = useNavigate();
+	const clinic = useSelector(clinicSelector);
 
 	useEffect(() => {
 		if (clinic) {
