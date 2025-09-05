@@ -321,6 +321,16 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							}}
 							placeholder='Tên thuốc'
 							allowClear
+							showSearch
+							style={{ width: '100%' }}
+							filterSort={(optionA, optionB) =>
+								(optionA?.value ?? '').localeCompare(optionB?.value ?? '')
+							}
+							filterOption={(inputValue, option) =>
+								replaceName(option?.value ?? '').includes(
+									replaceName(inputValue)
+								)
+							}
 							options={medicines.map((item) => ({
 								label: item.ten_thuoc,
 								value: item.ten_thuoc,
