@@ -27,6 +27,7 @@ const createDatabase = async () => {
 		// table of clinic info
 		db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  _id TEXT, -- ID duy nhất của phòng khám
   CSKCBID TEXT, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
   TenCSKCB TEXT,
   DiaChi TEXT,
@@ -48,6 +49,15 @@ const createDatabase = async () => {
   CreatedAt TEXT DEFAULT CURRENT_TIMESTAMP,
   UpdatedAt TEXT
   )`);
+
+		// add _id column if not exists (để đồng bộ với server)
+		db.all(`PRAGMA table_info(clinic_infos);`, (err, columns) => {
+			if (err) return;
+			const hasId = columns.some((col) => col.name === '_id');
+			if (!hasId) {
+				db.run(`ALTER TABLE clinic_infos ADD COLUMN _id TEXT;`);
+			}
+		});
 
 		db.run(`CREATE TABLE IF NOT EXISTS patients (
   id INTEGER PRIMARY KEY AUTOINCREMENT, -- Mã bệnh nhân

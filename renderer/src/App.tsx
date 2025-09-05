@@ -23,6 +23,9 @@ import HeaderComponent from './components/HeaderComponent';
 import RouterComponent from './routers/RouterComponent';
 import { theme } from './styles/theme';
 import type { ClinicModel } from './types/ClinicModel';
+import { Provider } from 'react-redux';
+import store from './store/store';
+import Routers from './routers/Routers';
 
 // Quản lý phần mềm như thế nào?
 // Kể cả tính năng cập nhật phiên bản, quản lý cài đặt, v.v.
@@ -45,27 +48,6 @@ dayjs.locale('vi'); // Đặt ngôn ngữ cho dayjs
 message.config({});
 
 function App() {
-	const [clinic, setClinic] = useState<ClinicModel>();
-
-	useEffect(() => {
-		getClinic();
-	}, []);
-
-	useEffect(() => {
-		clinic && localStorage.setItem('clinic', JSON.stringify(clinic));
-	}, [clinic]);
-
-	const getClinic = async () => {
-		try {
-			const res = await (window as any).beeclinicAPI.getClinicInfo();
-			if (res && res.length > 0) {
-				setClinic(res[0]);
-			}
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
 	ChartJS.register(
 		CategoryScale,
 		LinearScale,
@@ -80,13 +62,9 @@ function App() {
 
 	return (
 		<ConfigProvider theme={theme} locale={locale as any}>
-			<HashRouter basename='/'>
-				<div style={{ padding: 0, margin: 0 }}>
-					<HeaderComponent clinic={clinic} />
-					<RouterComponent clinic={clinic} />
-					<FooterComponent />
-				</div>
-			</HashRouter>
+			<Provider store={store}>
+				<Routers />
+			</Provider>
 		</ConfigProvider>
 	);
 }
