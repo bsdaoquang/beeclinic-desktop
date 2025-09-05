@@ -11,6 +11,7 @@ const createUpdateManager = ({
 	onAskBackupAndUpdate, // fn async() => throw để huỷ nếu backup fail
 	channel = 'latest', // hoặc 'beta'
 }) => {
+	autoUpdater.checkForUpdatesAndNotify({ isForceDevUpdateConfig: true });
 	autoUpdater.autoDownload = false; // chỉ tải khi user đồng ý
 	autoUpdater.autoInstallOnAppQuit = false; // tự quyết định lúc nào cài
 	autoUpdater.allowDowngrade = false;

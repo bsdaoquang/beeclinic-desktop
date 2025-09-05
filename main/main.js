@@ -243,7 +243,7 @@ ipcMain.handle('get-version', async () => {
 
 // get machine id
 ipcMain.handle('get-machine-id', async () => {
-	return { machineId: machineIdSync() };
+	return machineIdSync();
 });
 
 ipcMain.handle('add-patient', (event, patient) => {
@@ -627,6 +627,7 @@ ipcMain.handle('create-clinic-info', async (event, data) => {
 	return new Promise((resolve, reject) => {
 		const query = `
 			INSERT INTO clinic_infos (
+				_id,
 				CSKCBID,
 				TenCSKCB,
 				DiaChi,
@@ -674,6 +675,7 @@ ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
 	return new Promise((resolve, reject) => {
 		const fields = [
 			'CSKCBID',
+			'_id',
 			'TenCSKCB',
 			'DiaChi',
 			'DienThoai',
