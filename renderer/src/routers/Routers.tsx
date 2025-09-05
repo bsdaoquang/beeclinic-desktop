@@ -57,7 +57,6 @@ const Routers = () => {
 				const res = await handleAPI(`/clinic/${_id}`);
 				if (res) {
 					await handleAPI(`/clinic/${_id}`, data, 'put');
-					console.log('Đã đồng bộ dữ liệu clinic info với server');
 					dispatch(addClinic(res));
 				}
 			} else {
@@ -66,11 +65,9 @@ const Routers = () => {
 				const res = await handleAPI('/clinic', newData, 'post');
 				// update local db with _id from server
 				await window.beeclinicAPI.updateClinicById(data.id, res);
-				console.log('Đã thêm mới clinic info, với _id từ server');
 				dispatch(addClinic(res));
 			}
 		} else {
-			console.log('Không có kết nối internet, không thể đồng bộ dữ liệu');
 			dispatch(addClinic(data));
 		}
 	};
