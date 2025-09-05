@@ -41,6 +41,7 @@ import {
 	message,
 	Space,
 	Tag,
+	Tag,
 	Typography,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -277,7 +278,19 @@ const ClinicInfos = () => {
 		<div>
 			{messageHolder}
 			<Flex align='flex-start' justify='space-between'>
+			<Flex align='flex-start' justify='space-between'>
 				<div>
+					<Space>
+						<Typography.Title level={3} className='mb-0' type='secondary'>
+							Thông tin phòng khám
+						</Typography.Title>
+						{clinic.ActivationKey ? (
+							<Tag color='success'>Đã kích hoạt</Tag>
+						) : (
+							<Tag color='warning'>Chưa kích hoạt</Tag>
+						)}
+					</Space>
+
 					<Space>
 						<Typography.Title level={3} className='mb-0' type='secondary'>
 							Thông tin phòng khám
