@@ -41,7 +41,6 @@ import {
 	message,
 	Space,
 	Tag,
-	Tag,
 	Typography,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -277,7 +276,6 @@ const ClinicInfos = () => {
 	return (
 		<div>
 			{messageHolder}
-			<Flex align='flex-start' justify='space-between'>
 			<Flex align='flex-start' justify='space-between'>
 				<div>
 					<Space>
