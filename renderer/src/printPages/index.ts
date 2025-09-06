@@ -1,5 +1,6 @@
 /** @format */
 
+import MedicinePrintList from './MedicinePrintList';
 import PrescriptionPrint from './Prescription';
 
-export { PrescriptionPrint };
+export { PrescriptionPrint, MedicinePrintList };

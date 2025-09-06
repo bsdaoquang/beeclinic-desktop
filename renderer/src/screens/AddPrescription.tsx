@@ -4,6 +4,7 @@ import {
 	Button,
 	Card,
 	Checkbox,
+	DatePicker,
 	Descriptions,
 	Divider,
 	Form,
@@ -30,7 +31,7 @@ import { useReactToPrint } from 'react-to-print';
 import { useDebounce } from 'use-debounce';
 import { ServicesList } from '../components';
 import MedicinesList from '../components/MedicinesList';
-import { PrescriptionPrint } from '../printPages';
+import { MedicinePrintList, PrescriptionPrint } from '../printPages';
 import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
 import type {
@@ -42,6 +43,7 @@ import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
+import dayjs from 'dayjs';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +69,9 @@ const AddPrescription = () => {
 			value: string;
 		}[]
 	>([]);
+	const [ngay_tai_kham, setNgay_tai_kham] = useState(null);
+	const [ngay_gio_ke_don, setngay_gio_ke_don] = useState(dayjs(new Date()));
+	const [isSaveAsTemplate, setIsSaveAsTemplate] = useState(false);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -77,6 +82,7 @@ const AddPrescription = () => {
 	const [searchKey] = useDebounce(searchText, 300);
 
 	const printRef = useRef<HTMLDivElement>(null);
+	const printMedicineListRef = useRef<HTMLDivElement>(null);
 	const clinic: ClinicModel | undefined = localStorage.getItem('clinic')
 		? JSON.parse(localStorage.getItem('clinic')!)
 		: undefined;
@@ -97,6 +103,21 @@ const AddPrescription = () => {
 		onAfterPrint: () => {
 			navigate(-1);
 		},
+	});
+
+	const printMedicineList = useReactToPrint({
+		contentRef: printMedicineListRef,
+		pageStyle: `
+			@page {
+				size: A5 portrait;
+				margin: 1cm;
+			}
+			@media print {
+				body {
+					-webkit-print-color-adjust: exact;
+				}
+			}
+		`,
 	});
 
 	const navigate = useNavigate();
@@ -174,8 +195,10 @@ const AddPrescription = () => {
 			loai_don_thuoc: vals.loai_don_thuoc,
 			diagnosis: vals.diagnosis.toString(),
 			note: vals.note ?? '',
-			ngay_gio_ke_don: new Date().toISOString(),
-			ngay_tai_kham: vals.ngay_tai_kham ?? null,
+			ngay_gio_ke_don: ngay_gio_ke_don
+				? dayjs(ngay_gio_ke_don).toISOString()
+				: new Date().toISOString(),
+			ngay_tai_kham: ngay_tai_kham ? dayjs(ngay_tai_kham).toISOString() : null,
 			thong_tin_don_thuoc_json: prescriptionItems,
 			thong_tin_dich_vu_json: prescriptionServices,
 			// Tổng tiền = tiền thuốc + tiền dịch vụ + công khám
@@ -462,6 +485,20 @@ const AddPrescription = () => {
 										className='mt-5'
 										size='small'
 										type='card'
+										tabBarExtraContent={
+											<Tooltip title='In danh sách thuốc, mở khi có thuốc trong đơn, chẩn đoán và thông tin bệnh nhân'>
+												<Button
+													disabled={
+														!patient ||
+														!prescriptionItems.length ||
+														!diagnostics.length
+													}
+													type='link'
+													onClick={printMedicineList}>
+													In danh sách thuốc
+												</Button>
+											</Tooltip>
+										}
 										items={[
 											{
 												key: '1',
@@ -496,10 +533,42 @@ const AddPrescription = () => {
 										height: 'calc(100vh - 190px)',
 										overflow: 'auto',
 									}}>
-									<Descriptions column={1} size='small'>
-										<Descriptions.Item label='Ngày khám'>
-											{new Date().toLocaleString('vi-VN')}
-										</Descriptions.Item>
+									<Typography.Text type='secondary'>
+										Ngày giờ kê đơn
+									</Typography.Text>
+									<DatePicker
+										className='mb-3'
+										showTime
+										maxDate={dayjs(new Date())}
+										format={'DD/MM/YYYY HH:mm:ss'}
+										value={
+											ngay_gio_ke_don ? ngay_gio_ke_don : dayjs(new Date())
+										}
+										variant='filled'
+										style={{ width: '100%' }}
+										allowClear
+										placeholder='Chọn ngày giờ'
+										onChange={(val) => {
+											setngay_gio_ke_don(val);
+										}}
+									/>
+									<Typography.Text type='secondary'>
+										Ngày tái khám (nếu có)
+									</Typography.Text>
+									<DatePicker
+										className='mb-3'
+										showTime
+										format={'DD/MM/YYYY HH:mm:ss'}
+										value={ngay_tai_kham}
+										variant='filled'
+										style={{ width: '100%' }}
+										allowClear
+										placeholder='Chọn ngày giờ'
+										onChange={(val) => {
+											setNgay_tai_kham(val);
+										}}
+									/>
+									<Descriptions column={1} size='small' layout='horizontal'>
 										<Descriptions.Item label='Công khám'>
 											<Typography.Text
 												className='mb-0'
@@ -559,6 +628,20 @@ const AddPrescription = () => {
 											</Typography.Title>
 										</Descriptions.Item>
 									</Descriptions>
+									<Space className='mt-3'>
+										<Checkbox
+											checked={isSaveAsTemplate}
+											onChange={(e) => setIsSaveAsTemplate(e.target.checked)}>
+											Lưu đơn thuốc này làm mẫu
+										</Checkbox>
+										<Tooltip title='Lưu các thuốc trong đơn làm mẫu để sử dụng nhanh cho những lần sau, tự động tìm thêm thuốc vào đơn dựa trên chẩn đoán'>
+											<BiInfoCircle
+												className='text-muted'
+												size={18}
+												style={{ fontSize: 12, marginLeft: 4 }}
+											/>
+										</Tooltip>
+									</Space>
 									<Divider />
 									<Space className='mt-1'>
 										<Button danger type='text' onClick={() => navigate(-1)}>
@@ -566,11 +649,21 @@ const AddPrescription = () => {
 										</Button>
 										<Divider type='vertical' />
 										<Button
+											disabled={
+												isLoading ||
+												!diagnostics.length ||
+												!prescriptionItems.length
+											}
 											onClick={() => form.submit()}
 											icon={<FaSave size={16} className='text-muted' />}>
 											Lưu
 										</Button>
 										<Button
+											disabled={
+												isLoading ||
+												!diagnostics.length ||
+												!prescriptionItems.length
+											}
 											icon={<FaPrint size={16} className='text-white' />}
 											onClick={() => {
 												setIsPrint(true);
@@ -616,6 +709,16 @@ const AddPrescription = () => {
 						prescriptionItems={prescriptionItems}
 						diagnostic={diagnostics.toString()}
 						prescriptionCode={prescriptionCode}
+					/>
+				</div>
+			)}
+			{prescriptionItems.length > 0 && patient && diagnostics.length > 0 && (
+				<div className='d-none b-print-block' ref={printMedicineListRef}>
+					<MedicinePrintList
+						prescriptionCode={prescriptionCode}
+						medicines={prescriptionItems}
+						patient={patient!}
+						diagnostic={diagnostics}
 					/>
 				</div>
 			)}

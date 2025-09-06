@@ -79,7 +79,7 @@ const createDatabase = async () => {
   diagnosis TEXT,
   note TEXT,
   ngay_gio_ke_don TEXT,        -- ISO string
-  ngay_tai_kham INTEGER,       -- số ngày
+  ngay_tai_kham TEXT,       -- số ngày
   thong_tin_don_thuoc_json TEXT, -- JSON string of items
   thong_tin_dich_vu_json TEXT, -- JSON string of service items
   total REAL,                  -- Tổng tiền đơn thuốc + dịch vụ
