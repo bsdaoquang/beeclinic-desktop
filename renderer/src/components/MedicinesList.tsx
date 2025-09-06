@@ -213,20 +213,20 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						key={`prescription-item-${index}`}
 						extra={
 							<Space>
-								{`${item.quantity} ${item.unit}`}
+								<Typography.Text
+									style={{ fontSize: 16 }}
+									editable={{
+										onChange: (val) => {
+											const newItems = [...prescriptionItems];
+											newItems[index].quantity = Number(val);
+											onChange(newItems);
+										},
+									}}>
+									{item.quantity}
+								</Typography.Text>
+								<Typography.Text>{item.unit ? item.unit : ''}</Typography.Text>
 								<Divider type='vertical' />
-								<Tooltip title='Chỉnh sửa'>
-									<Button
-										type='link'
-										icon={<BiEdit size={20} />}
-										size='small'
-										onClick={() => {
-											formPres.setFieldsValue(item);
-											quantityRef.current.focus();
-											setIsAddMedicine(true);
-										}}
-									/>
-								</Tooltip>
+
 								<Tooltip title='Xoá khỏi đơn thuốc'>
 									<Button
 										type='link'
@@ -247,6 +247,13 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							title={`${item.ten_thuoc}`}
 							description={
 								<Typography.Text
+									editable={{
+										onChange: (val) => {
+											const newItems = [...prescriptionItems];
+											newItems[index].instruction = val;
+											onChange(newItems);
+										},
+									}}
 									type='secondary'
 									style={{
 										fontSize: 13,
