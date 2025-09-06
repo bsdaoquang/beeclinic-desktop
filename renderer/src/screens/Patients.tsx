@@ -130,7 +130,7 @@ const Patients = () => {
 			title: '',
 			dataIndex: '',
 			render: (item) => (
-				<Space className='patient-actions'>
+				<Space>
 					<Link to={`/prescriptions/add-new?patient-id=${item.id}`}>
 						Kê đơn
 					</Link>
