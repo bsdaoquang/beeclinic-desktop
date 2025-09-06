@@ -43,7 +43,7 @@ const MedicinePrintList = ({
 			<Divider />
 			{medicines.length > 0 ? (
 				<>
-					<table className='table table-bordered table-sm'>
+					<table className='table table-bordered'>
 						<thead>
 							<tr className='text-center'>
 								<th>Mã thuốc</th>
