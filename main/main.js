@@ -298,6 +298,32 @@ ipcMain.handle('get-prescriptions-by-patient-id', async (event, patientId) => {
 	});
 });
 
+// Dựa trên danh sách chẩn đoán, tách bởi dấu phẩy, tìm kiếm trong đơn thuốc đã lưu những đơn có chẩn đoán tương tự
+ipcMain.handle(
+	'find-prescriptions-by-diagnosis-list',
+	async (event, diagnosisList) => {
+		return new Promise((resolve, reject) => {
+			if (!Array.isArray(diagnosisList) || diagnosisList.length === 0) {
+				resolve([]);
+				return;
+			}
+
+			// Tạo chuỗi điều kiện SQL với các chẩn đoán
+			const conditions = diagnosisList
+				.map(() => 'diagnosis LIKE ?')
+				.join(' OR ');
+			const values = diagnosisList.map((diag) => `%${diag}%`);
+
+			const query = `SELECT * FROM prescriptions WHERE ${conditions} ORDER BY created_at DESC LIMIT 10`;
+
+			db.all(query, values, (err, rows) => {
+				if (err) reject(err);
+				else resolve(rows);
+			});
+		});
+	}
+);
+
 // tìm kiếm chẩn đoán từ icd10 table, icd10 fts5 đã làm trước đó, dựa trên key người dùng nhập theo slug hoặc code
 // trả về dang <code>-<slug>
 

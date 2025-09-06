@@ -16,6 +16,7 @@ import {
 	Space,
 	Spin,
 	Tabs,
+	Tag,
 	Tooltip,
 	Typography,
 } from 'antd';
@@ -23,7 +24,7 @@ import TextArea from 'antd/es/input/TextArea';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { BiInfoCircle } from 'react-icons/bi';
-import { BsArrowRight } from 'react-icons/bs';
+import { BsArrowLeft, BsArrowRight } from 'react-icons/bs';
 import { FaSave, FaUserEdit } from 'react-icons/fa';
 import { FaPrint } from 'react-icons/fa6';
 import { RxInfoCircled } from 'react-icons/rx';
@@ -59,7 +60,9 @@ const AddPrescription = () => {
 	const [isAsync, setIsAsync] = useState<null | boolean>(null);
 	const [diagnostics, setDiagnostics] = useState<string[]>([]);
 	const [isPrint, setIsPrint] = useState(false);
-
+	const [samePrescriptions, setSamePrescriptions] = useState<
+		PrescriptionModel[]
+	>([]);
 	const [prescriptionsByPatient, setPrescriptionsByPatient] = useState<
 		PrescriptionModel[]
 	>([]);
@@ -149,6 +152,25 @@ const AddPrescription = () => {
 			getIcd10Diagnosis(searchKey);
 		}
 	}, [searchKey]);
+
+	useEffect(() => {
+		if (diagnostics.length) {
+			getSamePrescriptionsByDiagnosis(diagnostics);
+		} else {
+			setSamePrescriptions([]);
+		}
+	}, [diagnostics]);
+
+	const getSamePrescriptionsByDiagnosis = async (diagnosis: string[]) => {
+		try {
+			const res = await (
+				window as any
+			).beeclinicAPI.getPrescriptionsByDiagnosis(diagnosis);
+			setSamePrescriptions(res);
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const getIcd10Diagnosis = async (key: string) => {
 		const text = replaceName(key);
@@ -260,6 +282,66 @@ const AddPrescription = () => {
 
 	const handleAsyncPrescription = async (prescriptionData: any) => {
 		console.log('Sending prescription to national system:', prescriptionData);
+	};
+
+	const renderPropoverContent = ({
+		type,
+		items,
+	}: {
+		type: 'thong_tin_don_thuoc_json' | 'thong_tin_dich_vu_json';
+		items: any[];
+	}) => {
+		return (
+			<div
+				style={{
+					width: 450,
+				}}>
+				<List
+					style={{
+						maxHeight: '50vh',
+						overflowY: 'auto',
+					}}
+					dataSource={items}
+					renderItem={(item, index) => (
+						<List.Item key={`medicine${item.id}`}>
+							{type === 'thong_tin_dich_vu_json' ? (
+								<List.Item.Meta
+									title={`${numToString(index + 1)}. ${
+										item.ten_dich_vu
+									} - ${item.gia.toLocaleString('vi-VN', {
+										style: 'currency',
+										currency: 'VND',
+									})}`}
+									description={item.mo_ta ?? ''}
+								/>
+							) : (
+								<List.Item.Meta
+									title={`${numToString(index + 1)}. ${item.ten_thuoc} x ${
+										item.quantity
+									} ${item.unit}`}
+									description={item.instruction}
+								/>
+							)}
+						</List.Item>
+					)}
+				/>
+				<div className=''>
+					<Button
+						iconPosition='start'
+						icon={<BsArrowLeft size={16} />}
+						type='link'
+						onClick={() => {
+							if (type === 'thong_tin_dich_vu_json') {
+								setPrescriptionServices(items);
+							} else {
+								setPrescriptionItems(items);
+							}
+						}}>
+						Sử dụng lại
+					</Button>
+				</div>
+			</div>
+		);
 	};
 
 	return (
@@ -535,13 +617,7 @@ const AddPrescription = () => {
 								</Card>
 							</div>
 							<div className='col-3 d-sm-none d-md-block'>
-								<Card
-									title='Thông tin phiên khám'
-									size='small'
-									style={{
-										height: 'calc(100vh - 190px)',
-										overflow: 'auto',
-									}}>
+								<Card title='Thông tin phiên khám' size='small'>
 									<Typography.Text type='secondary'>
 										Ngày giờ kê đơn
 									</Typography.Text>
@@ -651,37 +727,71 @@ const AddPrescription = () => {
 											/>
 										</Tooltip>
 									</Space> */}
-									<Divider />
-									<Space className='mt-1'>
-										<Button danger type='text' onClick={() => navigate(-1)}>
-											Huỷ bỏ
-										</Button>
-										<Divider type='vertical' />
-										<Button
-											disabled={
-												isLoading ||
-												!diagnostics.length ||
-												!prescriptionItems.length
-											}
-											onClick={() => form.submit()}
-											icon={<FaSave size={16} className='text-muted' />}>
-											Lưu
-										</Button>
-										<Button
-											disabled={
-												isLoading ||
-												!diagnostics.length ||
-												!prescriptionItems.length
-											}
-											icon={<FaPrint size={16} className='text-white' />}
-											onClick={() => {
-												setIsPrint(true);
-												form.submit();
-											}}
-											type='primary'>
-											Lưu và In
-										</Button>
-									</Space>
+								</Card>
+								<Card className='mt-2' size='small' title='Đơn thuốc gợi ý'>
+									<List
+										style={{ maxHeight: 340, overflowY: 'auto' }}
+										dataSource={samePrescriptions}
+										renderItem={(item) => (
+											<List.Item>
+												<List.Item.Meta
+													title={item.diagnosis.replace(/,/g, ' / ')}
+													description={
+														<Space>
+															{item.thong_tin_don_thuoc_json &&
+																JSON.parse(item.thong_tin_don_thuoc_json)
+																	.length > 0 && (
+																	<Popover
+																		content={() =>
+																			renderPropoverContent({
+																				type: 'thong_tin_don_thuoc_json',
+																				items: item.thong_tin_don_thuoc_json
+																					? JSON.parse(
+																							item.thong_tin_don_thuoc_json
+																					  )
+																					: [],
+																			})
+																		}>
+																		<Tag color='blue'>
+																			Thuốc:{' '}
+																			{item.thong_tin_don_thuoc_json
+																				? JSON.parse(
+																						item.thong_tin_don_thuoc_json
+																				  ).length
+																				: 0}
+																		</Tag>
+																	</Popover>
+																)}
+															{item.thong_tin_dich_vu_json &&
+																JSON.parse(item.thong_tin_dich_vu_json).length >
+																	0 && (
+																	<Popover
+																		content={() =>
+																			renderPropoverContent({
+																				type: 'thong_tin_dich_vu_json',
+																				items: item.thong_tin_dich_vu_json
+																					? JSON.parse(
+																							item.thong_tin_dich_vu_json
+																					  )
+																					: [],
+																			})
+																		}>
+																		<Tag color='green'>
+																			Dịch vụ:{' '}
+																			{item.thong_tin_dich_vu_json
+																				? JSON.parse(
+																						item.thong_tin_dich_vu_json
+																				  ).length
+																				: 0}
+																		</Tag>
+																	</Popover>
+																)}
+														</Space>
+													}
+												/>
+											</List.Item>
+										)}
+									/>
 								</Card>
 							</div>
 						</div>
@@ -701,6 +811,39 @@ const AddPrescription = () => {
 									</Tooltip>
 								</Checkbox>
 							</div>
+							<div className='col-6 text-end'>
+								<Space className=''>
+									<Button danger type='text' onClick={() => navigate(-1)}>
+										Huỷ bỏ
+									</Button>
+									<Divider type='vertical' />
+									<Button
+										disabled={
+											isLoading ||
+											!diagnostics.length ||
+											!prescriptionItems.length
+										}
+										onClick={() => form.submit()}
+										icon={<FaSave size={16} className='text-muted' />}>
+										Lưu
+									</Button>
+									<Button
+										disabled={
+											isLoading ||
+											!diagnostics.length ||
+											!prescriptionItems.length
+										}
+										icon={<FaPrint size={16} className='text-white' />}
+										onClick={() => {
+											setIsPrint(true);
+											form.submit();
+										}}
+										type='primary'>
+										Lưu và In
+									</Button>
+								</Space>
+							</div>
+							<div className='col'></div>
 						</div>
 					</>
 				) : (

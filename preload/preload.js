@@ -24,6 +24,10 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	// get prescriptions by patient id
 	getPrescriptionsByPatientId: (patientId) =>
 		ipcRenderer.invoke('get-prescriptions-by-patient-id', patientId),
+	// get prescription by diagonisis
+	getPrescriptionsByDiagnosis: (diagnosis) =>
+		ipcRenderer.invoke('find-prescriptions-by-diagnosis-list', diagnosis),
+	// medicine
 	// search diagnosis from icd10 search-icd-diagnosis
 	searchIcdDiagnosis: (key) => ipcRenderer.invoke('search-icd-diagnosis', key),
 	addMedicine: (medicine) => ipcRenderer.invoke('add-medicine', medicine),
