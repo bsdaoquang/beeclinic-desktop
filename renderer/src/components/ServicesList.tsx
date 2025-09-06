@@ -1,9 +1,12 @@
 /** @format */
 
-import { AutoComplete, Button, List } from 'antd';
+import { AutoComplete, Button, Divider, Form, List, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import type { ServiceModel } from '../types/ServiceModel';
+import { replaceName } from '../utils/replaceName';
+import { IoIosAdd } from 'react-icons/io';
+import { AddService } from '../modals';
 
 export interface ServicesListProps {
 	prescriptionItems: ServiceModel[];
@@ -13,6 +16,7 @@ export interface ServicesListProps {
 const ServicesList = ({ prescriptionItems, onChange }: ServicesListProps) => {
 	const [services, setServices] = useState<ServiceModel[]>([]);
 	const [searchValue, setSearchValue] = useState<string>('');
+	const [isAddService, setIsAddService] = useState(false);
 
 	const inpRef = useRef<any>(null);
 
@@ -48,12 +52,13 @@ const ServicesList = ({ prescriptionItems, onChange }: ServicesListProps) => {
 		<div>
 			<List
 				header={
-					<AutoComplete
+					<Select
 						notFoundContent={<div>Không tìm thấy dịch vụ</div>}
 						ref={inpRef}
 						style={{
 							width: '100%',
 						}}
+						showSearch
 						value={searchValue}
 						allowClear
 						onChange={(text) => setSearchValue(text)}
@@ -61,6 +66,28 @@ const ServicesList = ({ prescriptionItems, onChange }: ServicesListProps) => {
 							value: service.id,
 							label: service.ten_dich_vu,
 						}))}
+						filterSort={(optionA, optionB) =>
+							(optionA.label ?? '')
+								.toLowerCase()
+								.localeCompare((optionB.label ?? '').toLowerCase())
+						}
+						popupRender={(menus) => (
+							<>
+								{menus}
+								<Divider className='p-0 m-2' />
+								<Button
+									icon={<IoIosAdd size={22} />}
+									onClick={() => setIsAddService(true)}
+									type='link'>
+									Thêm dịch vụ mới
+								</Button>
+							</>
+						)}
+						filterOption={(inputValue, option) =>
+							option?.label
+								? replaceName(option?.label).includes(replaceName(inputValue))
+								: false
+						}
 						onSelect={(val) => handleAddService(val)}
 						placeholder='Chọn dịch vụ'
 					/>
@@ -77,10 +104,11 @@ const ServicesList = ({ prescriptionItems, onChange }: ServicesListProps) => {
 								icon={<IoClose size={24} />}
 								danger
 								onClick={() => {
-									onChange(
-										prescriptionItems.filter((item) => item.id !== item.id)
+									const newItems = prescriptionItems.filter(
+										(i) => i.id !== item.id
 									);
-									setServices([...services, item]);
+									onChange(newItems);
+									setServices([item, ...services]);
 								}}
 							/>
 						}>
@@ -93,6 +121,21 @@ const ServicesList = ({ prescriptionItems, onChange }: ServicesListProps) => {
 						/>
 					</List.Item>
 				)}
+			/>
+
+			<AddService
+				visible={isAddService}
+				onClose={() => setIsAddService(false)}
+				onOK={() => {
+					// setIsAddService(false);
+					// getAllServices();
+				}}
+				onAdd={(service) => {
+					setIsAddService(false);
+					// getAllServices();
+					onChange([...prescriptionItems, service]);
+					setSearchValue('');
+				}}
 			/>
 		</div>
 	);

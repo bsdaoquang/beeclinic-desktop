@@ -628,7 +628,7 @@ const AddPrescription = () => {
 											</Typography.Title>
 										</Descriptions.Item>
 									</Descriptions>
-									<Space className='mt-3'>
+									{/* <Space className='mt-3'>
 										<Checkbox
 											checked={isSaveAsTemplate}
 											onChange={(e) => setIsSaveAsTemplate(e.target.checked)}>
@@ -641,7 +641,7 @@ const AddPrescription = () => {
 												style={{ fontSize: 12, marginLeft: 4 }}
 											/>
 										</Tooltip>
-									</Space>
+									</Space> */}
 									<Divider />
 									<Space className='mt-1'>
 										<Button danger type='text' onClick={() => navigate(-1)}>
