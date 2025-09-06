@@ -17,7 +17,6 @@ import {
 	Typography,
 } from 'antd';
 import { useEffect, useRef, useState } from 'react';
-import { BiEdit } from 'react-icons/bi';
 import { IoIosAdd } from 'react-icons/io';
 import { IoClose } from 'react-icons/io5';
 import type { ClinicModel } from '../types/ClinicModel';

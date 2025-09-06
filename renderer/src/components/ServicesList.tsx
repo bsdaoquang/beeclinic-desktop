@@ -1,12 +1,12 @@
 /** @format */
 
-import { AutoComplete, Button, Divider, Form, List, Select } from 'antd';
+import { Button, Divider, List, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
+import { IoIosAdd } from 'react-icons/io';
 import { IoClose } from 'react-icons/io5';
+import { AddService } from '../modals';
 import type { ServiceModel } from '../types/ServiceModel';
 import { replaceName } from '../utils/replaceName';
-import { IoIosAdd } from 'react-icons/io';
-import { AddService } from '../modals';
 
 export interface ServicesListProps {
 	prescriptionItems: ServiceModel[];
