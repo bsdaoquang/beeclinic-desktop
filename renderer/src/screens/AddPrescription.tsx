@@ -5,7 +5,6 @@ import {
 	Card,
 	Checkbox,
 	DatePicker,
-	DatePicker,
 	Descriptions,
 	Divider,
 	Form,

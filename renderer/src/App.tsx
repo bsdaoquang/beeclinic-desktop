@@ -15,17 +15,11 @@ import {
 } from 'chart.js';
 import dayjs, { locale } from 'dayjs';
 import 'dayjs/locale/vi'; // Import ngôn ngữ tiếng Việt cho dayjs
-import { useEffect, useState } from 'react';
-import { HashRouter } from 'react-router-dom';
-import '../src/styles/index.css';
-import FooterComponent from './components/FooterComponent';
-import HeaderComponent from './components/HeaderComponent';
-import RouterComponent from './routers/RouterComponent';
-import { theme } from './styles/theme';
-import type { ClinicModel } from './types/ClinicModel';
 import { Provider } from 'react-redux';
-import store from './store/store';
+import '../src/styles/index.css';
 import Routers from './routers/Routers';
+import store from './store/store';
+import { theme } from './styles/theme';
 
 // Quản lý phần mềm như thế nào?
 // Kể cả tính năng cập nhật phiên bản, quản lý cài đặt, v.v.

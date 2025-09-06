@@ -1,16 +1,4 @@
 /** @format */
-/*
-  Trang này để quản lý sao lưu và phục hồi dữ liệu phòng khám
-  Nếu không có kết nối internet -> Hiển thị thông báo không thể sao lưu trực tuyến
-  nếu có kết nối internet:
-  Nếu chưa đăng nhập -> Đăng nhập
-  Nếu đã đăng nhập -> Hiển thị bản sao lưu gần nhất và các bản sao lưu khác (nếu có)
-  Cài đặt lịch sao lưu tự động (nếu có)
-  Nút "Sao lưu ngay" để tạo bản sao lưu mới
-  Nút "Phục hồi" để phục hồi từ bản sao lưu đã chọn
-  Hiển thị trạng thái sao lưu và phục hồi (thành công, thất bại, đang tiến hành)
-  Hướng dẫn người dùng cách sao lưu và phục hồi dữ liệu phòng khám
-*/
 
 import {
 	Button,
@@ -28,9 +16,9 @@ import {
 import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
 import { FaGoogleDrive } from 'react-icons/fa6';
-import BackupModal from '../modals/BackupModal';
-import { MdSettingsBackupRestore } from 'react-icons/md';
 import { GoTrash } from 'react-icons/go';
+import { MdSettingsBackupRestore } from 'react-icons/md';
+import BackupModal from '../modals/BackupModal';
 import type { BackupFile } from '../types/ClinicModel';
 
 const ClinicBackup = () => {
