@@ -20,6 +20,7 @@ import {
 	Typography,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
+import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { BiInfoCircle } from 'react-icons/bi';
 import { BsArrowRight } from 'react-icons/bs';
@@ -31,6 +32,7 @@ import { useReactToPrint } from 'react-to-print';
 import { useDebounce } from 'use-debounce';
 import { ServicesList } from '../components';
 import MedicinesList from '../components/MedicinesList';
+import { AddPatient } from '../modals';
 import { MedicinePrintList, PrescriptionPrint } from '../printPages';
 import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
@@ -43,8 +45,6 @@ import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
-import dayjs from 'dayjs';
-import { AddPatient } from '../modals';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -72,7 +72,6 @@ const AddPrescription = () => {
 	>([]);
 	const [ngay_tai_kham, setNgay_tai_kham] = useState(null);
 	const [ngay_gio_ke_don, setngay_gio_ke_don] = useState(dayjs(new Date()));
-	const [isSaveAsTemplate, setIsSaveAsTemplate] = useState(false);
 	const [isFixPatient, setIsFixPatient] = useState(false);
 
 	const query = new URLSearchParams(useLocation().search);
