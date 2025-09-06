@@ -23,7 +23,7 @@ import TextArea from 'antd/es/input/TextArea';
 import { useEffect, useRef, useState } from 'react';
 import { BiInfoCircle } from 'react-icons/bi';
 import { BsArrowRight } from 'react-icons/bs';
-import { FaSave } from 'react-icons/fa';
+import { FaSave, FaUserEdit } from 'react-icons/fa';
 import { FaPrint } from 'react-icons/fa6';
 import { RxInfoCircled } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -44,6 +44,7 @@ import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
 import dayjs from 'dayjs';
+import { AddPatient } from '../modals';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +73,7 @@ const AddPrescription = () => {
 	const [ngay_tai_kham, setNgay_tai_kham] = useState(null);
 	const [ngay_gio_ke_don, setngay_gio_ke_don] = useState(dayjs(new Date()));
 	const [isSaveAsTemplate, setIsSaveAsTemplate] = useState(false);
+	const [isFixPatient, setIsFixPatient] = useState(false);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -276,6 +278,14 @@ const AddPrescription = () => {
 								<Card
 									title='Thông tin bệnh nhân'
 									size='small'
+									extra={
+										<Button
+											type='link'
+											size='small'
+											onClick={() => setIsFixPatient(true)}
+											icon={<FaUserEdit size={18} />}
+										/>
+									}
 									style={{
 										height: 'calc(100vh - 190px)',
 										overflow: 'auto',
@@ -502,7 +512,7 @@ const AddPrescription = () => {
 										items={[
 											{
 												key: '1',
-												label: 'Thuốc',
+												label: `Thuốc (${prescriptionItems.length})`,
 												children: (
 													<MedicinesList
 														prescriptionItems={prescriptionItems}
@@ -513,7 +523,7 @@ const AddPrescription = () => {
 											},
 											{
 												key: '2',
-												label: 'Dịch vụ - Thủ thuật',
+												label: `Dịch vụ - Thủ thuật (${prescriptionServices.length})`,
 												children: (
 													<ServicesList
 														prescriptionItems={prescriptionServices}
@@ -722,6 +732,13 @@ const AddPrescription = () => {
 					/>
 				</div>
 			)}
+
+			<AddPatient
+				visible={isFixPatient}
+				onClose={() => setIsFixPatient(false)}
+				onFinish={() => getPatientDetail()}
+				patient={patient}
+			/>
 		</div>
 	);
 };
