@@ -9,13 +9,14 @@ export interface AddServiceProps {
 	onClose: () => void;
 	service?: ServiceModel;
 	onOK: () => void;
+	onAdd?: (service: ServiceModel) => void;
 }
 
 const AddService = (props: AddServiceProps) => {
 	const [form] = Form.useForm();
 	const [messageAPI, messageHolder] = message.useMessage();
 
-	const { onClose, visible, service, onOK } = props;
+	const { onClose, visible, service, onOK, onAdd } = props;
 
 	useEffect(() => {
 		form.setFieldValue('gia', 0);
@@ -51,7 +52,13 @@ const AddService = (props: AddServiceProps) => {
 
 			messageAPI.success('Cập nhật dịch vụ - thủ thuật thành công');
 		} else {
-			await (window as any).beeclinicAPI.addService(serviceData);
+			const res = await (window as any).beeclinicAPI.addService(serviceData);
+
+			onAdd &&
+				onAdd({
+					id: res.id,
+					...serviceData,
+				});
 			messageAPI.success('Thêm dịch vụ - thủ thuật thành công');
 		}
 
