@@ -238,7 +238,7 @@ const Prescriptions = () => {
 			{messageHolder}
 			{modalHolder}
 			<div className='container-fluid'>
-				<div className='container'>
+				<div className=''>
 					<div className='row py-3'>
 						<div className='col-8'>
 							<Space align='center'>
