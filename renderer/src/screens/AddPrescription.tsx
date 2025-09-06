@@ -22,7 +22,6 @@ import {
 	Typography,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
-import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { BiInfoCircle } from 'react-icons/bi';
 import { BsArrowLeft, BsArrowRight } from 'react-icons/bs';
@@ -47,6 +46,7 @@ import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
 import dayjs from 'dayjs';
+import { AddPatient } from '../modals';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +64,7 @@ const AddPrescription = () => {
 	const [samePrescriptions, setSamePrescriptions] = useState<
 		PrescriptionModel[]
 	>([]);
+	const [isFixPatient, setIsFixPatient] = useState(false);
 	const [prescriptionsByPatient, setPrescriptionsByPatient] = useState<
 		PrescriptionModel[]
 	>([]);
@@ -88,7 +89,6 @@ const AddPrescription = () => {
 
 	const printRef = useRef<HTMLDivElement>(null);
 	const printMedicineListRef = useRef<HTMLDivElement>(null);
-	const printMedicineListRef = useRef<HTMLDivElement>(null);
 	const clinic: ClinicModel | undefined = localStorage.getItem('clinic')
 		? JSON.parse(localStorage.getItem('clinic')!)
 		: undefined;
@@ -109,21 +109,6 @@ const AddPrescription = () => {
 		onAfterPrint: () => {
 			navigate(-1);
 		},
-	});
-
-	const printMedicineList = useReactToPrint({
-		contentRef: printMedicineListRef,
-		pageStyle: `
-			@page {
-				size: A5 portrait;
-				margin: 1cm;
-			}
-			@media print {
-				body {
-					-webkit-print-color-adjust: exact;
-				}
-			}
-		`,
 	});
 
 	const printMedicineList = useReactToPrint({
@@ -238,10 +223,6 @@ const AddPrescription = () => {
 			loai_don_thuoc: vals.loai_don_thuoc,
 			diagnosis: vals.diagnosis.toString(),
 			note: vals.note ?? '',
-			ngay_gio_ke_don: ngay_gio_ke_don
-				? dayjs(ngay_gio_ke_don).toISOString()
-				: new Date().toISOString(),
-			ngay_tai_kham: ngay_tai_kham ? dayjs(ngay_tai_kham).toISOString() : null,
 			ngay_gio_ke_don: ngay_gio_ke_don
 				? dayjs(ngay_gio_ke_don).toISOString()
 				: new Date().toISOString(),
@@ -614,20 +595,6 @@ const AddPrescription = () => {
 												</Button>
 											</Tooltip>
 										}
-										tabBarExtraContent={
-											<Tooltip title='In danh sách thuốc, mở khi có thuốc trong đơn, chẩn đoán và thông tin bệnh nhân'>
-												<Button
-													disabled={
-														!patient ||
-														!prescriptionItems.length ||
-														!diagnostics.length
-													}
-													type='link'
-													onClick={printMedicineList}>
-													In danh sách thuốc
-												</Button>
-											</Tooltip>
-										}
 										items={[
 											{
 												key: '1',
@@ -884,6 +851,12 @@ const AddPrescription = () => {
 					/>
 				</div>
 			)}
+
+			<AddPatient
+				visible={isFixPatient}
+				onClose={() => setIsFixPatient(false)}
+				patient={patient}
+			/>
 		</div>
 	);
 };

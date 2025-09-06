@@ -300,14 +300,6 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							ref={medicineNameRef}
 							autoFocus
 							showSearch
-							filterOption={(inputValue, option) =>
-								replaceName(option!.value).includes(replaceName(inputValue))
-							}
-							filterSort={(optionA, optionB) =>
-								(optionA!.value ?? '')
-									.toLowerCase()
-									.localeCompare((optionB!.value ?? '').toLowerCase())
-							}
 							style={{ width: '100%' }}
 							onSelect={(name) => {
 								const medicine = medicines.find(
@@ -321,15 +313,15 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 							}}
 							placeholder='Tên thuốc'
 							allowClear
-							showSearch
-							style={{ width: '100%' }}
 							filterSort={(optionA, optionB) =>
 								(optionA?.value ?? '').localeCompare(optionB?.value ?? '')
 							}
 							filterOption={(inputValue, option) =>
-								replaceName(option?.value ?? '').includes(
-									replaceName(inputValue)
-								)
+								option?.value
+									? replaceName(option?.value ?? '').includes(
+											replaceName(inputValue)
+									  )
+									: false
 							}
 							options={medicines.map((item) => ({
 								label: item.ten_thuoc,
