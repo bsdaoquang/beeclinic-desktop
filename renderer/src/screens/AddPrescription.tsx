@@ -5,6 +5,7 @@ import {
 	Card,
 	Checkbox,
 	DatePicker,
+	DatePicker,
 	Descriptions,
 	Divider,
 	Form,
@@ -33,7 +34,6 @@ import { useReactToPrint } from 'react-to-print';
 import { useDebounce } from 'use-debounce';
 import { ServicesList } from '../components';
 import MedicinesList from '../components/MedicinesList';
-import { AddPatient } from '../modals';
 import { MedicinePrintList, PrescriptionPrint } from '../printPages';
 import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
@@ -46,6 +46,7 @@ import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
+import dayjs from 'dayjs';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -75,7 +76,7 @@ const AddPrescription = () => {
 	>([]);
 	const [ngay_tai_kham, setNgay_tai_kham] = useState(null);
 	const [ngay_gio_ke_don, setngay_gio_ke_don] = useState(dayjs(new Date()));
-	const [isFixPatient, setIsFixPatient] = useState(false);
+	const [isSaveAsTemplate, setIsSaveAsTemplate] = useState(false);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -86,6 +87,7 @@ const AddPrescription = () => {
 	const [searchKey] = useDebounce(searchText, 300);
 
 	const printRef = useRef<HTMLDivElement>(null);
+	const printMedicineListRef = useRef<HTMLDivElement>(null);
 	const printMedicineListRef = useRef<HTMLDivElement>(null);
 	const clinic: ClinicModel | undefined = localStorage.getItem('clinic')
 		? JSON.parse(localStorage.getItem('clinic')!)
@@ -107,6 +109,21 @@ const AddPrescription = () => {
 		onAfterPrint: () => {
 			navigate(-1);
 		},
+	});
+
+	const printMedicineList = useReactToPrint({
+		contentRef: printMedicineListRef,
+		pageStyle: `
+			@page {
+				size: A5 portrait;
+				margin: 1cm;
+			}
+			@media print {
+				body {
+					-webkit-print-color-adjust: exact;
+				}
+			}
+		`,
 	});
 
 	const printMedicineList = useReactToPrint({
@@ -221,6 +238,10 @@ const AddPrescription = () => {
 			loai_don_thuoc: vals.loai_don_thuoc,
 			diagnosis: vals.diagnosis.toString(),
 			note: vals.note ?? '',
+			ngay_gio_ke_don: ngay_gio_ke_don
+				? dayjs(ngay_gio_ke_don).toISOString()
+				: new Date().toISOString(),
+			ngay_tai_kham: ngay_tai_kham ? dayjs(ngay_tai_kham).toISOString() : null,
 			ngay_gio_ke_don: ngay_gio_ke_don
 				? dayjs(ngay_gio_ke_don).toISOString()
 				: new Date().toISOString(),
@@ -593,6 +614,20 @@ const AddPrescription = () => {
 												</Button>
 											</Tooltip>
 										}
+										tabBarExtraContent={
+											<Tooltip title='In danh sách thuốc, mở khi có thuốc trong đơn, chẩn đoán và thông tin bệnh nhân'>
+												<Button
+													disabled={
+														!patient ||
+														!prescriptionItems.length ||
+														!diagnostics.length
+													}
+													type='link'
+													onClick={printMedicineList}>
+													In danh sách thuốc
+												</Button>
+											</Tooltip>
+										}
 										items={[
 											{
 												key: '1',
@@ -620,7 +655,13 @@ const AddPrescription = () => {
 								</Card>
 							</div>
 							<div className='col-3 d-sm-none d-md-block'>
-								<Card title='Thông tin phiên khám' size='small'>
+								<Card
+									title='Thông tin phiên khám'
+									size='small'
+									style={{
+										height: 'calc(100vh - 190px)',
+										overflow: 'auto',
+									}}>
 									<Typography.Text type='secondary'>
 										Ngày giờ kê đơn
 									</Typography.Text>
@@ -716,7 +757,7 @@ const AddPrescription = () => {
 											</Typography.Title>
 										</Descriptions.Item>
 									</Descriptions>
-									{/* <Space className='mt-3'>
+									<Space className='mt-3'>
 										<Checkbox
 											checked={isSaveAsTemplate}
 											onChange={(e) => setIsSaveAsTemplate(e.target.checked)}>
@@ -729,72 +770,38 @@ const AddPrescription = () => {
 												style={{ fontSize: 12, marginLeft: 4 }}
 											/>
 										</Tooltip>
-									</Space> */}
-								</Card>
-								<Card className='mt-2' size='small' title='Đơn thuốc gợi ý'>
-									<List
-										style={{ maxHeight: 340, overflowY: 'auto' }}
-										dataSource={samePrescriptions}
-										renderItem={(item) => (
-											<List.Item>
-												<List.Item.Meta
-													title={item.diagnosis.replace(/,/g, ' / ')}
-													description={
-														<Space>
-															{item.thong_tin_don_thuoc_json &&
-																JSON.parse(item.thong_tin_don_thuoc_json)
-																	.length > 0 && (
-																	<Popover
-																		content={() =>
-																			renderPropoverContent({
-																				type: 'thong_tin_don_thuoc_json',
-																				items: item.thong_tin_don_thuoc_json
-																					? JSON.parse(
-																							item.thong_tin_don_thuoc_json
-																					  )
-																					: [],
-																			})
-																		}>
-																		<Tag color='blue'>
-																			Thuốc:{' '}
-																			{item.thong_tin_don_thuoc_json
-																				? JSON.parse(
-																						item.thong_tin_don_thuoc_json
-																				  ).length
-																				: 0}
-																		</Tag>
-																	</Popover>
-																)}
-															{item.thong_tin_dich_vu_json &&
-																JSON.parse(item.thong_tin_dich_vu_json).length >
-																	0 && (
-																	<Popover
-																		content={() =>
-																			renderPropoverContent({
-																				type: 'thong_tin_dich_vu_json',
-																				items: item.thong_tin_dich_vu_json
-																					? JSON.parse(
-																							item.thong_tin_dich_vu_json
-																					  )
-																					: [],
-																			})
-																		}>
-																		<Tag color='green'>
-																			Dịch vụ:{' '}
-																			{item.thong_tin_dich_vu_json
-																				? JSON.parse(
-																						item.thong_tin_dich_vu_json
-																				  ).length
-																				: 0}
-																		</Tag>
-																	</Popover>
-																)}
-														</Space>
-													}
-												/>
-											</List.Item>
-										)}
-									/>
+									</Space>
+									<Divider />
+									<Space className='mt-1'>
+										<Button danger type='text' onClick={() => navigate(-1)}>
+											Huỷ bỏ
+										</Button>
+										<Divider type='vertical' />
+										<Button
+											disabled={
+												isLoading ||
+												!diagnostics.length ||
+												!prescriptionItems.length
+											}
+											onClick={() => form.submit()}
+											icon={<FaSave size={16} className='text-muted' />}>
+											Lưu
+										</Button>
+										<Button
+											disabled={
+												isLoading ||
+												!diagnostics.length ||
+												!prescriptionItems.length
+											}
+											icon={<FaPrint size={16} className='text-white' />}
+											onClick={() => {
+												setIsPrint(true);
+												form.submit();
+											}}
+											type='primary'>
+											Lưu và In
+										</Button>
+									</Space>
 								</Card>
 							</div>
 						</div>
@@ -868,7 +875,7 @@ const AddPrescription = () => {
 				</div>
 			)}
 			{prescriptionItems.length > 0 && patient && diagnostics.length > 0 && (
-				<div className='d-none d-print-block' ref={printMedicineListRef}>
+				<div className='d-none b-print-block' ref={printMedicineListRef}>
 					<MedicinePrintList
 						prescriptionCode={prescriptionCode}
 						medicines={prescriptionItems}
@@ -877,13 +884,6 @@ const AddPrescription = () => {
 					/>
 				</div>
 			)}
-
-			<AddPatient
-				visible={isFixPatient}
-				onClose={() => setIsFixPatient(false)}
-				onFinish={() => getPatientDetail()}
-				patient={patient}
-			/>
 		</div>
 	);
 };
