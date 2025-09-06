@@ -166,6 +166,9 @@ const AddPrescription = () => {
 			const res = await (
 				window as any
 			).beeclinicAPI.getPrescriptionsByDiagnosis(diagnosis);
+			// setSamePrescriptions(res);
+			// nếu trong danh sách đã có thì bỏ qua
+
 			setSamePrescriptions(res);
 		} catch (error) {
 			console.log(error);
@@ -865,7 +868,7 @@ const AddPrescription = () => {
 				</div>
 			)}
 			{prescriptionItems.length > 0 && patient && diagnostics.length > 0 && (
-				<div className='d-none b-print-block' ref={printMedicineListRef}>
+				<div className='d-none d-print-block' ref={printMedicineListRef}>
 					<MedicinePrintList
 						prescriptionCode={prescriptionCode}
 						medicines={prescriptionItems}

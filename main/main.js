@@ -700,6 +700,7 @@ ipcMain.handle('create-clinic-info', async (event, data) => {
 ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
 	return new Promise((resolve, reject) => {
 		const fields = [
+			'_id',
 			'CSKCBID',
 			'_id',
 			'TenCSKCB',
