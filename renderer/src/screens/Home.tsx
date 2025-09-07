@@ -1,14 +1,13 @@
 /** @format */
 
 import logoUrl from '@/assets/icons/icon.png';
-import { AutoComplete, Button, Flex, Modal, Space, Typography } from 'antd';
+import { AutoComplete, Button, Flex, Space, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
 import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
-import axios from 'axios';
 
 const Home = () => {
 	const [patients, setPatients] = useState<
@@ -22,7 +21,6 @@ const Home = () => {
 		}[]
 	>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isSyncIcd10, setIsSyncIcd10] = useState(false);
 	const [isVisibleModalAddPatient, setIsVisibleModalAddPatient] =
 		useState(false);
 	const inpRef = useRef<any>(null);
@@ -30,7 +28,6 @@ const Home = () => {
 
 	useEffect(() => {
 		getPatients();
-		syncIcd10();
 		inpRef.current.focus();
 	}, []);
 
@@ -60,40 +57,6 @@ const Home = () => {
 			console.log(error);
 		} finally {
 			setIsLoading(false);
-		}
-	};
-
-	// đồng bộ icd10 nếu chưa có
-	const syncIcd10 = async () => {
-		try {
-			const icd10s = await window.beeclinicAPI.getIcd10s();
-			if (
-				!icd10s ||
-				!icd10s.length ||
-				(icd10s.length && icd10s.length < 36689)
-			) {
-				setIsSyncIcd10(true);
-
-				const res = await axios('https://beeclinic.vercel.app/api/v1/icd10');
-
-				const { data } = res.data;
-				const newDatas = data.map((item: any) => {
-					const title = `${item.code} - ${item.title}`;
-
-					return {
-						code: item.code,
-						title,
-						slug: replaceName(title),
-					};
-				});
-				await window.beeclinicAPI.bulkCreateIcd10s(newDatas);
-
-				setIsSyncIcd10(false);
-			}
-		} catch (error) {
-			console.log(error);
-		} finally {
-			setIsSyncIcd10(false);
 		}
 	};
 
@@ -210,22 +173,6 @@ const Home = () => {
 					}}
 				/>
 			</div>
-
-			{isSyncIcd10 && (
-				<Modal open={true} footer={null} closable={false} centered>
-					<div className='text-center p-3'>
-						<Typography.Text>
-							Đang đồng bộ dữ liệu chẩn đoán ICD10, vui lòng chờ trong giây
-							lát...
-						</Typography.Text>
-
-						<Typography.Text className='d-block mt-3' type='secondary'>
-							Quá trình này chỉ diễn ra 1 lần duy nhất khi bạn mới sử dụng phần
-							mềm.
-						</Typography.Text>
-					</div>
-				</Modal>
-			)}
 		</div>
 	);
 };

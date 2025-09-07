@@ -5,12 +5,13 @@ import {
 	Divider,
 	Flex,
 	Menu,
+	Modal,
 	Popover,
 	Space,
 	Tooltip,
 	Typography,
 } from 'antd';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IoIosInformationCircleOutline } from 'react-icons/io';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { useSelector } from 'react-redux';
@@ -20,9 +21,17 @@ import { LockScreenModal } from '../modals';
 import { clinicSelector } from '../store/reducers/clinic-reducer';
 import type { ClinicModel } from '../types/ClinicModel';
 import { formatDateToString } from '../utils/datetime';
+import axios from 'axios';
+import { replaceName } from '../utils/replaceName';
 
 const HeaderComponent = () => {
 	const [isLockScreen, setIsLockScreen] = useState(false);
+	const [isSyncIcd10, setIsSyncIcd10] = useState(false);
+
+	useEffect(() => {
+		syncIcd10();
+		// chuyển qua đây cho nó chạy ngầm
+	}, []);
 
 	const navigate = useNavigate();
 	const clinic: ClinicModel = useSelector(clinicSelector);
@@ -42,6 +51,41 @@ const HeaderComponent = () => {
 	const isTrial = Boolean(
 		clinic && !clinic?.ActivationKey && trialPeriodDaysLeft > 0
 	);
+
+	// đồng bộ icd10 nếu chưa có
+	const syncIcd10 = async () => {
+		try {
+			const icd10s = await window.beeclinicAPI.getIcd10s();
+			if (
+				!icd10s ||
+				!icd10s.length ||
+				(icd10s.length && icd10s.length < 36689)
+			) {
+				// setIsSyncIcd10(true);
+				// máy win chạy chậm quá, tắt đi
+
+				const res = await axios('https://beeclinic.vercel.app/api/v1/icd10');
+
+				const { data } = res.data;
+				const newDatas = data.map((item: any) => {
+					const title = `${item.code} - ${item.title}`;
+
+					return {
+						code: item.code,
+						title,
+						slug: replaceName(title),
+					};
+				});
+				await window.beeclinicAPI.bulkCreateIcd10s(newDatas);
+
+				setIsSyncIcd10(false);
+			}
+		} catch (error) {
+			console.log(error);
+		} finally {
+			setIsSyncIcd10(false);
+		}
+	};
 	return (
 		<div
 			style={{
@@ -216,6 +260,22 @@ const HeaderComponent = () => {
 				visible={isLockScreen}
 				onClose={() => setIsLockScreen(false)}
 			/>
+
+			{isSyncIcd10 && (
+				<Modal open={true} footer={null} closable={false} centered>
+					<div className='text-center p-3'>
+						<Typography.Text>
+							Đang đồng bộ dữ liệu chẩn đoán ICD10, vui lòng chờ trong giây
+							lát...
+						</Typography.Text>
+
+						<Typography.Text className='d-block mt-3' type='secondary'>
+							Quá trình này chỉ diễn ra 1 lần duy nhất khi bạn mới sử dụng phần
+							mềm.
+						</Typography.Text>
+					</div>
+				</Modal>
+			)}
 		</div>
 	);
 };

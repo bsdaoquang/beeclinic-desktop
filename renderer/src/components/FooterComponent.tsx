@@ -96,10 +96,10 @@ const FooterComponent = () => {
 	};
 
 	return (
-		<Affix offsetBottom={0}>
+		<>
 			<div
 				style={{
-					padding: '10px',
+					padding: 10,
 					backgroundColor: '#f3f3f3',
 					minHeight: 20,
 				}}>
@@ -122,13 +122,18 @@ const FooterComponent = () => {
 							<Divider type='vertical' />
 							<Typography.Text type='secondary'>Liên hệ: </Typography.Text>
 							<Link to='tel:+84328323686' className='text-muted'>
-								032 832 3686
+								<Typography.Text className='text-muted'>
+									+84 032 832 3686
+								</Typography.Text>
 							</Link>
 							<Divider type='vertical' />
 							<Space size={24}>
-								<Link to='mailto:bsdaoquang@gmail.com' className='text-muted'>
-									<i className='fas fa-envelope text-muted' />
-								</Link>
+								{/* <Link to='mailto:bsdaoquang@gmail.com' className='text-muted'>
+									<i
+										className='fas fa-envelope text-muted'
+										style={{ fontSize: 14 }}
+									/>
+								</Link> */}
 								{mySocialLinks.map((link) => (
 									<Button
 										key={link.name}
@@ -152,7 +157,7 @@ const FooterComponent = () => {
 					</div>
 				</div>
 			</div>
-		</Affix>
+		</>
 	);
 };
 
