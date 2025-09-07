@@ -1,7 +1,7 @@
 /** @format */
 
 import { Button, Input, Modal, Typography } from 'antd';
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { BsEye, BsEyeSlash, BsFillShieldLockFill } from 'react-icons/bs';
 
 interface LockScreenModalProps {
@@ -15,6 +15,9 @@ const LockScreenModal = ({
 }: LockScreenModalProps) => {
 	const [pass, setPass] = useState('');
 	const [isShowPass, setIsShowPass] = useState(false);
+	const [errorTest, setErrorTest] = useState('');
+
+	const passRef = useRef<any>(null);
 
 	useEffect(() => {
 		if (!visible) {
@@ -35,6 +38,11 @@ const LockScreenModal = ({
 			onClose();
 		} else {
 			// Show error
+			setErrorTest('Mật khẩu không đúng. Vui lòng thử lại.');
+			setPass('');
+			if (passRef && passRef.current) {
+				passRef.current.focus();
+			}
 		}
 	};
 
@@ -69,6 +77,8 @@ const LockScreenModal = ({
 				</div>
 				<div className='mb-3'>
 					<Input.OTP
+						status={errorTest ? 'error' : undefined}
+						ref={passRef}
 						value={pass}
 						variant='filled'
 						size='large'
@@ -87,6 +97,12 @@ const LockScreenModal = ({
 					onClick={() => setIsShowPass(!isShowPass)}>
 					{isShowPass ? 'Hide' : 'Show'} Password
 				</Button>
+
+				{errorTest && (
+					<Typography.Text type='danger' className='d-block mt-3'>
+						{errorTest}
+					</Typography.Text>
+				)}
 			</div>
 		</Modal>
 	);
