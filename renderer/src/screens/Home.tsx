@@ -149,7 +149,7 @@ const Home = () => {
 							<div className='mb-5 pt-5'>
 								<Space size={8} style={{ alignItems: 'flex-start' }}>
 									<img
-										src='/assets/icons/icon.png'
+										src='./assets/icons/icon.png'
 										alt='logo'
 										style={{ width: 80, height: 80 }}
 									/>
