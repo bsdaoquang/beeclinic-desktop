@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
+import logoUrl from '@/assets/icons/icon.png';
 
 const Home = () => {
 	const [options, setOptions] = useState<any[]>([]);
@@ -149,7 +150,7 @@ const Home = () => {
 							<div className='mb-5 pt-5'>
 								<Space size={8} style={{ alignItems: 'flex-start' }}>
 									<img
-										src='./assets/icons/icon.png'
+										src={logoUrl}
 										alt='logo'
 										style={{ width: 80, height: 80 }}
 									/>
