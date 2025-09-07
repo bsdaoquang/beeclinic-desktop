@@ -6,6 +6,7 @@ import {
 	Checkbox,
 	Divider,
 	Drawer,
+	Flex,
 	Form,
 	Input,
 	InputNumber,
@@ -30,6 +31,13 @@ export interface MedicineListProps {
 	clinic?: ClinicModel;
 }
 
+const initDosage = {
+	sang: null,
+	trua: null,
+	chieu: null,
+	toi: null,
+};
+
 const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 	const [medicines, setMedicines] = useState<PrescriptionItem[]>([]);
 
@@ -38,18 +46,16 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 	const [dosages, setDosages] = useState<{
 		sang: number | null;
 		trua: number | null;
+		chieu: number | null;
 		toi: number | null;
-	}>({
-		sang: null,
-		trua: null,
-		toi: null,
-	});
+	}>(initDosage);
 	const [days, setDays] = useState(7);
 
 	const quantityRef = useRef<any>(null);
 	const medicineNameRef = useRef<any>(null);
-	const sangref = useRef<any>(null);
+	const sangRef = useRef<any>(null);
 	const truaRef = useRef<any>(null);
+	const chieuRef = useRef<any>(null);
 	const toiRef = useRef<any>(null);
 	const [formPres] = Form.useForm();
 
@@ -75,12 +81,15 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 				`Uống ${days ? `${days} ngày: ` : ''}${
 					dosages.sang ? `sáng ${dosages.sang} ${unit}, ` : ''
 				}${dosages.trua ? `trưa ${dosages.trua} ${unit}, ` : ''}${
-					dosages.toi ? `tối ${dosages.toi} ${unit}` : ''
-				}`
+					dosages.chieu ? `chiều ${dosages.chieu} ${unit}, ` : ''
+				}${dosages.toi ? `tối ${dosages.toi} ${unit}` : ''}`
 			);
 
 			const total =
-				(dosages.sang ?? 0) + (dosages.trua ?? 0) + (dosages.toi ?? 0);
+				(dosages.sang ?? 0) +
+				(dosages.trua ?? 0) +
+				(dosages.chieu ?? 0) +
+				(dosages.toi ?? 0);
 
 			formPres.setFieldValue('quantity', total * days);
 		}
@@ -164,11 +173,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 			onChange([...prescriptionItems, vals]);
 
 			const isContinue = vals.isContinue;
-			setDosages({
-				sang: null,
-				toi: null,
-				trua: null,
-			});
+			setDosages(initDosage);
 
 			if (isContinue) {
 				formPres.resetFields();
@@ -268,11 +273,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 					setIsAddMedicine(false);
 					formPres.resetFields();
 					setDays(7);
-					setDosages({
-						sang: null,
-						toi: null,
-						trua: null,
-					});
+					setDosages(initDosage);
 					formPres.setFieldValue('quantity', null);
 				}}
 				open={isAddMedicine}
@@ -298,6 +299,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						rules={[{ required: true, message: 'Vui lòng nhập tên thuốc' }]}>
 						<AutoComplete
 							ref={medicineNameRef}
+							allowClear
 							autoFocus
 							showSearch
 							style={{ width: '100%' }}
@@ -312,21 +314,28 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 								handleQuantity(medicine?.unit ?? undefined);
 							}}
 							placeholder='Tên thuốc'
-							allowClear
-							filterSort={(optionA, optionB) =>
-								(optionA?.value ?? '').localeCompare(optionB?.value ?? '')
-							}
-							filterOption={(inputValue, option) =>
-								option?.value
-									? replaceName(option?.value ?? '').includes(
-											replaceName(inputValue)
-									  )
-									: false
-							}
 							options={medicines.map((item) => ({
-								label: item.ten_thuoc,
+								label: (
+									<Flex justify='space-between'>
+										<Typography.Text>
+											{item.ten_thuoc}{' '}
+											{item.biet_duoc && (
+												<Typography.Text type='secondary'>
+													({item.biet_duoc})
+												</Typography.Text>
+											)}
+										</Typography.Text>
+
+										{item.quantity ?? 0}
+									</Flex>
+								),
+								key: item.ma_thuoc + item.ten_thuoc + item.biet_duoc,
 								value: item.ten_thuoc,
 							}))}
+							filterOption={(inputValue, option) =>
+								option?.value !== undefined &&
+								replaceName(option?.key).includes(replaceName(inputValue))
+							}
 						/>
 					</Form.Item>
 					<div className='row'>
@@ -382,7 +391,7 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						<div className='col'>
 							<Form.Item label='Sáng'>
 								<InputNumber
-									ref={sangref}
+									ref={sangRef}
 									min={0}
 									value={dosages.sang}
 									onChange={(val) => {
@@ -405,6 +414,22 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 										setDosages({
 											...dosages,
 											trua: val,
+										});
+									}}
+									style={{ width: '100%' }}
+								/>
+							</Form.Item>
+						</div>
+						<div className='col'>
+							<Form.Item label='Chiều'>
+								<InputNumber
+									ref={chieuRef}
+									min={0}
+									value={dosages.chieu}
+									onChange={(val) => {
+										setDosages({
+											...dosages,
+											chieu: val,
 										});
 									}}
 									style={{ width: '100%' }}

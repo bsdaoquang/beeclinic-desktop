@@ -13,6 +13,7 @@ export const theme: ThemeConfig = {
 		},
 		Select: {
 			borderRadius: 4,
+			optionActiveBg: '#1ABC9C33',
 		},
 		Input: {
 			borderRadius: 4,

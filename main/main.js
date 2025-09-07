@@ -442,23 +442,29 @@ ipcMain.handle('get-prescriptions', async () => {
 // get all diagnosis in prescription
 ipcMain.handle('get-all-diagnosis-in-prescription', async (event) => {
 	return new Promise((resolve, reject) => {
-		db.all('SELECT diagnosis FROM prescriptions', (err, rows) => {
+		db.all('SELECT diagnosis FROM prescriptions', (err, prescriptionRows) => {
 			if (err) {
 				reject(err);
 			} else {
-				/*
-				// console.log(rows);
-				[
-  { diagnosis: 'Viêm họng cấp' },
-  { diagnosis: 'Viêm phế quản,Tăng huyết áp' },
-  { diagnosis: 'Viêm họng cấp,Đái tháo đường type II' }
-]
-				*/
-				// chuyển dữ liệu thành 1 danh sách các chẩn đoán, tách bởi dấu phẩy, không trùng lặp
 				const diagnosisList = Array.from(
-					new Set(rows.flatMap((row) => row.diagnosis.split(',')))
+					new Set(
+						prescriptionRows
+							.flatMap((row) => row.diagnosis.split(','))
+							.map((s) => s.trim())
+							.filter(Boolean)
+					)
 				);
-				resolve(diagnosisList);
+
+				db.all('SELECT code, title FROM icd10', (icdErr, icdRows) => {
+					if (icdErr) {
+						reject(icdErr);
+					} else {
+						const icdList = icdRows.map((row) => `${row.code} ${row.title}`);
+						// Gộp 2 mảng, loại trùng lặp
+						const allList = Array.from(new Set([...diagnosisList, ...icdList]));
+						resolve(allList);
+					}
+				});
 			}
 		});
 	});
@@ -519,14 +525,10 @@ ipcMain.handle(
 
 ipcMain.handle('search-icd-diagnosis', async (event, key) => {
 	return new Promise((resolve, reject) => {
-		db.all(
-			'SELECT * FROM icd10 WHERE slug LIKE ? OR code LIKE ?',
-			[`%${key}%`, `%${key}%`],
-			(err, rows) => {
-				if (err) reject(err);
-				else resolve(rows.map((row) => `${row.code} ${row.title}`));
-			}
-		);
+		db.all('SELECT * FROM icd10', (err, rows) => {
+			if (err) reject(err);
+			else resolve(rows.map((row) => `${row.code} ${row.title}`));
+		});
 	});
 });
 

@@ -16,11 +16,11 @@ import {
 	Space,
 	Spin,
 	Tabs,
-	Tag,
 	Tooltip,
 	Typography,
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
+import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
 import { BiInfoCircle } from 'react-icons/bi';
 import { BsArrowLeft, BsArrowRight } from 'react-icons/bs';
@@ -29,9 +29,9 @@ import { FaPrint } from 'react-icons/fa6';
 import { RxInfoCircled } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
-import { useDebounce } from 'use-debounce';
 import { ServicesList } from '../components';
 import MedicinesList from '../components/MedicinesList';
+import { AddPatient } from '../modals';
 import { MedicinePrintList, PrescriptionPrint } from '../printPages';
 import type { ClinicModel } from '../types/ClinicModel';
 import type { PatientModel } from '../types/PatientModel';
@@ -44,8 +44,6 @@ import { formatDateToString, getShortDateTime } from '../utils/datetime';
 import { numToString } from '../utils/numToString';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
-import dayjs from 'dayjs';
-import { AddPatient } from '../modals';
 
 const AddPrescription = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -68,12 +66,7 @@ const AddPrescription = () => {
 		PrescriptionModel[]
 	>([]);
 	const [congkham, setCongkham] = useState(0);
-	const [diagnosisOptions, setDiagnosisOptions] = useState<
-		{
-			label: string;
-			value: string;
-		}[]
-	>([]);
+	const [diagnosisOptions, setDiagnosisOptions] = useState<string[]>([]);
 	const [ngay_tai_kham, setNgay_tai_kham] = useState(null);
 	const [ngay_gio_ke_don, setngay_gio_ke_don] = useState(dayjs(new Date()));
 	const [isSaveAsTemplate, setIsSaveAsTemplate] = useState(false);
@@ -83,8 +76,6 @@ const AddPrescription = () => {
 	const [form] = Form.useForm();
 	const [formPres] = Form.useForm();
 	const [messageAPI, messHolder] = message.useMessage();
-	const [searchText, setSearchText] = useState('');
-	const [searchKey] = useDebounce(searchText, 300);
 
 	const printRef = useRef<HTMLDivElement>(null);
 	const printMedicineListRef = useRef<HTMLDivElement>(null);
@@ -133,13 +124,9 @@ const AddPrescription = () => {
 		setPrescriptionCode(generatePrescriptionCode(clinic?.CSKCBID ?? '', 'c'));
 		clinic && clinic.CongKham && setCongkham(clinic.CongKham);
 
-		// Kiểm tra xem có accesstoken của hệ thống đơn thuốc quốc gia không? nếu có thì bật đồng bộ, không thì thôi
-
-		// Lấy danh sách những chẩn đoán trước đó của phòng khám
-		getAllDiagnosis();
-
 		// Lấy danh sách lịch sử khám của bệnh nhân
 		getPrescriptionsByPatientId();
+		getAllDiagnosis();
 	}, []);
 
 	useEffect(() => {
@@ -147,12 +134,6 @@ const AddPrescription = () => {
 			getPatientDetail();
 		}
 	}, [patientId]);
-
-	useEffect(() => {
-		if (searchKey && searchKey.length >= 3) {
-			getIcd10Diagnosis(searchKey);
-		}
-	}, [searchKey]);
 
 	useEffect(() => {
 		if (diagnostics.length) {
@@ -171,21 +152,6 @@ const AddPrescription = () => {
 			// nếu trong danh sách đã có thì bỏ qua
 
 			setSamePrescriptions(res);
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
-	const getIcd10Diagnosis = async (key: string) => {
-		const text = replaceName(key);
-		try {
-			const res = await (window as any).beeclinicAPI.searchIcdDiagnosis(text);
-			setDiagnosisOptions(
-				res.map((item: any) => ({
-					label: item,
-					value: item,
-				}))
-			);
 		} catch (error) {
 			console.log(error);
 		}
@@ -262,12 +228,7 @@ const AddPrescription = () => {
 	const getAllDiagnosis = async () => {
 		try {
 			const res = await (window as any).beeclinicAPI.getDiagnosis();
-			setDiagnosisOptions(
-				res.map((item: any) => ({
-					label: item,
-					value: item,
-				}))
-			);
+			setDiagnosisOptions(res);
 		} catch (error) {
 			console.log(error);
 		}
@@ -550,29 +511,39 @@ const AddPrescription = () => {
 												},
 											]}
 											name={'diagnosis'}>
-											<Select
+											{/* <Select
 												mode='tags'
 												onChange={(val) => setDiagnostics(val)}
 												showSearch
 												options={diagnosisOptions}
 												filterOption={(input, option) => {
 													return option
-														? replaceName(option.label).includes(
+														? replaceName(option.key).includes(
 																replaceName(input)
 														  )
 														: false;
-												}}
-												onSearch={async (val) => {
-													if (val && val.length >= 3) {
-														setSearchText(val);
-													} else {
-														getAllDiagnosis();
-													}
 												}}
 												onSelect={() => setSearchText('')}
 												allowClear
 												placeholder='Chẩn đoán'
 												notFoundContent={'Không tìm thấy chẩn đoán phù hợp'}
+											/> */}
+											<Select
+												mode='tags'
+												options={diagnosisOptions.map((item) => ({
+													label: item,
+													value: item,
+													key: item,
+												}))}
+												onChange={(val) => console.log(val)}
+												filterOption={(input, option) => {
+													return option
+														? replaceName(option.key).includes(
+																replaceName(input)
+														  )
+														: false;
+												}}
+												showSearch
 											/>
 										</Form.Item>
 									</Form>
