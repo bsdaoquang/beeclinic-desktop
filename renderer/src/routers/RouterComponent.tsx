@@ -51,6 +51,8 @@ declare global {
 			onScheduledErr: (cb: (msg: string) => void) => void;
 			checkSchedule: () => Promise<{ isScheduled: boolean }>;
 			stopSchedule: () => Promise<{ ok: boolean }>;
+			getIcd10s: () => Promise<any[]>;
+			bulkCreateIcd10s: (data: any[]) => Promise<{ ok: boolean }>;
 		};
 	}
 }

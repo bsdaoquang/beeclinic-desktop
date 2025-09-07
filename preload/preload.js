@@ -30,6 +30,9 @@ contextBridge.exposeInMainWorld('beeclinicAPI', {
 	// medicine
 	// search diagnosis from icd10 search-icd-diagnosis
 	searchIcdDiagnosis: (key) => ipcRenderer.invoke('search-icd-diagnosis', key),
+	// add icd10
+	bulkCreateIcd10s: (data) => ipcRenderer.invoke('bulk-create-icd10s', data),
+	// medicine
 	addMedicine: (medicine) => ipcRenderer.invoke('add-medicine', medicine),
 	updateMedicineById: (id, updates) =>
 		ipcRenderer.invoke('update-medicine-by-id', { id, updates }),

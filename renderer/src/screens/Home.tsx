@@ -1,117 +1,61 @@
 /** @format */
 
-import {
-	AutoComplete,
-	Button,
-	Flex,
-	Modal,
-	Progress,
-	Space,
-	Typography,
-} from 'antd';
+import logoUrl from '@/assets/icons/icon.png';
+import { AutoComplete, Button, Flex, Modal, Space, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { BiSearchAlt2 } from 'react-icons/bi';
 import { useNavigate } from 'react-router-dom';
 import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
 import { replaceName } from '../utils/replaceName';
-import logoUrl from '@/assets/icons/icon.png';
+import axios from 'axios';
 
 const Home = () => {
-	const [options, setOptions] = useState<any[]>([]);
-	const [patients, setPatients] = useState<PatientModel[]>([]);
+	const [patients, setPatients] = useState<
+		{
+			value: string;
+			label: React.ReactNode;
+			key: string;
+			name: string;
+			phone: string;
+			citizenId: string;
+		}[]
+	>([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isSyncIcd10, setIsSyncIcd10] = useState(false);
 	const [isVisibleModalAddPatient, setIsVisibleModalAddPatient] =
 		useState(false);
-	const [isAddDatas, setIsAddDatas] = useState(false);
-	const [icd10Datas, setIcd10Datas] = useState<any[]>([]);
-	const [updatePercent, setUpdatePercent] = useState(0);
-	const [messageUpdate, setMessageUpdate] = useState('');
-
 	const inpRef = useRef<any>(null);
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		getPatients();
+		syncIcd10();
 		inpRef.current.focus();
-		checkDatas();
 	}, []);
-
-	useEffect(() => {
-		if (patients.length > 0) {
-			setOptions(
-				patients.map((item) => ({
-					value: `${item.id}`,
-					label: (
-						<Flex align='center' justify='space-between'>
-							{item.name} <span>{item.phone ?? ''}</span>
-						</Flex>
-					),
-				}))
-			);
-		}
-	}, [patients]);
-
-	useEffect(() => {
-		if (icd10Datas.length > 0) {
-			handleSaveIcd10Datas();
-		}
-	}, [icd10Datas]);
-
-	const checkDatas = async () => {
-		try {
-			await checkIcd10datas();
-		} catch (error) {
-			console.log(error);
-		}
-	};
-
-	const checkIcd10datas = async () => {
-		const res = await (window as any).beeclinicAPI.getIcd10s();
-		if (res && res.length > 0) {
-		} else {
-			setMessageUpdate('Đang tải dữ liệu ICD10 từ server...');
-			const result = await fetch('https://beeclinic.vercel.app/api/v1/icd10');
-			const data = await result.json();
-			setIcd10Datas(data.data);
-		}
-	};
-
-	const handleSaveIcd10Datas = async () => {
-		try {
-			if (icd10Datas.length > 0) {
-				setIsAddDatas(true);
-				setMessageUpdate(
-					'Đã tải dữ liệu ICD10 từ server, tiến hành lưu vào local...'
-				);
-				// await handleSaveIcd10Datas();
-				setMessageUpdate('Đang lưu dữ liệu ICD10 vào local...');
-				const promises = icd10Datas.map(async (item: any) => {
-					const newItem = {
-						code: item.code,
-						title: item.title,
-						slug: item.slug,
-					};
-
-					await (window as any).beeclinicAPI.addIcd10(newItem);
-					setUpdatePercent((prev) => prev + 100 / icd10Datas.length);
-				});
-				await Promise.all(promises);
-				console.log('Đã lưu dữ liệu ICD10 vào local');
-				setMessageUpdate('Đã lưu xong dữ liệu ICD10 vào local');
-			}
-		} catch (error) {
-			console.log(error);
-		} finally {
-			setIsAddDatas(false);
-		}
-	};
 
 	const getPatients = async () => {
 		setIsLoading(true);
 		try {
 			const res = await (window as any).beeclinicAPI.getPatients();
-			setPatients(res);
+			setPatients(
+				res && res.length
+					? res.map((item: PatientModel) => ({
+							value: `${item.id}`,
+							key: `${replaceName(item.name ?? '')}-${item.phone ?? ''}-${
+								item.citizenId ?? ''
+							}`,
+							name: item.name,
+							phone: item.phone,
+							citizenId: item.citizenId,
+							label: (
+								<Flex align='center' justify='space-between'>
+									{item.name} <span>{item.phone ?? ''}</span>
+								</Flex>
+							),
+					  }))
+					: []
+			);
 		} catch (error) {
 			console.log(error);
 		} finally {
@@ -119,26 +63,38 @@ const Home = () => {
 		}
 	};
 
-	const handleSearch = (key: string) => {
-		const val = replaceName(key);
-		const values = patients.filter(
-			(element) =>
-				replaceName(element.name).includes(val) ||
-				(element.phone && element.phone.includes(val)) ||
-				(element.citizenId && element.citizenId.includes(val))
-		);
+	// đồng bộ icd10 nếu chưa có
+	const syncIcd10 = async () => {
+		try {
+			const icd10s = await window.beeclinicAPI.getIcd10s();
+			if (
+				!icd10s ||
+				!icd10s.length ||
+				(icd10s.length && icd10s.length < 36689)
+			) {
+				setIsSyncIcd10(true);
 
-		setOptions(
-			values.map((item) => ({
-				label: (
-					<Flex align='center' justify='space-between'>
-						{item.name}
-						<span>{item.phone}</span>
-					</Flex>
-				),
-				value: `${item.id}`,
-			}))
-		);
+				const res = await axios('https://beeclinic.vercel.app/api/v1/icd10');
+
+				const { data } = res.data;
+				const newDatas = data.map((item: any) => {
+					const title = `${item.code} - ${item.title}`;
+
+					return {
+						code: item.code,
+						title,
+						slug: replaceName(title),
+					};
+				});
+				await window.beeclinicAPI.bulkCreateIcd10s(newDatas);
+
+				setIsSyncIcd10(false);
+			}
+		} catch (error) {
+			console.log(error);
+		} finally {
+			setIsSyncIcd10(false);
+		}
 	};
 
 	return (
@@ -182,16 +138,22 @@ const Home = () => {
 									onInputKeyDown={(e: any) => {
 										const value = e.target.value;
 										if (e.key === 'Enter' && value) {
-											const selectedOption = options.find(
-												(option) => option.value === value
+											const selectedOption = patients.find(
+												(patient: {
+													name: string;
+													phone: string;
+													citizenId: string;
+												}) =>
+													patient.name === value ||
+													patient.phone === value ||
+													patient.citizenId === value
 											);
+
 											if (selectedOption) {
 												navigate(
 													`/prescriptions/add-new?patient-id=${selectedOption.value}`
 												);
 											} else {
-												// console.log('No matching option found');
-												// Create patient with name = value and navigate to prescriptions
 												(window as any).beeclinicAPI
 													.addPatient({ name: value })
 													.then((res: any) => {
@@ -205,6 +167,11 @@ const Home = () => {
 											}
 										}
 									}}
+									filterOption={(inputValue, option) =>
+										option && inputValue
+											? option.key.includes(replaceName(inputValue))
+											: false
+									}
 									ref={inpRef}
 									disabled={isLoading}
 									variant='filled'
@@ -214,8 +181,7 @@ const Home = () => {
 									onSelect={(val) =>
 										navigate(`/prescriptions/add-new?patient-id=${val}`)
 									}
-									onChange={handleSearch}
-									options={options}
+									options={patients}
 									prefix={<BiSearchAlt2 size={20} className='text-muted' />}
 									size='large'
 									allowClear
@@ -243,20 +209,23 @@ const Home = () => {
 						inpRef.current.focus();
 					}}
 				/>
+			</div>
 
-				<Modal
-					title='Bổ sung dữ liệu'
-					closable={false}
-					centered
-					style={{ minHeight: 400 }}
-					footer={null}
-					open={isAddDatas}>
-					<div className='p-4'>
-						<Typography.Paragraph>{messageUpdate}</Typography.Paragraph>
-						<Progress percent={Math.round(updatePercent)} showInfo />
+			{isSyncIcd10 && (
+				<Modal open={true} footer={null} closable={false} centered>
+					<div className='text-center p-3'>
+						<Typography.Text>
+							Đang đồng bộ dữ liệu chẩn đoán ICD10, vui lòng chờ trong giây
+							lát...
+						</Typography.Text>
+
+						<Typography.Text className='d-block mt-3' type='secondary'>
+							Quá trình này chỉ diễn ra 1 lần duy nhất khi bạn mới sử dụng phần
+							mềm.
+						</Typography.Text>
 					</div>
 				</Modal>
-			</div>
+			)}
 		</div>
 	);
 };

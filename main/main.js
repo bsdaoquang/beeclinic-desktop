@@ -89,7 +89,7 @@ async function createWindow() {
 		win.loadFile(path.join(__dirname, '../dist/index.html'));
 	} else {
 		win.loadURL('http://localhost:5173');
-		// win.webContents.openDevTools();
+		win.webContents.openDevTools();
 	}
 
 	// Tạo update manager
@@ -117,6 +117,41 @@ app.whenReady().then(async () => {
 	createWindow();
 	app.on('activate', () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
+	});
+});
+
+// add many icd10s
+ipcMain.handle('bulk-create-icd10s', async (e, data) => {
+	return new Promise((resolve, reject) => {
+		db.all('SELECT code FROM icd10', (err, rows) => {
+			if (err) {
+				reject(err);
+				return;
+			}
+			const existingCodes = new Set(rows.map((row) => row.code));
+			const newIcd10s = data.filter((item) => !existingCodes.has(item.code));
+
+			if (newIcd10s.length === 0) {
+				resolve({ ok: true, added: 0 });
+				return;
+			}
+
+			const query = `
+				INSERT INTO icd10 (code, title, slug)
+				VALUES (?, ?, ?)
+			`;
+			const stmt = db.prepare(query);
+			newIcd10s.forEach((item) => {
+				stmt.run([item.code, item.title, item.slug || '']);
+			});
+			stmt.finalize((finalizeErr) => {
+				if (finalizeErr) {
+					reject(finalizeErr);
+				} else {
+					resolve({ ok: true, added: newIcd10s.length });
+				}
+			});
+		});
 	});
 });
 
@@ -821,7 +856,7 @@ ipcMain.handle('delete-service-by-id', async (event, id) => {
 
 ipcMain.handle('get-icd10s', async () => {
 	return new Promise((resolve, reject) => {
-		db.all('SELECT * FROM icd10 LIMIT 5', (err, rows) => {
+		db.all('SELECT * FROM icd10', (err, rows) => {
 			if (err) reject(err);
 			else resolve(rows);
 		});
