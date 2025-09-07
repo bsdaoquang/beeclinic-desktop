@@ -187,7 +187,10 @@ const HeaderComponent = () => {
 						<Divider type='vertical' />
 						<Tooltip title='Khoá màn hình'>
 							<Button
-								onClick={() => setIsLockScreen(true)}
+								onClick={() => {
+									navigate('/');
+									setIsLockScreen(true);
+								}}
 								icon={<BsFillShieldLockFill className='text-muted' size={18} />}
 								type='text'
 								size='small'
