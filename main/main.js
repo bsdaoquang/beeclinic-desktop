@@ -686,47 +686,23 @@ ipcMain.handle('get-clinic-infos', async () => {
 	});
 });
 
-ipcMain.handle('create-clinic-info', async (event, data) => {
+// create clinic info
+/*
+	data = {
+	MachineId: machineId,
+				AppVersion: version,
+				ActivationKey: '',}
+*/
+ipcMain.handle('create-clinic-info', async (e, data) => {
 	return new Promise((resolve, reject) => {
 		const query = `
 			INSERT INTO clinic_infos (
-				_id,
-				CSKCBID,
-				TenCSKCB,
-				DiaChi,
-				DienThoai,
-				Email,
-				SoGiayPhepHoatDong,
-				NgayCapGiayPhep,
-				NoiCapGiayPhep,
-				HoTenBS,
-				SoChungChiHanhNghe,
-				KhoaPhong,
-				ChucVu,
 				MachineId,
 				AppVersion,
-				ActivationKey,
-				CongKham
-			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+				ActivationKey
+			) VALUES (?, ?, ?)
 		`;
-		const values = [
-			data.CSKCBID,
-			data.TenCSKCB,
-			data.DiaChi,
-			data.DienThoai,
-			data.Email,
-			data.SoGiayPhepHoatDong,
-			data.NgayCapGiayPhep,
-			data.NoiCapGiayPhep,
-			data.HoTenBS,
-			data.SoChungChiHanhNghe,
-			data.KhoaPhong,
-			data.ChucVu,
-			data.MachineId,
-			data.AppVersion,
-			data.ActivationKey,
-			data.CongKham,
-		];
+		const values = [data.MachineId, data.AppVersion, data.ActivationKey];
 		db.run(query, values, function (err) {
 			if (err) reject(err);
 			else resolve({ id: this.lastID });

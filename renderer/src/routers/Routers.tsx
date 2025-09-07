@@ -1,78 +1,56 @@
 /** @format */
 
-import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
 import { HashRouter } from 'react-router-dom';
 import FooterComponent from '../components/FooterComponent';
 import HeaderComponent from '../components/HeaderComponent';
 import RouterComponent from './RouterComponent';
+import { useEffect } from 'react';
+import handleAPI from '../apis/handleAPI';
 
 const Routers = () => {
-	const dispatch = useDispatch();
+	// khi app được mở, nghĩa là bảng phòng khám đã được tạo
+	// nếu không có dữ liệu phòng khám -> tạo dữ liệu mới, nếu có mạng -> đồng bộ dữ liệu với server => có _id -> cập nhật dữ liệu phòng khám
+	// nếu đã có dữ liệu phòng khám -> kiểm tra nếu có mạng -> đồng bộ dữ liệu với server => có _id -> cập nhật dữ liệu phòng khám
 
 	useEffect(() => {
-		// checkAndSyncData();
+		handleSyncClinicData();
 	}, []);
 
-	// const checkAndSyncData = async () => {
-	// 	try {
-	// 		const machineId = await window.beeclinicAPI.getMachineId();
-	// 		const version = await window.beeclinicAPI.getVersion();
+	const isOnline = navigator.onLine;
 
-	// 		const res: ClinicModel[] | null =
-	// 			await window.beeclinicAPI.getClinicInfo();
+	const handleSyncClinicData = async () => {
+		try {
+			const machineId = await window.beeclinicAPI.getMachineId();
+			const { version } = await window.beeclinicAPI.getVersion();
 
-	// 		const data =
-	// 			res && res.length
-	// 				? res[0]
-	// 				: {
-	// 						MachineId: machineId,
-	// 						AppVersion: version.version,
-	// 						ActivationKey: '',
-	// 				  };
-	// 		if (!res || !res.length) {
-	// 			await window.beeclinicAPI.addClinic(data);
-	// 		}
+			const data = {
+				MachineId: machineId,
+				AppVersion: version,
+				ActivationKey: '',
+			};
 
-	// 		await handleAsyncData(data);
-	// 	} catch (error) {
-	// 		console.log(error);
-	// 	}
-	// };
-
-	// const handleAsyncData = async (data: any) => {
-	// 	const isOnline = window.navigator.onLine;
-
-	// 	if (isOnline) {
-	// 		const _id = data._id;
-
-	// 		if (_id) {
-	// 			const res = await handleAPI(`/clinic/${_id}`);
-	// 			if (res) {
-	// 				await window.beeclinicAPI.updateClinicById(data.id, {
-	// 					ActivationKey: res.ActivationKey,
-	// 				});
-	// 			}
-	// 			dispatch(
-	// 				addClinic({
-	// 					...data,
-	// 					ActivationKey: res ? res.ActivationKey : '',
-	// 				})
-	// 			);
-	// 		} else {
-	// 			const newData = { ...data };
-	// 			delete newData._id;
-	// 			const res = await handleAPI('/clinic', newData, 'post');
-	// 			await window.beeclinicAPI.updateClinicById(data.id, {
-	// 				ActivationKey: res.ActivationKey,
-	// 			});
-	// 			dispatch(addClinic(res));
-	// 		}
-	// 	} else {
-	// 		dispatch(addClinic(data));
-	// 	}
-	// };
-
+			const res = await window.beeclinicAPI.getClinicInfo();
+			if (!res.length) {
+				// chưa có phòng khám
+				const { id } = await window.beeclinicAPI.addClinic(data);
+				if (isOnline) {
+					const resServer = await handleAPI('/clinic', data, 'post');
+					if (resServer && resServer._id) {
+						// cập nhật _id từ server về phòng khám
+						await window.beeclinicAPI.updateClinicById(id, {
+							_id: resServer._id,
+							...data,
+						});
+					}
+				}
+			} else {
+				// Đã có phòng khám
+				console.log(res);
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	};
 	return (
 		<div>
 			<HashRouter basename='/'>

@@ -23,7 +23,7 @@ declare global {
 		beeclinicAPI: {
 			check: () => Promise<void>;
 			getClinicInfo: () => Promise<ClinicModel[]>;
-			addClinic: (data: any) => Promise<{ ok: boolean }>;
+			addClinic: (data: any) => Promise<{ id: number }>;
 			updateClinicById: (id: number, data: any) => Promise<{ ok: boolean }>;
 			downloadUpdate: () => Promise<void>;
 			installUpdate: () => Promise<void>;
