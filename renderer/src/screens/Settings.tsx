@@ -1,19 +1,17 @@
 /** @format */
 
 import { Tabs } from 'antd';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
 	ClinicActivation,
 	ClinicBackup,
 	ClinicInfos,
 	HTDTQG,
-	SecurityScreen,
 } from '../components';
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import type { ClinicModel } from '../types/ClinicModel';
-import { useSelector } from 'react-redux';
 import { clinicSelector } from '../store/reducers/clinic-reducer';
+import type { ClinicModel } from '../types/ClinicModel';
 
 const Settings = () => {
 	const [activeTab, setActiveTab] = useState('clinic-infos');

@@ -13,14 +13,13 @@ import {
 } from 'antd';
 import type { ColumnProps } from 'antd/es/table';
 import { useEffect, useState } from 'react';
-import { BiHome, BiSync, BiTrash } from 'react-icons/bi';
+import { BiSync, BiTrash } from 'react-icons/bi';
 import { IoIosSearch } from 'react-icons/io';
 import { IoHome, IoInformationCircleOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import type { PatientModel } from '../types/PatientModel';
 import type { PrescriptionModel } from '../types/PrescriptionModel';
 import { getShortDateTime } from '../utils/datetime';
-import { BsArrowLeft } from 'react-icons/bs';
 
 /*
   Prescription list

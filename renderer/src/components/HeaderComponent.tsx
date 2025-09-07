@@ -10,17 +10,16 @@ import {
 	Tooltip,
 	Typography,
 } from 'antd';
+import { useState } from 'react';
 import { IoIosInformationCircleOutline } from 'react-icons/io';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { baseURL } from '../apis/axiosClient';
+import { LockScreenModal } from '../modals';
 import { clinicSelector } from '../store/reducers/clinic-reducer';
 import type { ClinicModel } from '../types/ClinicModel';
 import { formatDateToString } from '../utils/datetime';
-import { LockScreenModal } from '../modals';
-import { useState } from 'react';
-import { BsFillShieldLockFill } from 'react-icons/bs';
 
 const HeaderComponent = () => {
 	const [isLockScreen, setIsLockScreen] = useState(false);

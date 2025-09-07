@@ -13,18 +13,17 @@ import {
 	Table,
 	Typography,
 } from 'antd';
-import { use, useEffect, useState } from 'react';
+import type { ColumnProps } from 'antd/es/table';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AddPatient } from '../modals';
 import type { PatientModel } from '../types/PatientModel';
+import type { PrescriptionModel } from '../types/PrescriptionModel';
 import {
 	formatDateToString,
 	getShortDateTime,
 	getYearOld,
 } from '../utils/datetime';
-import { AddPatient } from '../modals';
-import type { PrescriptionModel } from '../types/PrescriptionModel';
-import type { ColumnProps } from 'antd/es/table';
-import { IoInformationCircleOutline } from 'react-icons/io5';
 
 /** @format */
 

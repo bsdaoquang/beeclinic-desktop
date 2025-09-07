@@ -1,7 +1,7 @@
 /** @format */
 
 import { Button, Input, Modal, Typography } from 'antd';
-import { use, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BsEye, BsEyeSlash, BsFillShieldLockFill } from 'react-icons/bs';
 
 interface LockScreenModalProps {

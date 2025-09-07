@@ -82,8 +82,8 @@ export const getYearOld = (dob: string): number => {
 	return age < 1 ? 1 : age;
 };
 
-export const getDateTimeString = (d: any) => {
-	const date = d ?? new Date();
+export const getDateTimeString = (d?: any) => {
+	const date = d ? new Date(d) : new Date();
 
 	return `${numToString(date.getHours())}:${numToString(
 		date.getMinutes()
