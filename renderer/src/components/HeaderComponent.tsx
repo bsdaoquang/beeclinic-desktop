@@ -18,8 +18,13 @@ import { baseURL } from '../apis/axiosClient';
 import { clinicSelector } from '../store/reducers/clinic-reducer';
 import type { ClinicModel } from '../types/ClinicModel';
 import { formatDateToString } from '../utils/datetime';
+import { LockScreenModal } from '../modals';
+import { useState } from 'react';
+import { BsFillShieldLockFill } from 'react-icons/bs';
 
 const HeaderComponent = () => {
+	const [isLockScreen, setIsLockScreen] = useState(false);
+
 	const navigate = useNavigate();
 	const clinic: ClinicModel = useSelector(clinicSelector);
 
@@ -180,6 +185,15 @@ const HeaderComponent = () => {
 							</Space>
 						)}
 						<Divider type='vertical' />
+						<Tooltip title='Khoá màn hình'>
+							<Button
+								onClick={() => setIsLockScreen(true)}
+								icon={<BsFillShieldLockFill className='text-muted' size={18} />}
+								type='text'
+								size='small'
+							/>
+						</Tooltip>
+						<Divider type='vertical' />
 						<Button
 							onClick={() => navigate('/settings')}
 							icon={<IoSettingsOutline size={18} />}
@@ -191,6 +205,10 @@ const HeaderComponent = () => {
 					</Space>
 				</div>
 			</div>
+			<LockScreenModal
+				visible={isLockScreen}
+				onClose={() => setIsLockScreen(false)}
+			/>
 		</div>
 	);
 };

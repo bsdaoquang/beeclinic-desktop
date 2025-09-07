@@ -3,10 +3,10 @@
 import axios from 'axios';
 import queryString from 'query-string';
 
-export const baseURL =
-	import.meta.env && import.meta.env.PROD
-		? 'https://beeclinic.vercel.app'
-		: 'http://localhost:8000';
+export const baseURL = 'https://beeclinic.vercel.app';
+// import.meta.env && import.meta.env.PROD
+// 	? 'https://beeclinic.vercel.app'
+// 	: 'http://localhost:8000';
 
 const axiosClient = axios.create({
 	baseURL,
