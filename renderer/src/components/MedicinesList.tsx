@@ -125,10 +125,6 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 			);
 
 			if (isExitsMedicine) {
-				// Đã có thuốc tương tự
-				// nếu số lượng khác 0 tức là có quản lý
-				// Cập nhật số lượng trong kho nếu có khóa kích hoạt
-
 				if (isExitsMedicine.quantity > 0) {
 					const count = isExitsMedicine.quantity - vals.quantity;
 					// update to database
@@ -169,7 +165,6 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 				await (window as any).beeclinicAPI.addMedicine(newMedicine);
 				onChange([...prescriptionItems, vals]);
 			}
-			// prescriptionItems.push(vals);
 			onChange([...prescriptionItems, vals]);
 
 			const isContinue = vals.isContinue;
@@ -291,6 +286,9 @@ const MedicinesList = ({ prescriptionItems, onChange }: MedicineListProps) => {
 						</Form.Item>
 						<Form.Item name='isContinue'>
 							<Checkbox />
+						</Form.Item>
+						<Form.Item name='gia_ban'>
+							<InputNumber />
 						</Form.Item>
 					</div>
 					<Form.Item

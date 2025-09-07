@@ -3,15 +3,14 @@
 import {
 	Button,
 	Card,
-	Checkbox,
 	DatePicker,
 	Descriptions,
 	Divider,
+	Flex,
 	Form,
 	Input,
 	List,
 	message,
-	Popover,
 	Select,
 	Space,
 	Spin,
@@ -22,14 +21,12 @@ import {
 import TextArea from 'antd/es/input/TextArea';
 import dayjs from 'dayjs';
 import { useEffect, useRef, useState } from 'react';
-import { BiInfoCircle } from 'react-icons/bi';
-import { BsArrowLeft, BsArrowRight } from 'react-icons/bs';
 import { FaSave, FaUserEdit } from 'react-icons/fa';
 import { FaPrint } from 'react-icons/fa6';
-import { RxInfoCircled } from 'react-icons/rx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { ServicesList } from '../components';
+import CurrentPress from '../components/CurrentPress';
 import MedicinesList from '../components/MedicinesList';
 import { AddPatient } from '../modals';
 import { MedicinePrintList, PrescriptionPrint } from '../printPages';
@@ -40,8 +37,7 @@ import type {
 	PrescriptionModel,
 } from '../types/PrescriptionModel';
 import type { ServiceModel } from '../types/ServiceModel';
-import { formatDateToString, getShortDateTime } from '../utils/datetime';
-import { numToString } from '../utils/numToString';
+import { formatDateToString } from '../utils/datetime';
 import { generatePrescriptionCode } from '../utils/prescriptions';
 import { replaceName } from '../utils/replaceName';
 
@@ -55,7 +51,6 @@ const AddPrescription = () => {
 		ServiceModel[]
 	>([]);
 	const [prescriptionCode, setPrescriptionCode] = useState('');
-	const [isAsync, setIsAsync] = useState<null | boolean>(null);
 	const [diagnostics, setDiagnostics] = useState<string[]>([]);
 	const [isPrint, setIsPrint] = useState(false);
 	const [samePrescriptions, setSamePrescriptions] = useState<
@@ -69,7 +64,6 @@ const AddPrescription = () => {
 	const [diagnosisOptions, setDiagnosisOptions] = useState<string[]>([]);
 	const [ngay_tai_kham, setNgay_tai_kham] = useState(null);
 	const [ngay_gio_ke_don, setngay_gio_ke_don] = useState(dayjs(new Date()));
-	const [isSaveAsTemplate, setIsSaveAsTemplate] = useState(false);
 
 	const query = new URLSearchParams(useLocation().search);
 	const patientId = query.get('patient-id');
@@ -202,15 +196,13 @@ const AddPrescription = () => {
 				) +
 				prescriptionServices.reduce((acc, item) => acc + (item.gia || 0), 0) +
 				(congkham ?? 0),
-			sent: isAsync ? 1 : 0,
+			sent: 0,
 			sent_at: null,
 			created_at: new Date().toISOString(),
 			reason_for_visit: vals.reason_for_visit ?? '',
 			disease_progression: vals.disease_progression ?? '',
 		};
 		try {
-			isAsync && handleAsyncPrescription(prescriptionData);
-
 			await (window as any).beeclinicAPI.addPrescription(prescriptionData);
 			messageAPI.success('Lưu đơn thuốc thành công');
 
@@ -245,70 +237,6 @@ const AddPrescription = () => {
 		}
 	};
 
-	const handleAsyncPrescription = async (prescriptionData: any) => {
-		console.log('Sending prescription to national system:', prescriptionData);
-	};
-
-	const renderPropoverContent = ({
-		type,
-		items,
-	}: {
-		type: 'thong_tin_don_thuoc_json' | 'thong_tin_dich_vu_json';
-		items: any[];
-	}) => {
-		return (
-			<div
-				style={{
-					width: 450,
-				}}>
-				<List
-					style={{
-						maxHeight: '50vh',
-						overflowY: 'auto',
-					}}
-					dataSource={items}
-					renderItem={(item, index) => (
-						<List.Item key={`medicine${item.id}`}>
-							{type === 'thong_tin_dich_vu_json' ? (
-								<List.Item.Meta
-									title={`${numToString(index + 1)}. ${
-										item.ten_dich_vu
-									} - ${item.gia.toLocaleString('vi-VN', {
-										style: 'currency',
-										currency: 'VND',
-									})}`}
-									description={item.mo_ta ?? ''}
-								/>
-							) : (
-								<List.Item.Meta
-									title={`${numToString(index + 1)}. ${item.ten_thuoc} x ${
-										item.quantity
-									} ${item.unit}`}
-									description={item.instruction}
-								/>
-							)}
-						</List.Item>
-					)}
-				/>
-				<div className=''>
-					<Button
-						iconPosition='start'
-						icon={<BsArrowLeft size={16} />}
-						type='link'
-						onClick={() => {
-							if (type === 'thong_tin_dich_vu_json') {
-								setPrescriptionServices(items);
-							} else {
-								setPrescriptionItems(items);
-							}
-						}}>
-						Sử dụng lại
-					</Button>
-				</div>
-			</div>
-		);
-	};
-
 	return (
 		<div className='container-fluid'>
 			{messHolder}
@@ -320,7 +248,7 @@ const AddPrescription = () => {
 				) : patient ? (
 					<>
 						<div className='row'>
-							<div className='col-3 d-sm-none d-md-block'>
+							<div className='col-sm-12 col-md-3'>
 								<Card
 									title='Thông tin bệnh nhân'
 									size='small'
@@ -331,11 +259,7 @@ const AddPrescription = () => {
 											onClick={() => setIsFixPatient(true)}
 											icon={<FaUserEdit size={18} />}
 										/>
-									}
-									style={{
-										height: 'calc(100vh - 190px)',
-										overflow: 'auto',
-									}}>
+									}>
 									<Descriptions column={1} size='small'>
 										<Descriptions.Item label='Họ tên'>
 											{patient.name}
@@ -358,104 +282,57 @@ const AddPrescription = () => {
 											{patient.weight ?? ''}
 										</Descriptions.Item>
 									</Descriptions>
-									<Divider className='mb-3' />
-									<>
-										<Typography.Paragraph style={{ fontWeight: 'bold' }}>
-											Dị ứng
-										</Typography.Paragraph>
-										<Typography.Text type='secondary'>
-											{patient.allergies ?? ''}
-										</Typography.Text>
-									</>
-									<Divider className='mb-3' />
-									<>
-										<Typography.Paragraph style={{ fontWeight: 'bold' }}>
-											Lịch sử khám bệnh
-										</Typography.Paragraph>
-										<List
-											style={{
-												maxHeight: '320px',
-												overflowY: 'auto',
-											}}
-											bordered={false}
-											dataSource={prescriptionsByPatient}
-											rowKey={(item) => `${item.ma_don_thuoc}`}
-											renderItem={(item) => (
-												<List.Item
-													actions={[
-														<Popover
-															content={() => {
-																const vals: PrescriptionItem[] =
-																	item.thong_tin_don_thuoc_json
-																		? JSON.parse(item.thong_tin_don_thuoc_json)
-																		: [];
-
-																return (
-																	<div
-																		style={{
-																			width: 450,
-																		}}>
-																		<List
-																			style={{
-																				maxHeight: '50vh',
-																				overflowY: 'auto',
-																			}}
-																			dataSource={vals}
-																			renderItem={(medicine, index) => (
-																				<List.Item key={`medicine${item.id}`}>
-																					<List.Item.Meta
-																						title={`${numToString(
-																							index + 1
-																						)}. ${medicine.ten_thuoc} x ${
-																							medicine.quantity
-																						} ${medicine.unit}`}
-																						description={medicine.instruction}
-																					/>
-																				</List.Item>
-																			)}
-																		/>
-																		<div className='text-end'>
-																			<Button
-																				iconPosition='end'
-																				icon={<BsArrowRight size={16} />}
-																				type='link'
-																				onClick={() => {
-																					form.setFieldsValue({
-																						diagnosis: item.diagnosis.replace(
-																							', ',
-																							'/'
-																						),
-																					});
-																					setPrescriptionItems(vals);
-																				}}>
-																				Sử dụng lại
-																			</Button>
-																		</div>
-																	</div>
-																);
-															}}
-															title='Thông tin thuốc'>
-															<RxInfoCircled size={22} />
-														</Popover>,
-													]}>
-													<List.Item.Meta
-														title={item.diagnosis.replace(/,/g, ' / ')}
-														description={getShortDateTime(
-															item.created_at as string
-														)}
-													/>
-												</List.Item>
-											)}
-										/>
-									</>
+								</Card>
+								<Card
+									title={`Lịch sử khám bệnh: ${prescriptionsByPatient.length}`}
+									size='small'
+									className='mt-3'>
+									<List
+										size='small'
+										style={{
+											maxHeight: 'calc(100vh - 470px)',
+											overflowY: 'auto',
+										}}
+										itemLayout='vertical'
+										bordered={false}
+										dataSource={prescriptionsByPatient.sort(
+											(a, b) =>
+												new Date(b.ngay_gio_ke_don).getTime() -
+												new Date(a.ngay_gio_ke_don).getTime()
+										)}
+										rowKey={(item) => `${item.ma_don_thuoc}`}
+										renderItem={(item) => (
+											<CurrentPress
+												prescription={item}
+												onAddMedicine={(vals) => {
+													const newMedicines = [...prescriptionItems];
+													(vals as PrescriptionItem[]).forEach((val) => {
+														if (!newMedicines.find((n) => n.id === val.id)) {
+															newMedicines.push(val);
+														}
+													});
+													setPrescriptionItems(newMedicines);
+												}}
+												onAddService={(vals) => {
+													const newServices = [...prescriptionServices];
+													(vals as ServiceModel[]).forEach((val) => {
+														if (!newServices.find((n) => n.id === val.id)) {
+															newServices.push(val);
+														}
+													});
+													setPrescriptionServices(newServices);
+												}}
+											/>
+										)}
+									/>
 								</Card>
 							</div>
-							<div className='col'>
+							<div className='col-sm-12 col-md-6'>
 								<Card
 									title='Đơn thuốc'
 									size='small'
 									style={{
-										height: 'calc(100vh - 190px)',
+										height: 'calc(100vh - 150px)',
 										overflow: 'auto',
 									}}
 									extra={
@@ -511,23 +388,6 @@ const AddPrescription = () => {
 												},
 											]}
 											name={'diagnosis'}>
-											{/* <Select
-												mode='tags'
-												onChange={(val) => setDiagnostics(val)}
-												showSearch
-												options={diagnosisOptions}
-												filterOption={(input, option) => {
-													return option
-														? replaceName(option.key).includes(
-																replaceName(input)
-														  )
-														: false;
-												}}
-												onSelect={() => setSearchText('')}
-												allowClear
-												placeholder='Chẩn đoán'
-												notFoundContent={'Không tìm thấy chẩn đoán phù hợp'}
-											/> */}
 											<Select
 												mode='tags'
 												options={diagnosisOptions.map((item) => ({
@@ -535,7 +395,7 @@ const AddPrescription = () => {
 													value: item,
 													key: item,
 												}))}
-												onChange={(val) => console.log(val)}
+												onChange={(val) => setDiagnostics(val)}
 												filterOption={(input, option) => {
 													return option
 														? replaceName(option.key).includes(
@@ -543,7 +403,10 @@ const AddPrescription = () => {
 														  )
 														: false;
 												}}
+												notFoundContent='Không tìm thấy chẩn đoán'
+												placeholder='Chẩn đoán'
 												showSearch
+												allowClear
 											/>
 										</Form.Item>
 									</Form>
@@ -591,14 +454,8 @@ const AddPrescription = () => {
 									/>
 								</Card>
 							</div>
-							<div className='col-3 d-sm-none d-md-block'>
-								<Card
-									title='Thông tin phiên khám'
-									size='small'
-									style={{
-										height: 'calc(100vh - 190px)',
-										overflow: 'auto',
-									}}>
+							<div className='col-3'>
+								<Card title='Thông tin phiên khám' size='small'>
 									<Typography.Text type='secondary'>
 										Ngày giờ kê đơn
 									</Typography.Text>
@@ -623,6 +480,7 @@ const AddPrescription = () => {
 									</Typography.Text>
 									<DatePicker
 										className='mb-3'
+										minDate={dayjs(new Date())}
 										showTime
 										format={'DD/MM/YYYY HH:mm:ss'}
 										value={ngay_tai_kham}
@@ -694,26 +552,12 @@ const AddPrescription = () => {
 											</Typography.Title>
 										</Descriptions.Item>
 									</Descriptions>
-									<Space className='mt-3'>
-										<Checkbox
-											checked={isSaveAsTemplate}
-											onChange={(e) => setIsSaveAsTemplate(e.target.checked)}>
-											Lưu đơn thuốc này làm mẫu
-										</Checkbox>
-										<Tooltip title='Lưu các thuốc trong đơn làm mẫu để sử dụng nhanh cho những lần sau, tự động tìm thêm thuốc vào đơn dựa trên chẩn đoán'>
-											<BiInfoCircle
-												className='text-muted'
-												size={18}
-												style={{ fontSize: 12, marginLeft: 4 }}
-											/>
-										</Tooltip>
-									</Space>
-									<Divider />
-									<Space className='mt-1'>
-										<Button danger type='text' onClick={() => navigate(-1)}>
-											Huỷ bỏ
-										</Button>
-										<Divider type='vertical' />
+								</Card>
+								<Flex justify='space-between' className='my-3'>
+									<Button danger type='text' onClick={() => navigate(-1)}>
+										Huỷ bỏ
+									</Button>
+									<Space>
 										<Button
 											disabled={
 												isLoading ||
@@ -739,58 +583,44 @@ const AddPrescription = () => {
 											Lưu và In
 										</Button>
 									</Space>
+								</Flex>
+								<Card size='small' title='Đơn cùng chẩn đoán'>
+									<List
+										style={{
+											height: 'calc(100vh - 610px)',
+											overflowY: 'auto',
+										}}
+										itemLayout='vertical'
+										size='small'
+										dataSource={samePrescriptions}
+										renderItem={(item) => (
+											<CurrentPress
+												placement='topLeft'
+												key={item.id}
+												onAddMedicine={(vals) => {
+													const newMedicines = [...prescriptionItems];
+													(vals as PrescriptionItem[]).forEach((val) => {
+														if (!newMedicines.find((n) => n.id === val.id)) {
+															newMedicines.push(val);
+														}
+													});
+													setPrescriptionItems(newMedicines);
+												}}
+												onAddService={(vals) => {
+													const newServices = [...prescriptionServices];
+													(vals as ServiceModel[]).forEach((val) => {
+														if (!newServices.find((n) => n.id === val.id)) {
+															newServices.push(val);
+														}
+													});
+													setPrescriptionServices(newServices);
+												}}
+												prescription={item}
+											/>
+										)}
+									/>
 								</Card>
 							</div>
-						</div>
-
-						<div className='row mt-3'>
-							<div className='col'>
-								<Checkbox
-									disabled={!isAsync}
-									checked={isAsync ?? false}
-									onChange={(e) => setIsAsync(e.target.checked)}>
-									Đồng bộ lên hệ thống đơn thuốc Quốc Gia{' '}
-									<Tooltip title='Đồng bộ lên hệ thống đơn thuốc Quốc Gia để quản lý và theo dõi, đăng nhập vào hệ thống để lấy access token'>
-										<BiInfoCircle
-											size={18}
-											style={{ fontSize: 12, marginLeft: 4 }}
-										/>
-									</Tooltip>
-								</Checkbox>
-							</div>
-							<div className='col-6 text-end'>
-								<Space className=''>
-									<Button danger type='text' onClick={() => navigate(-1)}>
-										Huỷ bỏ
-									</Button>
-									<Divider type='vertical' />
-									<Button
-										disabled={
-											isLoading ||
-											!diagnostics.length ||
-											!prescriptionItems.length
-										}
-										onClick={() => form.submit()}
-										icon={<FaSave size={16} className='text-muted' />}>
-										Lưu
-									</Button>
-									<Button
-										disabled={
-											isLoading ||
-											!diagnostics.length ||
-											!prescriptionItems.length
-										}
-										icon={<FaPrint size={16} className='text-white' />}
-										onClick={() => {
-											setIsPrint(true);
-											form.submit();
-										}}
-										type='primary'>
-										Lưu và In
-									</Button>
-								</Space>
-							</div>
-							<div className='col'></div>
 						</div>
 					</>
 				) : (

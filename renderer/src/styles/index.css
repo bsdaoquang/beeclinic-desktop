@@ -8,6 +8,9 @@ a{
   text-decoration: none !important
 }
 
+.ant-list-item-meta, .ant-list-item-meta-title {
+  margin-block-end: 6px  !important;
+}
 .ant-btn-icon{
   margin-bottom: -3px !important;
 }
