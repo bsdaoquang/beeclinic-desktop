@@ -185,18 +185,23 @@ const HeaderComponent = () => {
 							</Space>
 						)}
 						<Divider type='vertical' />
-						<Tooltip title='Khoá màn hình'>
+						{/* <Tooltip title='Khoá màn hình'>
 							<Button
+								disabled={!isActive && !isTrial}
 								onClick={() => {
-									navigate('/');
-									setIsLockScreen(true);
+									if (clinic?.lockscreen_password) {
+										navigate('/');
+										setIsLockScreen(true);
+									} else {
+										navigate('/settings?tabKey=security');
+									}
 								}}
 								icon={<BsFillShieldLockFill className='text-muted' size={18} />}
 								type='text'
 								size='small'
 							/>
 						</Tooltip>
-						<Divider type='vertical' />
+						<Divider type='vertical' /> */}
 						<Button
 							onClick={() => navigate('/settings')}
 							icon={<IoSettingsOutline size={18} />}

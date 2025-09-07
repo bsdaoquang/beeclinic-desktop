@@ -6,16 +6,21 @@ import {
 	ClinicBackup,
 	ClinicInfos,
 	HTDTQG,
+	SecurityScreen,
 } from '../components';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import type { ClinicModel } from '../types/ClinicModel';
+import { useSelector } from 'react-redux';
+import { clinicSelector } from '../store/reducers/clinic-reducer';
 
 const Settings = () => {
 	const [activeTab, setActiveTab] = useState('clinic-infos');
 
 	const location = useLocation();
 	const navigate = useNavigate();
+	const clinic: ClinicModel = useSelector(clinicSelector);
 
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
@@ -31,6 +36,21 @@ const Settings = () => {
 		params.set('tabKey', key);
 		navigate({ search: params.toString() }, { replace: true });
 	};
+	const trialPeriodDaysLeft = clinic?.CreatedAt
+		? Math.max(
+				0,
+				14 -
+					Math.floor(
+						(new Date().getTime() - new Date(clinic.CreatedAt).getTime()) /
+							(1000 * 60 * 60 * 24)
+					)
+		  )
+		: 0;
+
+	const isActive = Boolean(clinic && clinic?.ActivationKey);
+	const isTrial = Boolean(
+		clinic && !clinic?.ActivationKey && trialPeriodDaysLeft > 0
+	);
 
 	return (
 		<div className='container-fluid'>
@@ -52,17 +72,25 @@ const Settings = () => {
 							key: 'clinic-appearance',
 							label: 'Đơn thuốc Quốc Gia',
 							children: <HTDTQG />,
+							disabled: !isActive && !isTrial,
 						},
 						{
 							key: 'clinic-backup',
 							label: 'Sao lưu & Phục hồi',
 							children: <ClinicBackup />,
+							disabled: !isActive && !isTrial,
 						},
 						{
 							key: 'activation',
 							label: 'Mã kích hoạt',
 							children: <ClinicActivation />,
 						},
+						// {
+						// 	key: 'security',
+						// 	label: 'Bảo mật',
+						// 	children: <SecurityScreen />,
+						// 	disabled: !isActive && !isTrial,
+						// },
 					]}
 				/>
 			</div>

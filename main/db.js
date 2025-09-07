@@ -28,6 +28,7 @@ const createDatabase = async () => {
 		db.run(`CREATE TABLE IF NOT EXISTS clinic_infos (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   _id TEXT, -- ID duy nhất của phòng khám
+  lockscreen_password TEXT, -- Mật khẩu khóa màn hình
   CSKCBID TEXT, -- Mã cơ sở KCB (quan trọng khi gửi lên hệ thống)
   TenCSKCB TEXT,
   DiaChi TEXT,
@@ -56,6 +57,12 @@ const createDatabase = async () => {
 			const hasId = columns.some((col) => col.name === '_id');
 			if (!hasId) {
 				db.run(`ALTER TABLE clinic_infos ADD COLUMN _id TEXT;`);
+			}
+			const hasLockscreenPassword = columns.some(
+				(col) => col.name === 'lockscreen_password'
+			);
+			if (!hasLockscreenPassword) {
+				db.run(`ALTER TABLE clinic_infos ADD COLUMN lockscreen_password TEXT;`);
 			}
 		});
 

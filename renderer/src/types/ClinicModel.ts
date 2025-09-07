@@ -35,6 +35,7 @@ export interface ClinicModel {
 
 	ClinicAccessToken: string;
 	DoctorAccessToken: string;
+	lockscreen_password?: string; // Mật khẩu khóa màn hình
 }
 
 export interface BackupFile {
