@@ -30,8 +30,8 @@ export interface ClinicModel {
 	CongKham: number; // Công khám
 
 	// Metadata
-	CreatedAt?: string; // Ngày tạo (ISO string)
-	UpdatedAt?: string; // Ngày cập nhật gần nhất
+	CreatedAt: string; // Ngày tạo (ISO string)
+	UpdatedAt: string; // Ngày cập nhật gần nhất
 
 	ClinicAccessToken: string;
 	DoctorAccessToken: string;

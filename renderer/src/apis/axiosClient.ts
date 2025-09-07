@@ -3,9 +3,13 @@
 import axios from 'axios';
 import queryString from 'query-string';
 
+export const baseURL =
+	import.meta.env && import.meta.env.PROD
+		? 'https://beeclinic.vercel.app'
+		: 'http://localhost:8000';
+
 const axiosClient = axios.create({
-	// baseURL: 'https://beeclinic.vercel.app/',
-	baseURL: 'http://localhost:8000',
+	baseURL,
 	paramsSerializer: (params) => queryString.stringify(params),
 });
 
@@ -29,7 +33,7 @@ axiosClient.interceptors.response.use(
 	(error) => {
 		const { response } = error;
 
-		return Promise.reject(response.data.message as string);
+		return Promise.reject(response.data as any);
 	}
 );
 

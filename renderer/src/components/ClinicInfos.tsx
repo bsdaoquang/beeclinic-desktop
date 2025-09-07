@@ -1,34 +1,5 @@
 /** @format */
 
-/*
-  Clinic model
-  CSKCBID: string; // Mã cơ sở KCB (bắt buộc khi gửi đơn thuốc quốc gia)
-	TenCSKCB: string; // Tên cơ sở KCB
-	DiaChi: string; // Địa chỉ
-	DienThoai?: string; // Điện thoại (có thể để trống)
-	Email?: string; // Email liên hệ (nếu có)
-
-	// Giấy phép hoạt động
-	SoGiayPhepHoatDong: string; // Số giấy phép hoạt động
-	NgayCapGiayPhep?: string; // Ngày cấp giấy phép (yyyy-MM-dd)
-	NoiCapGiayPhep?: string; // Nơi cấp
-
-	// Thông tin bác sĩ phụ trách kê đơn
-	HoTenBS: string; // Họ tên bác sĩ
-	SoChungChiHanhNghe: string; // Số chứng chỉ hành nghề
-	KhoaPhong?: string; // Khoa/phòng (nếu có)
-	ChucVu?: string; // Chức vụ (BSCKI, BSCKII, ThS, TS...)
-
-	// Thông tin hệ thống quản lý
-	MachineId: string; // Mã máy (tự sinh khi cài app)
-	AppVersion: string; // Phiên bản phần mềm
-	ActivationKey?: string; // Mã kích hoạt (nếu có)
-
-	// Metadata
-	CreatedAt?: string; // Ngày tạo (ISO string)
-	UpdatedAt?: string; // Ngày cập nhật gần nhất
-*/
-
 import {
 	AutoComplete,
 	Button,
@@ -62,7 +33,7 @@ const ClinicInfos = () => {
 	const [messageAPI, messageHolder] = message.useMessage();
 	const [form] = Form.useForm();
 
-	const clinic = useSelector(clinicSelector);
+	const clinic: ClinicModel = useSelector(clinicSelector);
 	const dispatch = useDispatch();
 
 	useEffect(() => {
@@ -262,6 +233,11 @@ const ClinicInfos = () => {
 					<Descriptions.Item label='Phiên bản phần mềm'>
 						{clinic?.AppVersion || ''}
 					</Descriptions.Item>
+					<Descriptions.Item label='Mã máy'>
+						<Typography.Text copyable>
+							{clinic?.MachineId || ''}
+						</Typography.Text>
+					</Descriptions.Item>
 					<Descriptions.Item label='Ngày tạo'>
 						{clinic?.CreatedAt ? getShortDateTime(clinic.CreatedAt) : ''}
 					</Descriptions.Item>
@@ -282,24 +258,12 @@ const ClinicInfos = () => {
 						<Typography.Title level={3} className='mb-0' type='secondary'>
 							Thông tin phòng khám
 						</Typography.Title>
-						{clinic.ActivationKey ? (
+						{clinic?.ActivationKey ? (
 							<Tag color='success'>Đã kích hoạt</Tag>
 						) : (
 							<Tag color='warning'>Chưa kích hoạt</Tag>
 						)}
 					</Space>
-
-					<Space>
-						<Typography.Title level={3} className='mb-0' type='secondary'>
-							Thông tin phòng khám
-						</Typography.Title>
-						{clinic.ActivationKey ? (
-							<Tag color='success'>Đã kích hoạt</Tag>
-						) : (
-							<Tag color='warning'>Chưa kích hoạt</Tag>
-						)}
-					</Space>
-
 					<div className='col-8'>
 						<Typography.Text type='secondary'>
 							Những thông tin này sẽ được sử dụng để gửi đơn thuốc Quốc Gia và

@@ -8,15 +8,18 @@ const handleAPI = async (
 	method?: 'post' | 'put' | 'get' | 'delete',
 	isFile?: boolean
 ) => {
-	return (
-		url &&
-		((await axiosClient(url, {
+	try {
+		if (!url) return;
+		const response = await axiosClient(url, {
 			method: method ?? 'get',
 			data,
 			headers: {
 				'Content-Type': isFile ? 'multipart/form-data' : 'application/json',
 			},
-		})) as any)
-	);
+		});
+		return response as any;
+	} catch (error) {
+		throw error as any;
+	}
 };
 export default handleAPI;

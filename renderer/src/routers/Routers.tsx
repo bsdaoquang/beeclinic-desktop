@@ -44,23 +44,17 @@ const Routers = () => {
 	};
 
 	const handleAsyncData = async (data: any) => {
-		// xử lý dữ liệu bất đồng bộ
-		// đồng bộ dữ liệu với server
-		// nếu có internet
 		const isOnline = window.navigator.onLine;
 
 		if (isOnline) {
 			const _id = data._id;
-			// if _id -> get by _id and update
-			// else -> add new
+
 			if (_id) {
 				const res = await handleAPI(`/clinic/${_id}`);
 				if (res) {
 					await window.beeclinicAPI.updateClinicById(data.id, {
 						ActivationKey: res.ActivationKey,
 					});
-
-					// dispatch(addClinic(res));
 				}
 				dispatch(
 					addClinic({
@@ -72,7 +66,6 @@ const Routers = () => {
 				const newData = { ...data };
 				delete newData._id;
 				const res = await handleAPI('/clinic', newData, 'post');
-				// update local db with _id from server
 				await window.beeclinicAPI.updateClinicById(data.id, {
 					ActivationKey: res.ActivationKey,
 				});
