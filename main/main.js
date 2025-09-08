@@ -545,7 +545,7 @@ ipcMain.handle(
 				.join(' OR ');
 			const values = diagnosisList.map((diag) => `%${diag}%`);
 
-			const query = `SELECT * FROM prescriptions WHERE ${conditions} ORDER BY created_at DESC LIMIT 10`;
+			const query = `SELECT * FROM prescriptions WHERE ${conditions} ORDER BY created_at DESC`;
 
 			db.all(query, values, (err, rows) => {
 				if (err) reject(err);

@@ -111,7 +111,7 @@ const Prescriptions = () => {
 			title: 'Đồng bộ đơn thuốc',
 			content:
 				'Bạn cần phải đăng nhập vào Hệ thống ĐTQG để lấy mã đồng bộ đơn thuốc này.',
-			onOk: () => navigate('/settings'),
+			onOk: () => navigate('/settings?tabKey=clinic-appearance'),
 			okText: 'Đến phần cài đặt',
 		});
 	};

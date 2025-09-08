@@ -306,11 +306,17 @@ const AddPrescription = () => {
 												prescription={item}
 												onAddMedicine={(vals) => {
 													const newMedicines = [...prescriptionItems];
-													(vals as PrescriptionItem[]).forEach((val) => {
-														if (!newMedicines.find((n) => n.id === val.id)) {
-															newMedicines.push(val);
-														}
+
+													vals.forEach((val) => {
+														const index = newMedicines.findIndex(
+															(element) =>
+																element.ten_thuoc === val.ten_thuoc ||
+																element.ma_thuoc === val.ma_thuoc
+														);
+
+														index === -1 && newMedicines.push(val);
 													});
+
 													setPrescriptionItems(newMedicines);
 												}}
 												onAddService={(vals) => {
