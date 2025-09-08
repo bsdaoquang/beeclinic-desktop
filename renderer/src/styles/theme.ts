@@ -16,7 +16,7 @@ export const theme: ThemeConfig = {
 			optionActiveBg: '#1ABC9C33',
 		},
 		Input: {
-			borderRadius: 4,
+			borderRadius: 2,
 		},
 		Modal: {
 			borderRadius: 6,

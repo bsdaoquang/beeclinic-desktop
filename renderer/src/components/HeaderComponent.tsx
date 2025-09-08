@@ -23,6 +23,7 @@ import type { ClinicModel } from '../types/ClinicModel';
 import { formatDateToString } from '../utils/datetime';
 import axios from 'axios';
 import { replaceName } from '../utils/replaceName';
+import { BsFillShieldLockFill } from 'react-icons/bs';
 
 const HeaderComponent = () => {
 	const [isLockScreen, setIsLockScreen] = useState(false);
@@ -228,7 +229,7 @@ const HeaderComponent = () => {
 							</Space>
 						)}
 						<Divider type='vertical' />
-						{/* <Tooltip title='Khoá màn hình'>
+						<Tooltip title='Khoá màn hình'>
 							<Button
 								disabled={!isActive && !isTrial}
 								onClick={() => {
@@ -244,7 +245,7 @@ const HeaderComponent = () => {
 								size='small'
 							/>
 						</Tooltip>
-						<Divider type='vertical' /> */}
+						<Divider type='vertical' />
 						<Button
 							onClick={() => navigate('/settings')}
 							icon={<IoSettingsOutline size={18} />}

@@ -712,36 +712,16 @@ ipcMain.handle('create-clinic-info', async (e, data) => {
 
 ipcMain.handle('update-clinic-info-by-id', async (event, { id, updates }) => {
 	return new Promise((resolve, reject) => {
-		const fields = [
-			'_id',
-			'CSKCBID',
-			'_id',
-			'TenCSKCB',
-			'DiaChi',
-			'DienThoai',
-			'Email',
-			'SoGiayPhepHoatDong',
-			'NgayCapGiayPhep',
-			'NoiCapGiayPhep',
-			'HoTenBS',
-			'SoChungChiHanhNghe',
-			'KhoaPhong',
-			'ChucVu',
-			'MachineId',
-			'AppVersion',
-			'ActivationKey',
-			'CongKham', // bổ sung công khám
-		];
+		const updateKeys = Object.keys(updates || {});
+		if (updateKeys.length === 0) {
+			resolve({ success: false, changes: 0, message: 'No fields to update' });
+			return;
+		}
 
-		const setClause = fields
-			.filter((field) => updates[field] !== undefined)
-			.map((field) => `${field} = ?`)
-			.join(', ');
+		const setClause = updateKeys.map((field) => `${field} = ?`).join(', ');
+		const values = updateKeys.map((field) => updates[field]);
 
-		const values = fields
-			.filter((field) => updates[field] !== undefined)
-			.map((field) => updates[field]);
-
+		// Always update UpdatedAt
 		const query = `UPDATE clinic_infos SET ${setClause}, UpdatedAt = ? WHERE id = ?`;
 		values.push(new Date().toISOString(), id);
 

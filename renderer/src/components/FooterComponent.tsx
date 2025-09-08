@@ -1,6 +1,6 @@
 /** @format */
 
-import { Affix, Button, Divider, Space, Typography } from 'antd';
+import { Button, Divider, Space, Typography } from 'antd';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -30,12 +30,6 @@ const FooterComponent = () => {
 
 		window.beeclinicAPI.check();
 	}, []);
-
-	// idle là ko có gì
-	// checking là đang check
-	// available là có bản mới
-	// downloading là đang tải
-	// downloaded là đã tải xong
 
 	const getVersion = async () => {
 		const response = await (window as any).beeclinicAPI.getVersion();
@@ -99,7 +93,7 @@ const FooterComponent = () => {
 		<>
 			<div
 				style={{
-					padding: 10,
+					padding: '5px 10px',
 					backgroundColor: '#f3f3f3',
 					minHeight: 20,
 				}}>
@@ -128,12 +122,6 @@ const FooterComponent = () => {
 							</Link>
 							<Divider type='vertical' />
 							<Space size={24}>
-								{/* <Link to='mailto:bsdaoquang@gmail.com' className='text-muted'>
-									<i
-										className='fas fa-envelope text-muted'
-										style={{ fontSize: 14 }}
-									/>
-								</Link> */}
 								{mySocialLinks.map((link) => (
 									<Button
 										key={link.name}

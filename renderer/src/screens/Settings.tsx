@@ -9,6 +9,7 @@ import {
 	ClinicBackup,
 	ClinicInfos,
 	HTDTQG,
+	SecurityScreen,
 } from '../components';
 import { clinicSelector } from '../store/reducers/clinic-reducer';
 import type { ClinicModel } from '../types/ClinicModel';
@@ -83,12 +84,12 @@ const Settings = () => {
 							label: 'Mã kích hoạt',
 							children: <ClinicActivation />,
 						},
-						// {
-						// 	key: 'security',
-						// 	label: 'Bảo mật',
-						// 	children: <SecurityScreen />,
-						// 	disabled: !isActive && !isTrial,
-						// },
+						{
+							key: 'security',
+							label: 'Bảo mật',
+							children: <SecurityScreen />,
+							disabled: !isActive && !isTrial,
+						},
 					]}
 				/>
 			</div>

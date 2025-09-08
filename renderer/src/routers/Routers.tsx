@@ -73,6 +73,7 @@ const Routers = () => {
 
 						// cập nhật activation key về tránh hack
 						const res = await handleAPI(`/clinic/${clinic._id}`);
+						// console.log(res);
 						if (res && res._id) {
 							// cập nhật dữ liệu mới nhất từ server về phòng khám
 							await window.beeclinicAPI.updateClinicById(clinic.id, {
