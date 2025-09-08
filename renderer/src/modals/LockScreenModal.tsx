@@ -3,6 +3,10 @@
 import { Button, Input, Modal, Typography } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 import { BsEye, BsEyeSlash, BsFillShieldLockFill } from 'react-icons/bs';
+import bcrypt from 'bcryptjs-react';
+import type { ClinicModel } from '../types/ClinicModel';
+import { useSelector } from 'react-redux';
+import { clinicSelector } from '../store/reducers/clinic-reducer';
 
 interface LockScreenModalProps {
 	visible: boolean;
@@ -18,6 +22,8 @@ const LockScreenModal = ({
 	const [errorTest, setErrorTest] = useState('');
 
 	const passRef = useRef<any>(null);
+	const clinic: ClinicModel = useSelector(clinicSelector);
+	const hashedPassword = clinic?.lockscreen_password || '';
 
 	useEffect(() => {
 		if (!visible) {
@@ -32,17 +38,20 @@ const LockScreenModal = ({
 		}
 	}, [pass]);
 
-	const handleUnlock = () => {
-		if (pass === '123456') {
-			// Unlock the screen
+	const handleUnlock = async () => {
+		if (!hashedPassword) {
+			setErrorTest('Không tìm thấy mật khẩu khoá màn hình.');
+			return;
+		}
+		const isMatch = await bcrypt.compare(pass, hashedPassword);
+		if (isMatch) {
+			setErrorTest('');
 			onClose();
+			setPass('');
 		} else {
-			// Show error
 			setErrorTest('Mật khẩu không đúng. Vui lòng thử lại.');
 			setPass('');
-			if (passRef && passRef.current) {
-				passRef.current.focus();
-			}
+			passRef.current?.focus?.();
 		}
 	};
 
