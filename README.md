@@ -32,5 +32,5 @@ BeeClinic là phần mềm **quản lý phòng khám** được phát triển d�
 
 ## 📞 Hỗ trợ
 
-- Website: [https://beeclinic.vercel.app](https://beeclinic.vercel.app)  
+- Website: [https://beeclinic.yhocso.vn](https://beeclinic.yhocso.vn)  
 - Liên hệ: beeclinic@yhọcso.vn  
